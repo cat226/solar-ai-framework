@@ -1,0 +1,9 @@
+# Place trained model weights in this directory.
+#
+# Expected files (configured in configs/settings.yaml):
+#   yolo_solar.pt        — YOLO panel detection weights
+#   mobilenet_solar.pth  — Fine-tuned MobileNetV2 weights
+#   xgboost_solar.joblib — Trained XGBoost pipeline
+#
+# This file is tracked by git to preserve the directory structure.
+# The weight files themselves are NOT committed (add to .gitignore).
