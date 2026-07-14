@@ -1,0 +1,30 @@
+# Solar AI Framework — Python dependencies
+# Install with: pip install -r requirements.txt
+
+# Streamlit UI
+streamlit>=1.35.0
+
+# Computer Vision — YOLO
+ultralytics>=8.2.0
+
+# Computer Vision — MobileNet (PyTorch)
+torch>=2.2.0
+torchvision>=0.17.0
+
+# Image processing
+Pillow>=10.0.0
+numpy>=1.26.0
+
+# Weather API
+requests>=2.31.0
+
+# ML prediction
+xgboost>=2.0.0
+scikit-learn>=1.4.0
+joblib>=1.3.0
+
+# Data
+pandas>=2.2.0
+
+# Configuration
+PyYAML>=6.0.1

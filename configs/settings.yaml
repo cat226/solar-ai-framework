@@ -1,0 +1,106 @@
+# =============================================================================
+# Solar AI Framework — Central Configuration
+# configs/settings.yaml
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Weather API
+# ---------------------------------------------------------------------------
+# NOTE: The API key is NOT stored here.
+# Set OPENWEATHER_API_KEY in .env or .streamlit/secrets.toml.
+# See .env.example and .streamlit/secrets.toml.example for templates.
+weather:
+  base_url: "https://api.openweathermap.org/data/2.5/weather"
+  timeout_seconds: 10
+  default_city: "Chennai"
+  units: "metric"                               # metric = Celsius
+
+# ---------------------------------------------------------------------------
+# Model Paths  (relative to project root)
+# ---------------------------------------------------------------------------
+models:
+  yolo:
+    weights: "weights/yolo_solar.pt"
+    confidence_threshold: 0.45
+    iou_threshold: 0.50
+    image_size: 640
+  mobilenet:
+    weights: "weights/mobilenet_solar.pth"
+    num_classes: 6
+    input_size: 224
+  xgboost:
+    weights: "weights/xgboost_solar.joblib"
+
+# ---------------------------------------------------------------------------
+# Classification Labels
+# ---------------------------------------------------------------------------
+classification:
+  labels:
+    - "Clean"
+    - "Dusty"
+    - "Bird-Drop"
+    - "Electrical-Damage"
+    - "Physical-Damage"
+    - "Hotspot"
+
+# ---------------------------------------------------------------------------
+# Physics Constants
+# ---------------------------------------------------------------------------
+physics:
+  # Irradiance
+  max_irradiance_wm2: 1000.0          # Peak irradiance W/m² (clear sky, noon)
+  irradiance_cloud_factor: 0.75       # Fraction transmitted under full cloud cover
+
+  # Module Temperature — NOCT model: Tcell = Ta + (NOCT-20)/800 * G
+  noct_celsius: 45.0                  # Nominal Operating Cell Temperature
+  noct_irradiance_ref: 800.0          # Reference irradiance for NOCT (W/m²)
+  noct_ambient_ref: 20.0              # Reference ambient temperature (°C)
+  wind_cooling_coefficient: 1.5       # °C reduction per m/s wind speed
+
+  # Temperature coefficient of power
+  temp_coefficient_pmax: -0.004       # %/°C (−0.4 %/°C, typical Si panel)
+  stc_temperature: 25.0               # Standard Test Conditions temperature (°C)
+
+  # Soiling ratios per fault class
+  soiling_ratios:
+    "Clean": 1.00
+    "Dusty": 0.92
+    "Bird-Drop": 0.88
+    "Electrical-Damage": 0.80
+    "Physical-Damage": 0.75
+    "Hotspot": 0.70
+
+  # Default panel rating
+  panel_rated_power_wp: 400.0         # Watts peak
+
+# ---------------------------------------------------------------------------
+# Feature Engineering
+# ---------------------------------------------------------------------------
+feature_engineering:
+  feature_columns:
+    - "irradiance_wm2"
+    - "module_temp_c"
+    - "ambient_temp_c"
+    - "humidity_pct"
+    - "wind_speed_ms"
+    - "cloud_cover_pct"
+    - "soiling_ratio"
+    - "fault_class_id"
+    - "detection_confidence"
+
+# ---------------------------------------------------------------------------
+# Recommendation Thresholds
+# ---------------------------------------------------------------------------
+recommendations:
+  efficiency_loss_critical_pct: 20.0  # Trigger urgent action above this loss
+  efficiency_loss_warning_pct: 10.0   # Trigger advisory above this loss
+  hotspot_max_temp_c: 65.0            # Module temp threshold for hotspot warning
+  cleaning_humidity_threshold_pct: 85 # Skip cleaning recommendation if very humid
+
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
+logging:
+  level: "INFO"                        # DEBUG | INFO | WARNING | ERROR
+  format: "%(asctime)s [%(levelname)s] %(name)s — %(message)s"
+  datefmt: "%Y-%m-%d %H:%M:%S"

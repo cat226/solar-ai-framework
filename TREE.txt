@@ -1,0 +1,39 @@
+solar-ai-framework/
+|-- .env.example
+|-- .gitignore
+|-- .streamlit/
+|   |__ secrets.toml.example
+|-- AGENTS.md
+|-- ARCHITECTURE.md
+|-- ARCHITECTURE_REVIEW_RESPONSE.md
+|-- LICENSE
+|-- PATCH_SUMMARY.md
+|-- TASK-001.md
+|-- TEST_REPORT.md
+|-- TREE.txt
+|-- app.py
+|-- configs/
+|   |__ settings.yaml
+|-- models/
+|   |-- __init__.py
+|   |-- classifier.py
+|   |-- detector.py
+|   |-- model_manager.py          [NEW — TASK-001R]
+|   |__ predictor.py
+|-- requirements.txt
+|-- services/
+|   |-- __init__.py
+|   |-- feature_engineering.py
+|   |-- physics.py
+|   |-- pipeline.py
+|   |-- recommendation.py
+|   |__ weather.py
+|-- utils/
+|   |-- __init__.py
+|   |-- config.py
+|   |-- exceptions.py             [NEW — TASK-001R]
+|   |-- image_utils.py
+|   |__ logger.py
+|-- verify_imports.py
+|__ weights/
+    |__ .gitkeep
