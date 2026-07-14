@@ -455,8 +455,8 @@ We thank the maintainers and contributors of these projects for enabling reprodu
 
 **Solar AI Framework Research Team**
 
-- Edith Stark
-- Verona
+- Ramana Sree
+- Verona Ann
 
 ---
 
