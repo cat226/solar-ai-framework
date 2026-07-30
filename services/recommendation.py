@@ -24,11 +24,10 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 # Recommendation thresholds from config
-_R: dict = CFG["recommendations"]
-_CRIT_LOSS: float = float(_R["efficiency_loss_critical_pct"])
-_WARN_LOSS: float = float(_R["efficiency_loss_warning_pct"])
-_HOT_TEMP: float = float(_R["hotspot_max_temp_c"])
-_HUMID_SKIP: float = float(_R["cleaning_humidity_threshold_pct"])
+_RECOMMENDATION_CFG: dict = CFG["recommendations"]
+_CRIT_LOSS: float = float(_RECOMMENDATION_CFG["efficiency_loss_critical_pct"])
+_WARN_LOSS: float = float(_RECOMMENDATION_CFG["efficiency_loss_warning_pct"])
+_HOT_TEMP: float = float(_RECOMMENDATION_CFG["hotspot_max_temp_c"])
 
 
 # ---------------------------------------------------------------------------

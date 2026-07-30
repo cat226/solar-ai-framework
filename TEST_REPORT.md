@@ -1,8 +1,8 @@
 # TEST_REPORT.md
-## TASK-001R — Test & Verification Report
+## TASK-002 — Test & Verification Report
 **Date:** 2026-07-14  
 **Environment:** Windows 11, Python 3.12.10  
-**Branch:** feature/edith
+**Branch:** feature/task-002-physics
 
 ---
 
@@ -42,106 +42,56 @@ Full results from `python verify_imports.py`:
 | 2 | `utils.config — CFG + get_secret` | **PASS** | `api_key` absent from YAML; `get_secret` fallback works |
 | 3 | `utils.logger` | **PASS** | `get_logger()` factory OK |
 | 4 | `utils.image_utils` | **PASS** | All helpers importable |
-| 5 | `models.model_manager` | **PASS** | Singleton created; `loaded_models: {YOLO: False, MobileNet: False, XGBoost: False}` |
-| 6 | `models.detector` | **PASS** | `SolarPanelDetector` instantiated; `set_model()` present |
-| 7 | `models.classifier` | **PASS** | `SolarFaultClassifier` instantiated; `set_model()` present |
-| 8 | `models.predictor` | **PASS** | `EnergyPredictor` instantiated; `set_model()` present |
+| 5 | `models.model_manager` | **PASS** | Singleton created |
+| 6 | `models.detector` | **PASS** | `SolarPanelDetector` instantiated |
+| 7 | `models.classifier` | **PASS** | `SolarFaultClassifier` instantiated |
+| 8 | `models.predictor` | **PASS** | `EnergyPredictor` instantiated |
 | 9 | `services.weather` | **PASS** | `WeatherData`, `fetch_weather` importable |
-| 10 | `services.physics — live call` | **PASS** | `compute_physics(25, 2, 30, "Clean")` successful |
-| 11 | `services.feature_engineering` | **PASS** | `build_features`, `validate_features`, `build_feature_dataframe` importable |
-| 12 | `services.recommendation — to_dict` | **PASS** | `to_dict()` keys: `[status, summary, issues, recommendation, priority]` |
-| 13 | `services.pipeline` | **PASS** | `run_pipeline`, `PipelineResult` importable and properly constructed |
-| 14 | `app.py — syntax` | **PASS** | AST parses clean; 130 total lines, 95 executable lines |
+| 10 | `services.physics — live call` | **PASS** | `compute_physics` verified live calculation |
+| 11 | `services.feature_engineering` | **PASS** | `build_features` validated correctly |
+| 12 | `services.recommendation` | **PASS** | `to_dict()` keys verified |
+| 13 | `services.pipeline` | **PASS** | `run_pipeline`, `PipelineResult` instantiated |
+| 14 | `app.py — syntax` | **PASS** | AST parses clean; 130 total lines, 94 executable lines |
 
 **Overall: 14/14 — PASS**
 
 ---
 
-## 3. Circular Import Check
-
-Verified by importing all modules in dependency order. No circular import was triggered:
-
-```
-utils.config         (no app imports)
-utils.logger         (imports utils.config only)
-utils.exceptions     (no imports)
-utils.image_utils    (imports utils.config, utils.logger)
-utils.ui_helpers     (imports services.pipeline, streamlit)
-models.detector      (imports utils.*)
-models.classifier    (imports utils.*)
-models.predictor     (imports utils.*)
-models.model_manager (imports utils.*, models.* via lazy loading)
-services.weather     (imports utils.config, utils.exceptions, utils.logger)
-services.physics     (imports utils.config, utils.logger)
-services.feature_engineering (imports models.*, services.physics, services.weather, utils.*)
-services.recommendation      (imports models.classifier, models.predictor, services.physics, utils.*)
-services.pipeline    (imports models.*, services.*, utils.*)
-app.py               (imports services.pipeline, utils.config, utils.logger, utils.ui_helpers)
-```
-
-**Rule verified:** `utils` ← nothing; `models` ← `utils` only; `services` ← `models + utils`;
-`app.py` ← `services.pipeline + utils` only.
-
-**Result: No circular imports — PASS**
-
----
-
-## 4. Physics Live Calculation Test
+## 3. Physics & Features Validation
 
 ```
 Input:  ambient_temp=25°C, wind=2 m/s, cloud=30%, fault="Clean"
-Output: irradiance=~212.0 W/m2, module_temp=~28.6°C, soiling=1.00,
-        temp_loss=~1.45%, effective_efficiency=~0.9855
+Output (Physics Module): 
+        irradiance=~64.5 W/m2 (dependent on local solar time), 
+        module_temp=~24.0°C, 
+        soiling=1.00,
+        temp_loss=0.00%, 
+        effective_efficiency=1.0000
 ```
 
-**Result: PASS** — values are physically plausible for mid-afternoon partial cloud.
-
----
-
-## 5. Secret Management Test
-
-```python
-from utils.config import get_secret
-s = get_secret("NONEXISTENT_KEY", "default")
-assert s == "default"   # PASS
-```
+**Validation Checks Passed**:
+- Numeric consistency verified successfully (Module temp aligns with ambient+irradiance).
+- New derived features successfully verified within their limits.
+- Backward compatibility strict bounds filter preserved exact 9 column structure for XGBoost.
 
 **Result: PASS**
 
 ---
 
-## 6. Recommendation `to_dict()` Test
+## 4. Pipeline Execution & Logging
 
-```python
-from services.recommendation import RecommendationReport
-r = RecommendationReport()
-d = r.to_dict()
-```
+The pipeline emits the following log messages, confirmed present in source:
+1. `[INFO] Weather Request: ...` (`services/weather.py`)
+2. `[INFO] Physics Calculations: ...` (`services/physics.py`)
+3. `[INFO] Feature Generation: ...` (`services/feature_engineering.py`)
+4. `[INFO] Pipeline Timing: ...` (`services/pipeline.py`)
 
-**Result: PASS** — all required keys present.
+The `Physics Calculations` log pair was exercised directly via the
+`compute_physics` live call in §2 (test #10). A full end-to-end
+`run_pipeline` execution was **not** performed in this environment: the
+pipeline begins with YOLO detection and MobileNet classification, and the
+model weights are not present in `weights/` (only `.gitkeep`). The remaining
+log messages are therefore verified by source inspection, not by a completed
+end-to-end run.
 
----
-
-## 7. ModelManager Singleton Test
-
-```python
-from models.model_manager import model_manager
-assert model_manager.loaded_models == {"YOLO": False, "MobileNet": False, "XGBoost": False}
-```
-
-**Result: PASS**
-
----
-
-## 8. app.py Acceptance Criteria (Post-Refinement)
-
-| Criterion | Status |
-|-----------|--------|
-| No AI logic | PASS |
-| No feature engineering | PASS |
-| No API requests | PASS |
-| No physics calculations | PASS |
-| No DataFrame construction | PASS |
-| No inline result rendering logic | PASS (moved to `ui_helpers.py`) |
-| Calls `run_pipeline()` | PASS |
-| Total lines < 150 (130 lines) | PASS |
+**Result: PASS (log statements present; end-to-end run not executed — see note)**

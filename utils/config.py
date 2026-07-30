@@ -47,6 +47,7 @@ def load_config(path: Path = _SETTINGS_PATH) -> dict[str, Any]:
     Raises:
         FileNotFoundError: If the settings file does not exist.
         yaml.YAMLError: If the file cannot be parsed.
+        ValueError: If required configuration keys are missing.
     """
     if not path.exists():
         raise FileNotFoundError(
@@ -57,7 +58,23 @@ def load_config(path: Path = _SETTINGS_PATH) -> dict[str, Any]:
     with open(path, "r", encoding="utf-8") as fh:
         config: dict[str, Any] = yaml.safe_load(fh)
 
+    _validate_config_schema(config)
     return config
+
+
+def _validate_config_schema(config: dict[str, Any]) -> None:
+    """Validate that required top-level configuration sections exist.
+
+    Args:
+        config: Configuration dictionary to validate.
+
+    Raises:
+        ValueError: If any required section is missing.
+    """
+    required_sections = ["weather", "models", "classification", "physics", "feature_engineering", "recommendations", "logging"]
+    missing = [s for s in required_sections if s not in config]
+    if missing:
+        raise ValueError(f"Missing required configuration sections: {missing}")
 
 
 def get_secret(key: str, fallback: Optional[str] = None) -> Optional[str]:

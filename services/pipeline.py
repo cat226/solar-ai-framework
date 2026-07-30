@@ -173,6 +173,9 @@ def run_pipeline(
             wind_speed_ms=result.weather_data.wind_speed_ms,
             cloud_cover_pct=result.weather_data.cloud_cover_pct,
             fault_label=result.classification_result.label,
+            latitude=result.weather_data.latitude,
+            longitude=result.weather_data.longitude,
+            observation_time=result.weather_data.timestamp,
         )
 
         # ── Step 5: Feature Engineering + Validation ─────────────────────────
@@ -223,4 +226,5 @@ def run_pipeline(
         logger.exception("Pipeline unexpected failure: %s", exc)
 
     result.processing_time = time.time() - start_time
+    logger.info("Pipeline Timing: execution completed in %.2fs", result.processing_time)
     return result

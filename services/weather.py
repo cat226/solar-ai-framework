@@ -15,11 +15,12 @@ This module has no knowledge of images, models, or the UI.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from typing import Optional
 
 import requests
 
 from utils.config import CFG, get_secret
-from utils.exceptions import WeatherAPIError
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -29,6 +30,7 @@ _W_CFG: dict = CFG["weather"]
 _BASE_URL: str = _W_CFG["base_url"]
 _TIMEOUT: int = int(_W_CFG["timeout_seconds"])
 _UNITS: str = _W_CFG["units"]
+_DEFAULTS: dict = _W_CFG["defaults"]
 
 
 # ---------------------------------------------------------------------------
@@ -45,15 +47,23 @@ class WeatherData:
         humidity_pct: Relative humidity percentage (0–100).
         wind_speed_ms: Wind speed in m/s.
         cloud_cover_pct: Cloud cover percentage (0–100).
+        pressure_hpa: Atmospheric pressure in hPa.
+        latitude: Latitude coordinate.
+        longitude: Longitude coordinate.
+        timestamp: UTC datetime of the observation.
         description: Human-readable weather description (e.g. "light rain").
         fetch_successful: True if the API call and parsing succeeded.
     """
 
     city: str = ""
-    ambient_temp_c: float = 25.0
-    humidity_pct: float = 50.0
-    wind_speed_ms: float = 2.0
-    cloud_cover_pct: float = 0.0
+    ambient_temp_c: float = _DEFAULTS["ambient_temp_c"]
+    humidity_pct: float = _DEFAULTS["humidity_pct"]
+    wind_speed_ms: float = _DEFAULTS["wind_speed_ms"]
+    cloud_cover_pct: float = _DEFAULTS["cloud_cover_pct"]
+    pressure_hpa: float = _DEFAULTS["pressure_hpa"]
+    latitude: float = _DEFAULTS["latitude"]
+    longitude: float = _DEFAULTS["longitude"]
+    timestamp: Optional[datetime] = None
     description: str = ""
     fetch_successful: bool = False
 
@@ -88,7 +98,7 @@ def fetch_weather(city: str) -> WeatherData:
         "units": _UNITS,
     }
 
-    logger.info("Fetching weather data for city: %s", city)
+    logger.info("Weather Request: Fetching data for city '%s'", city)
 
     try:
         response = requests.get(_BASE_URL, params=params, timeout=_TIMEOUT)
@@ -101,18 +111,24 @@ def fetch_weather(city: str) -> WeatherData:
             humidity_pct=float(data["main"]["humidity"]),
             wind_speed_ms=float(data["wind"]["speed"]),
             cloud_cover_pct=float(data["clouds"]["all"]),
+            pressure_hpa=float(data["main"]["pressure"]),
+            latitude=float(data["coord"]["lat"]),
+            longitude=float(data["coord"]["lon"]),
+            timestamp=datetime.fromtimestamp(data["dt"], tz=timezone.utc),
             description=data["weather"][0]["description"],
             fetch_successful=True,
         )
 
         logger.info(
-            "Weather fetched: %s | %.1f°C | humidity=%d%% | wind=%.1f m/s | "
-            "clouds=%d%%",
+            "Weather Response: %s | %.1f°C | humidity=%d%% | wind=%.1f m/s | "
+            "clouds=%d%% | lat=%.2f | lon=%.2f",
             weather.description,
             weather.ambient_temp_c,
             weather.humidity_pct,
             weather.wind_speed_ms,
             weather.cloud_cover_pct,
+            weather.latitude,
+            weather.longitude,
         )
         return weather
 

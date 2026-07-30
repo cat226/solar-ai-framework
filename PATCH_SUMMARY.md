@@ -1,10 +1,55 @@
 # PATCH_SUMMARY.md
-## TASK-001R — Architecture Compliance & Refinement Patch
+## TASK-002 — Physics-Informed Weather & Environmental Feature Engineering
 **Date:** 2026-07-14  
-**Branch:** feature/edith  
-**Base:** TASK-001 implementation
+**Branch:** feature/task-002-physics  
+**Base:** TASK-001R
 
 ---
+
+## Files Modified
+
+### `configs/settings.yaml`
+- Added fallback environmental defaults for weather in case of API failure (`weather.defaults`).
+- Centralized all constants (no hardcoded constants remain in Python code).
+
+### `services/weather.py`
+- Upgraded `WeatherData` to include `latitude`, `longitude`, `pressure_hpa`, and `timestamp`.
+- Added structured logs (`Weather Request`, `Weather Response`).
+- Expanded exception handling to use timeout configuration and safe fallbacks strictly mapped from settings.
+
+### `services/physics.py`
+- Refactored entire physics engine into 5 clean, single-responsibility functions.
+- `calculate_irradiance()`: Added geographical awareness using latitude/longitude and solar zenith approximations.
+- `calculate_module_temperature()`: Properly isolates NOCT calculation with wind cooling factor.
+- `calculate_cloud_factor()`, `calculate_soiling_ratio()`, `calculate_wind_cooling()` isolated.
+- Added `Physics Calculations` logging.
+
+### `services/feature_engineering.py`
+- Added new derived features to the raw dataframe: `temperature_difference_c`, `cloud_factor`, `wind_cooling_factor`.
+- Added strict numeric consistency validation checks (e.g., verifying module temperature against irradiance/ambient combos).
+- Safely slices `_FEATURE_COLUMNS` strictly to length of 9 before returning, ensuring XGBoost predictor compatibility.
+- Added `Feature Generation` logging.
+
+### `services/pipeline.py`
+- Wired the physics step to the enriched `WeatherData`: `compute_physics()` now
+  receives `latitude`, `longitude`, and `observation_time` (from
+  `weather_data.timestamp`) so the geo/time-aware irradiance model is actually
+  driven by live weather data. Backward compatible — on a failed weather fetch
+  these fall back to defaults (`timestamp=None` → `datetime.now(utc)`).
+- Added `Pipeline Timing` log at the end of execution.
+
+---
+
+## Backward Compatibility
+- **API and UI**: The application interface, entry point, and UI code (`app.py`, `ui_helpers.py`) are untouched.
+- **Machine Learning**: Although new scientific features are generated and validated, they are strictly stripped right before inference, meaning the XGBoost prediction pipeline is 100% backwards compatible.
+
+---
+
+## TASK-001R — Architecture Compliance & Refinement Patch
+**Date:** 2026-07-14  
+
+*(Previous patch summary retained below)*
 
 ## Files Created
 
@@ -20,71 +65,5 @@
 | `PATCH_SUMMARY.md` | This file |
 | `TEST_REPORT.md` | Import and runtime verification report |
 | `TASK-001R_REPORT.md` | Post-review refinement report |
+| `TASK-002_IMPLEMENTATION.md` | Feature enhancement report |
 | `verify_imports.py` | Automated import verification script |
-
----
-
-## Files Modified
-
-### `configs/settings.yaml`
-```diff
-- weather:
--   api_key: "YOUR_OPENWEATHERMAP_API_KEY"
-+ # NOTE: The API key is NOT stored here.
-+ # Set OPENWEATHER_API_KEY in .env or .streamlit/secrets.toml.
-  weather:
-    base_url: ...
-```
-
-### `utils/config.py`
-- Added `get_secret(key, fallback)` — resolves secrets from Streamlit → env → fallback.
-
-### `.gitignore`
-```diff
-+ # Secrets — NEVER commit
-+ .env
-+ .streamlit/secrets.toml
-```
-
-### `services/weather.py`
-- Removed `_API_KEY` module constant.
-- Added `get_secret("OPENWEATHER_API_KEY")` call inside `fetch_weather()`.
-- Imports `get_secret` from `utils.config` and `WeatherAPIError` from `utils.exceptions`.
-
-### `services/feature_engineering.py`
-- Split into `build_features()` + `validate_features()` + `build_feature_dataframe()`.
-- Added `_FEATURE_RANGES` dict with valid bounds for all 9 features.
-- `validate_features()` raises `FeatureValidationError` on schema / NaN / range failures.
-
-### `services/recommendation.py`
-- Added `Recommendation.to_dict()` → `{severity, message, action}`.
-- Added `RecommendationReport.to_dict()` → `{status, summary, issues, recommendation, priority}`.
-
-### `services/physics.py`
-- Replaced Unicode characters in log messages (η, °, ²) with ASCII equivalents to fix Windows cp1252 encoding errors.
-
-### `models/detector.py`, `models/classifier.py`, `models/predictor.py`
-- Removed self-loading mechanisms.
-- Added `set_model(model)` injection methods.
-- Refactored exception handling to use custom typed exceptions.
-
-### `services/pipeline.py`
-- Uses `model_manager.get_*()` for all model access.
-- Expanded `run_pipeline()` signature: `panel_age`, `maintenance_count`, `voltage`, `current`, `installation_type`.
-- Standardized `PipelineResult` class fields: `detection_result`, `classification_result`, `weather_data`, `physics_data`, `feature_dataframe`, `efficiency_prediction`, `recommendations`, `processing_time`, `status`, etc.
-- Structured exception handling: catches `SolarAIError` subclasses by type.
-
-### `app.py`
-- Extracted display logic out into `utils/ui_helpers.py`.
-- Final line count reduced to 130 lines.
-- Sidebar: added `panel_age`, `maintenance_count`, `voltage`, `current`, `installation_type` inputs.
-- `run_pipeline()` called with all new parameters.
-
----
-
-## Backward Compatibility
-
-- `PipelineResult` fields were renamed/restructured specifically for unified object design as requested by architecture review, but data fidelity is unchanged.
-- `RecommendationReport` and `Recommendation` dataclass APIs structurally unchanged.
-- `CFG` singleton unchanged.
-- `get_logger()` unchanged.
