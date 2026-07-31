@@ -38,7 +38,7 @@ st.set_page_config(
 # ---------------------------------------------------------------------------
 # Sidebar — inputs
 # ---------------------------------------------------------------------------
-def _render_sidebar() -> tuple:
+def _render_sidebar() -> tuple[Image.Image | None, str, float, int, float, float, str]:
     """Render sidebar inputs and return all pipeline parameters."""
     st.sidebar.title("☀️ Solar AI Framework")
     st.sidebar.markdown("Upload a solar panel image to begin analysis.")
@@ -83,8 +83,7 @@ def _render_sidebar() -> tuple:
     if uploaded_file is not None:
         pil_image = Image.open(io.BytesIO(uploaded_file.read())).convert("RGB")
 
-    return pil_image, city, float(panel_age), int(maintenance_count), \
-        float(voltage), float(current), str(installation_type)
+    return pil_image, city, panel_age, maintenance_count, voltage, current, installation_type
 
 
 # ---------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 
 Responsibility
 --------------
-- Compute plane-of-array irradiance from cloud cover and time of day.
+- Compute plane-of-array irradiance using solar geometry.
 - Compute solar cell module temperature using the NOCT thermal model.
 - Derive the soiling ratio from the fault classification label.
 - Compute temperature-corrected power loss.
@@ -24,16 +24,16 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 # Pull physics constants once
-_P: dict = CFG["physics"]
-_MAX_IRR: float = float(_P["max_irradiance_wm2"])
-_CLOUD_FACTOR: float = float(_P["irradiance_cloud_factor"])
-_NOCT: float = float(_P["noct_celsius"])
-_NOCT_IRR_REF: float = float(_P["noct_irradiance_ref"])
-_NOCT_AMB_REF: float = float(_P["noct_ambient_ref"])
-_WIND_COOL: float = float(_P["wind_cooling_coefficient"])
-_TEMP_COEFF: float = float(_P["temp_coefficient_pmax"])
-_STC_TEMP: float = float(_P["stc_temperature"])
-_SOILING_RATIOS: dict[str, float] = _P["soiling_ratios"]
+_PHYSICS_CFG: dict = CFG["physics"]
+_MAX_IRRADIANCE_WM2: float = float(_PHYSICS_CFG["max_irradiance_wm2"])
+_CLOUD_FACTOR_MIN: float = float(_PHYSICS_CFG["irradiance_cloud_factor"])
+_NOCT_CELSIUS: float = float(_PHYSICS_CFG["noct_celsius"])
+_NOCT_IRRADIANCE_REF: float = float(_PHYSICS_CFG["noct_irradiance_ref"])
+_NOCT_AMBIENT_REF: float = float(_PHYSICS_CFG["noct_ambient_ref"])
+_WIND_COOLING_COEFF: float = float(_PHYSICS_CFG["wind_cooling_coefficient"])
+_TEMP_COEFF_PMAX: float = float(_PHYSICS_CFG["temp_coefficient_pmax"])
+_STC_TEMPERATURE: float = float(_PHYSICS_CFG["stc_temperature"])
+_SOILING_RATIOS: dict[str, float] = _PHYSICS_CFG["soiling_ratios"]
 
 
 # ---------------------------------------------------------------------------
@@ -50,6 +50,8 @@ class PhysicsResult:
         soiling_ratio: Fraction of clean-panel output (0.0–1.0).
         temp_loss_pct: Percentage power loss due to elevated module temperature.
         effective_efficiency: Combined efficiency factor (soiling × temperature).
+        cloud_factor: Derived factor for cloud cover impact.
+        wind_cooling_factor: Derived factor for wind cooling effect in °C.
     """
 
     irradiance_wm2: float = 0.0
@@ -57,25 +59,57 @@ class PhysicsResult:
     soiling_ratio: float = 1.0
     temp_loss_pct: float = 0.0
     effective_efficiency: float = 1.0
+    cloud_factor: float = 1.0
+    wind_cooling_factor: float = 0.0
 
 
 # ---------------------------------------------------------------------------
 # Public functions
 # ---------------------------------------------------------------------------
 
-def calculate_irradiance(
-    cloud_cover_pct: float,
-    observation_time: Optional[datetime] = None,
-) -> float:
-    """Estimate plane-of-array irradiance from cloud cover and solar angle.
-
-    Uses a cosine solar-elevation model to approximate the diurnal cycle.
-    Cloud cover linearly attenuates irradiance between the clear-sky peak and
-    a minimum fraction defined by ``physics.irradiance_cloud_factor``.
-
+def calculate_cloud_factor(cloud_cover_pct: float) -> float:
+    """Calculate the cloud transmission factor.
+    
     Args:
         cloud_cover_pct: Fractional cloud cover (0–100 %).
+        
+    Returns:
+        Fractional transmission factor in [0.0, 1.0].
+    """
+    cloud_fraction = cloud_cover_pct / 100.0
+    # Linearly interpolate between 1.0 (clear) and _CLOUD_FACTOR_MIN (fully cloudy)
+    factor = 1.0 - (1.0 - _CLOUD_FACTOR_MIN) * cloud_fraction
+    return round(factor, 4)
+
+
+def calculate_wind_cooling(wind_speed_ms: float) -> float:
+    """Calculate the wind cooling factor.
+    
+    Args:
+        wind_speed_ms: Wind speed in m/s.
+        
+    Returns:
+        Temperature reduction in °C.
+    """
+    return round(_WIND_COOLING_COEFF * wind_speed_ms, 2)
+
+
+def calculate_irradiance(
+    cloud_factor: float,
+    observation_time: Optional[datetime] = None,
+    latitude: float = 0.0,
+    longitude: float = 0.0,
+) -> float:
+    """Estimate plane-of-array irradiance from cloud factor and solar angle.
+
+    Uses a cosine solar-elevation model to approximate the diurnal cycle,
+    enhanced by simple geographical coordinates.
+
+    Args:
+        cloud_factor: Computed cloud transmission factor.
         observation_time: UTC datetime of observation.  Defaults to now (UTC).
+        latitude: Observer latitude.
+        longitude: Observer longitude.
 
     Returns:
         Estimated irradiance in W/m².
@@ -83,23 +117,29 @@ def calculate_irradiance(
     if observation_time is None:
         observation_time = datetime.now(tz=timezone.utc)
 
-    # Solar elevation proxy: peak at solar noon (12:00 UTC ≈ 12:00 local)
-    hour = observation_time.hour + observation_time.minute / 60.0
-    # Map [6h, 18h] to [0, π] — cosine peak at noon
-    solar_angle = math.pi * (hour - 6.0) / 12.0
-    solar_factor = max(0.0, math.sin(solar_angle))
+    # Calculate local solar time approximation using longitude
+    utc_hour = observation_time.hour + observation_time.minute / 60.0
+    local_solar_hour = (utc_hour + longitude / 15.0) % 24.0
+
+    # Solar elevation proxy: map [6h, 18h] to [0, π] — cosine peak at solar noon
+    solar_angle = math.pi * (local_solar_hour - 6.0) / 12.0
+    
+    # Adjust for latitude (simplistic cosine approximation for solar zenith)
+    lat_rad = math.radians(latitude)
+    lat_factor = math.cos(lat_rad)
+    
+    # Combined solar factor
+    solar_factor = max(0.0, math.sin(solar_angle)) * max(0.1, lat_factor)
 
     # Clear-sky irradiance at this solar angle
-    clear_sky = _MAX_IRR * solar_factor
+    clear_sky = _MAX_IRRADIANCE_WM2 * solar_factor
 
-    # Cloud attenuation: linearly interpolate between clear and cloudy floor
-    cloud_fraction = cloud_cover_pct / 100.0
-    min_irr = clear_sky * _CLOUD_FACTOR
-    irradiance = clear_sky - (clear_sky - min_irr) * cloud_fraction
+    # Apply cloud attenuation
+    irradiance = clear_sky * cloud_factor
 
     logger.debug(
-        "Irradiance: hour=%.1f, solar_factor=%.3f, cloud=%.0f%% → %.1f W/m²",
-        hour, solar_factor, cloud_cover_pct, irradiance,
+        "Irradiance calc: local_hour=%.1f, solar_factor=%.3f, cloud_factor=%.3f → %.1f W/m²",
+        local_solar_hour, solar_factor, cloud_factor, irradiance,
     )
     return round(irradiance, 2)
 
@@ -107,32 +147,31 @@ def calculate_irradiance(
 def calculate_module_temperature(
     ambient_temp_c: float,
     irradiance_wm2: float,
-    wind_speed_ms: float,
+    wind_cooling_factor: float,
 ) -> float:
     """Estimate solar cell module temperature using the NOCT thermal model.
 
-    Formula: T_cell = T_ambient + (NOCT - T_ref) / G_ref × G - k × v_wind
+    Formula: T_cell = T_ambient + (NOCT - T_ref) / G_ref × G - wind_cooling
 
     Args:
         ambient_temp_c: Ambient (air) temperature in °C.
         irradiance_wm2: Incident irradiance in W/m².
-        wind_speed_ms: Wind speed in m/s (cooling effect).
+        wind_cooling_factor: Wind cooling effect in °C.
 
     Returns:
         Estimated module temperature in °C.
     """
-    noct_rise = (_NOCT - _NOCT_AMB_REF) / _NOCT_IRR_REF * irradiance_wm2
-    wind_cooling = _WIND_COOL * wind_speed_ms
-    module_temp = ambient_temp_c + noct_rise - wind_cooling
+    noct_rise = (_NOCT_CELSIUS - _NOCT_AMBIENT_REF) / _NOCT_IRRADIANCE_REF * irradiance_wm2
+    module_temp = ambient_temp_c + noct_rise - wind_cooling_factor
 
     logger.debug(
-        "Module temp: ambient=%.1f°C, irr=%.1f W/m², wind=%.1f m/s → %.2f°C",
-        ambient_temp_c, irradiance_wm2, wind_speed_ms, module_temp,
+        "Module temp calc: ambient=%.1f°C, irr=%.1f W/m², wind_cooling=%.1f°C → %.2f°C",
+        ambient_temp_c, irradiance_wm2, wind_cooling_factor, module_temp,
     )
     return round(module_temp, 2)
 
 
-def get_soiling_ratio(fault_label: str) -> float:
+def calculate_soiling_ratio(fault_label: str) -> float:
     """Return the soiling ratio for a given fault class label.
 
     Falls back to ``1.0`` (no soiling) for unknown labels.
@@ -161,8 +200,8 @@ def calculate_temperature_loss(module_temp_c: float) -> float:
     Returns:
         Power loss as a non-negative percentage (0.0 if below STC temp).
     """
-    delta_t = module_temp_c - _STC_TEMP
-    loss_pct = _TEMP_COEFF * delta_t * 100.0  # coeff is negative → loss positive
+    delta_t = module_temp_c - _STC_TEMPERATURE
+    loss_pct = _TEMP_COEFF_PMAX * delta_t * 100.0  # coeff is negative → loss positive
     loss_pct = max(0.0, -loss_pct)            # ensure non-negative
 
     logger.debug(
@@ -177,6 +216,8 @@ def compute_physics(
     wind_speed_ms: float,
     cloud_cover_pct: float,
     fault_label: str,
+    latitude: float = 0.0,
+    longitude: float = 0.0,
     observation_time: Optional[datetime] = None,
 ) -> PhysicsResult:
     """Run all physics calculations and return a consolidated :class:`PhysicsResult`.
@@ -188,14 +229,21 @@ def compute_physics(
         wind_speed_ms: Wind speed in m/s.
         cloud_cover_pct: Cloud cover percentage (0–100).
         fault_label: Fault class label from the MobileNet classifier.
+        latitude: Observer latitude.
+        longitude: Observer longitude.
         observation_time: UTC datetime of observation; defaults to now (UTC).
 
     Returns:
         :class:`PhysicsResult` with all computed values.
     """
-    irradiance = calculate_irradiance(cloud_cover_pct, observation_time)
-    module_temp = calculate_module_temperature(ambient_temp_c, irradiance, wind_speed_ms)
-    soiling_ratio = get_soiling_ratio(fault_label)
+    logger.info("Physics Calculations: Starting...")
+    
+    cloud_factor = calculate_cloud_factor(cloud_cover_pct)
+    wind_cooling_factor = calculate_wind_cooling(wind_speed_ms)
+    
+    irradiance = calculate_irradiance(cloud_factor, observation_time, latitude, longitude)
+    module_temp = calculate_module_temperature(ambient_temp_c, irradiance, wind_cooling_factor)
+    soiling_ratio = calculate_soiling_ratio(fault_label)
     temp_loss_pct = calculate_temperature_loss(module_temp)
 
     # Effective efficiency combines both soiling and temperature degradation
@@ -208,10 +256,12 @@ def compute_physics(
         soiling_ratio=soiling_ratio,
         temp_loss_pct=temp_loss_pct,
         effective_efficiency=effective_efficiency,
+        cloud_factor=cloud_factor,
+        wind_cooling_factor=wind_cooling_factor,
     )
 
     logger.info(
-        "Physics: irr=%.1f W/m2, T_mod=%.1f C, soiling=%.2f, temp_loss=%.2f%%, eff=%.4f",
+        "Physics Calculations complete: irr=%.1f W/m2, T_mod=%.1f C, soiling=%.2f, temp_loss=%.2f%%, eff=%.4f",
         result.irradiance_wm2, result.module_temp_c, result.soiling_ratio,
         result.temp_loss_pct, result.effective_efficiency,
     )

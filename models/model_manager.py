@@ -138,7 +138,7 @@ class ModelManager:
         """Load fine-tuned MobileNetV2 into ``self._classifier``."""
         try:
             import torch  # type: ignore
-            from torchvision import models, transforms  # type: ignore  # noqa: F401
+            from torchvision import models  # type: ignore
         except ImportError as exc:
             raise ModelLoadError(
                 "MobileNet",

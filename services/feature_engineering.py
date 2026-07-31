@@ -51,6 +51,9 @@ _FEATURE_RANGES: dict[str, tuple[float, float]] = {
     "soiling_ratio":        (0.0,     1.0),
     "fault_class_id":       (0.0,    10.0),
     "detection_confidence": (0.0,     1.0),
+    "temperature_difference_c": (-40.0, 100.0),
+    "cloud_factor":         (0.0,     1.0),
+    "wind_cooling_factor":  (0.0,    50.0),
 }
 
 
@@ -81,6 +84,7 @@ def build_features(
         order expected by the trained XGBoost pipeline.
     """
     fault_class_id: int = _LABEL_TO_ID.get(classification.label, 0)
+    temperature_difference = physics.module_temp_c - weather.ambient_temp_c
 
     row: dict[str, float] = {
         "irradiance_wm2":       physics.irradiance_wm2,
@@ -92,6 +96,9 @@ def build_features(
         "soiling_ratio":        physics.soiling_ratio,
         "fault_class_id":       float(fault_class_id),
         "detection_confidence": detection.best_confidence,
+        "temperature_difference_c": temperature_difference,
+        "cloud_factor":         physics.cloud_factor,
+        "wind_cooling_factor":  physics.wind_cooling_factor,
     }
 
     # Fill any schema gaps introduced by config changes
@@ -103,10 +110,10 @@ def build_features(
         for col in missing:
             row[col] = 0.0
 
-    df = pd.DataFrame([row])[_FEATURE_COLUMNS]
+    df = pd.DataFrame([row])
 
-    logger.info("Feature vector assembled (%d features).", len(df.columns))
-    logger.debug("Feature vector:\n%s", df.to_string())
+    logger.info("Feature Generation: vector assembled with %d total features.", len(df.columns))
+    logger.debug("Raw feature vector:\n%s", df.to_string())
 
     return df
 
@@ -145,7 +152,7 @@ def validate_features(df: pd.DataFrame) -> None:
             f"DataFrame contains NaN values in columns: {null_cols}"
         )
 
-    # 3. Range checks
+    # 3. Range checks and numeric consistency
     row: dict[str, Any] = df.iloc[0].to_dict()
     violations: list[str] = []
     for col, (lo, hi) in _FEATURE_RANGES.items():
@@ -157,9 +164,18 @@ def validate_features(df: pd.DataFrame) -> None:
                 f"  '{col}': {val:.4g} is outside [{lo}, {hi}]"
             )
 
+    # 4. Numeric Consistency Checks
+    amb = row.get("ambient_temp_c", 0)
+    mod = row.get("module_temp_c", 0)
+    irr = row.get("irradiance_wm2", 0)
+    
+    # Check if module temp is completely detached from reality (e.g. much lower than ambient without wind, or extremely hot without irradiance)
+    if irr < 10 and mod > amb + 15:
+        violations.append("  Numeric Consistency: Module temp anomalously high given near-zero irradiance.")
+    
     if violations:
         raise FeatureValidationError(
-            "One or more feature values are out of valid range:\n"
+            "One or more feature values failed validation:\n"
             + "\n".join(violations)
         )
 
@@ -195,4 +211,8 @@ def build_feature_dataframe(
     """
     df = build_features(weather, physics, classification, detection)
     validate_features(df)
-    return df
+    
+    # Strip derived features strictly for XGBoost backward compatibility
+    final_df = df[_FEATURE_COLUMNS]
+    logger.info("Feature Generation complete. Returning %d strict model features.", len(final_df.columns))
+    return final_df

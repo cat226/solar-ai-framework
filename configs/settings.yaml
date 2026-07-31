@@ -14,6 +14,14 @@ weather:
   timeout_seconds: 10
   default_city: "Chennai"
   units: "metric"                               # metric = Celsius
+  defaults:
+    ambient_temp_c: 25.0
+    humidity_pct: 50.0
+    wind_speed_ms: 2.0
+    cloud_cover_pct: 0.0
+    pressure_hpa: 1013.25
+    latitude: 0.0
+    longitude: 0.0
 
 # ---------------------------------------------------------------------------
 # Model Paths  (relative to project root)

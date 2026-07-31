@@ -71,6 +71,24 @@ class PredictionError(SolarAIError):
 # Input validation exceptions
 # ---------------------------------------------------------------------------
 
+class InputValidationError(SolarAIError):
+    """Raised when a public entry-point argument fails validation.
+
+    Used for scalar/parameter inputs (e.g. city name, latitude, longitude,
+    panel age, voltage) that are malformed, out of range, or of the wrong
+    type.  Image-specific and feature-DataFrame failures use the dedicated
+    :class:`ImageValidationError` and :class:`FeatureValidationError`.
+
+    Args:
+        reason: Human-readable description of the validation failure,
+                ideally naming the offending parameter and expected range.
+    """
+
+    def __init__(self, reason: str) -> None:
+        self.reason = reason
+        super().__init__(f"Input validation failed: {reason}")
+
+
 class ImageValidationError(SolarAIError):
     """Raised when an uploaded image fails validation checks.
 
