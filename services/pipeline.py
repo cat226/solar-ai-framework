@@ -49,6 +49,7 @@ from utils.config import CFG
 from utils.exceptions import (
     FeatureValidationError,
     ImageValidationError,
+    InputValidationError,
     ModelLoadError,
     PredictionError,
     SolarAIError,
@@ -100,6 +101,76 @@ class PipelineResult:
 
 
 # ---------------------------------------------------------------------------
+# Input validation
+# ---------------------------------------------------------------------------
+
+def _validate_scalar_inputs(
+    panel_age: float,
+    maintenance_count: int,
+    voltage: float,
+    current: float,
+    installation_type: str,
+) -> None:
+    """Validate supplementary scalar inputs, failing early on bad values.
+
+    These are the non-image parameters supplied at the public entry point.
+    Each check raises :class:`InputValidationError` with an actionable
+    message naming the offending parameter and its expected range.
+
+    Args:
+        panel_age: Age of the panel in years; must be finite and in [0, 100].
+        maintenance_count: Prior maintenance events; must be an integer >= 0.
+        voltage: Measured panel voltage in Volts; must be finite and >= 0.
+        current: Measured panel current in Amperes; must be finite and >= 0.
+        installation_type: Non-empty mounting type string.
+
+    Raises:
+        InputValidationError: If any parameter is out of range or the wrong type.
+    """
+    import math
+
+    def _finite(name: str, value: float) -> float:
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise InputValidationError(
+                f"'{name}' must be a number, got {type(value).__name__}."
+            )
+        num = float(value)
+        if not math.isfinite(num):
+            raise InputValidationError(f"'{name}' must be a finite number.")
+        return num
+
+    age = _finite("panel_age", panel_age)
+    if not 0.0 <= age <= 100.0:
+        raise InputValidationError(
+            f"'panel_age' must be between 0 and 100 years, got {age:g}."
+        )
+
+    if isinstance(maintenance_count, bool) or not isinstance(maintenance_count, int):
+        raise InputValidationError(
+            "'maintenance_count' must be an integer, got "
+            f"{type(maintenance_count).__name__}."
+        )
+    if maintenance_count < 0:
+        raise InputValidationError(
+            f"'maintenance_count' must be >= 0, got {maintenance_count}."
+        )
+
+    v = _finite("voltage", voltage)
+    if v < 0.0:
+        raise InputValidationError(f"'voltage' must be >= 0 V, got {v:g}.")
+
+    c = _finite("current", current)
+    if c < 0.0:
+        raise InputValidationError(f"'current' must be >= 0 A, got {c:g}.")
+
+    if not isinstance(installation_type, str) or not installation_type.strip():
+        raise InputValidationError(
+            "'installation_type' must be a non-empty string "
+            "(e.g. 'rooftop' or 'ground-mount')."
+        )
+
+
+# ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 
@@ -144,9 +215,21 @@ def run_pipeline(
     )
 
     try:
-        # ── Step 0: Image validation ────────────────────────────────────────
+        # ── Step 0: Input validation ────────────────────────────────────────
         if image is None:
             raise ImageValidationError("No image provided to the pipeline.")
+        if not isinstance(image, Image.Image):
+            raise ImageValidationError(
+                "Pipeline input must be a PIL image, got "
+                f"{type(image).__name__}."
+            )
+        _validate_scalar_inputs(
+            panel_age=panel_age,
+            maintenance_count=maintenance_count,
+            voltage=voltage,
+            current=current,
+            installation_type=installation_type,
+        )
         if image.mode != "RGB":
             image = image.convert("RGB")
 
@@ -208,22 +291,30 @@ def run_pipeline(
         )
 
     except (
+        InputValidationError,
         ImageValidationError,
         ModelLoadError,
         PredictionError,
         FeatureValidationError,
         SolarAIError,
     ) as exc:
+        # Known, typed failures carry user-safe, actionable messages already.
         result.status = "ERROR"
         result.error_message = str(exc)
         result.error_type = type(exc).__name__
         logger.error("Pipeline failed [%s]: %s", result.error_type, exc)
 
     except Exception as exc:  # noqa: BLE001 — catch-all for unexpected errors
+        # Unexpected errors: log full details for diagnostics, but show the
+        # user a generic message so raw internals are not exposed in the UI.
         result.status = "ERROR"
-        result.error_message = f"Unexpected error: {exc}"
+        result.error_message = (
+            "An unexpected error occurred while analysing the image. "
+            "Please try again; if the problem persists, check the logs."
+        )
         result.error_type = type(exc).__name__
-        logger.exception("Pipeline unexpected failure: %s", exc)
+        logger.exception("Pipeline unexpected failure [%s]: %s",
+                         type(exc).__name__, exc)
 
     result.processing_time = time.time() - start_time
     logger.info("Pipeline Timing: execution completed in %.2fs", result.processing_time)

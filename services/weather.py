@@ -133,11 +133,19 @@ def fetch_weather(city: str) -> WeatherData:
         return weather
 
     except requests.exceptions.Timeout:
-        logger.warning("Weather API timed out after %d s. Using defaults.", _TIMEOUT)
+        logger.warning(
+            "Weather API timed out after %d s for city '%s'. Using defaults.",
+            _TIMEOUT, city,
+        )
     except requests.exceptions.HTTPError as exc:
-        logger.warning("Weather API HTTP error: %s. Using defaults.", exc)
+        logger.warning(
+            "Weather API HTTP error for city '%s': %s. Using defaults.", city, exc,
+        )
     except (KeyError, ValueError, requests.exceptions.RequestException) as exc:
-        logger.warning("Weather API error: %s. Using defaults.", exc)
+        logger.warning(
+            "Weather API error for city '%s' (%s): %s. Using defaults.",
+            city, type(exc).__name__, exc,
+        )
 
     # Return safe defaults so the pipeline can continue
     return WeatherData(city=city, fetch_successful=False)

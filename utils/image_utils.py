@@ -13,6 +13,7 @@ import numpy as np
 from PIL import Image
 
 from utils.config import CFG
+from utils.exceptions import ImageValidationError
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -37,18 +38,39 @@ def load_pil_image(source: Union[str, Path, bytes]) -> Image.Image:
         PIL.Image.Image in RGB mode.
 
     Raises:
-        ValueError: If the source type is not supported.
+        ImageValidationError: If the source is empty, of an unsupported type,
+            or cannot be decoded as an image.
     """
+    if source is None:
+        raise ImageValidationError(
+            "No image source provided. Pass a file path (str/Path) or raw bytes."
+        )
     if isinstance(source, (str, Path)):
-        img = Image.open(str(source)).convert("RGB")
+        try:
+            img = Image.open(str(source)).convert("RGB")
+        except (FileNotFoundError, OSError, ValueError) as exc:
+            raise ImageValidationError(
+                f"Could not open image at '{source}': {exc}. "
+                "Provide a readable image file (e.g. PNG or JPEG)."
+            ) from exc
         logger.debug("Loaded image from path: %s", source)
-    elif isinstance(source, bytes):
+    elif isinstance(source, (bytes, bytearray)):
+        if len(source) == 0:
+            raise ImageValidationError(
+                "Image byte buffer is empty. Upload a non-empty image file."
+            )
         import io
-        img = Image.open(io.BytesIO(source)).convert("RGB")
+        try:
+            img = Image.open(io.BytesIO(bytes(source))).convert("RGB")
+        except (OSError, ValueError) as exc:
+            raise ImageValidationError(
+                f"Could not decode image from byte buffer: {exc}. "
+                "Upload a valid image file (e.g. PNG or JPEG)."
+            ) from exc
         logger.debug("Loaded image from bytes buffer (%d bytes).", len(source))
     else:
-        raise ValueError(
-            f"Unsupported source type '{type(source).__name__}'. "
+        raise ImageValidationError(
+            f"Unsupported image source type '{type(source).__name__}'. "
             "Pass a file path (str/Path) or raw bytes."
         )
     return img
