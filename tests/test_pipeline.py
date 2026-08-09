@@ -21,7 +21,26 @@ Design rules honoured:
 from __future__ import annotations
 
 import math
+import sys
 from unittest.mock import MagicMock
+
+# Lightweight stubs for heavy optional dependencies so the test module can be
+# collected in environments without torch/torchvision installed.
+if "torch" not in sys.modules:
+    torch_stub = MagicMock()
+    torch_stub.nn = MagicMock()
+    torch_stub.nn.functional = MagicMock()
+    torch_stub.device = MagicMock()
+    torch_stub.cuda = MagicMock()
+    torch_stub.cuda.is_available = MagicMock(return_value=False)
+    sys.modules["torch"] = torch_stub
+    sys.modules["torch.nn"] = torch_stub.nn
+    sys.modules["torch.nn.functional"] = torch_stub.nn.functional
+if "torchvision" not in sys.modules:
+    tv_stub = MagicMock()
+    tv_stub.transforms = MagicMock()
+    sys.modules["torchvision"] = tv_stub
+    sys.modules["torchvision.transforms"] = tv_stub.transforms
 
 import pytest
 from PIL import Image
@@ -160,6 +179,7 @@ class TestEntryPointValidation:
         assert result.status == "ERROR"
         assert "finite" in result.error_message
 
+<<<<<<< HEAD
     def test_string_panel_age_returns_error_result(self):
         img = Image.new("RGB", (10, 10))
         result = run_pipeline(image=img, panel_age="abc")
@@ -181,6 +201,8 @@ class TestEntryPointValidation:
         assert "current" in result.error_message
         assert result.error_type == "InputValidationError"
 
+=======
+>>>>>>> 9e2fe55 (TEST-003: Add pipeline orchestration test coverage)
     def test_validation_stops_before_models(self, monkeypatch):
         img = Image.new("RGB", (10, 10))
         called = []
@@ -300,6 +322,7 @@ class TestNormalOrchestration:
         monkeypatch.setattr("services.pipeline.build_feature_dataframe", lambda **kw: MagicMock())
         monkeypatch.setattr("services.pipeline.generate_recommendations", lambda **kw: MagicMock(overall_severity=MagicMock(value="OK")))
 
+<<<<<<< HEAD
         result = run_pipeline(image=img, city="Chennai")
         assert result.processing_time >= 0.0
 
@@ -353,6 +376,11 @@ class TestNormalOrchestration:
         assert detector.detect.call_args[0][0].mode == "RGB"
         assert clf.classify.call_args[0][0].mode == "RGB"
 
+=======
+        result = run_pipeline(image=img)
+        assert result.processing_time >= 0.0
+
+>>>>>>> 9e2fe55 (TEST-003: Add pipeline orchestration test coverage)
 
 # ---------------------------------------------------------------------------
 # C. Execution order
