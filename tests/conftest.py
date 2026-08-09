@@ -58,6 +58,12 @@ def fixed_utc_midnight() -> datetime:
     return datetime(2026, 7, 14, 0, 0, 0, tzinfo=timezone.utc)
 
 
+@pytest.fixture
+def fixed_utc_noon() -> datetime:
+    """Fixed solar-noon UTC instant (2026-07-14 12:00 UTC)."""
+    return datetime(2026, 7, 14, 12, 0, 0, tzinfo=timezone.utc)
+
+
 # ---------------------------------------------------------------------------
 # Deterministic domain data objects
 # ---------------------------------------------------------------------------
