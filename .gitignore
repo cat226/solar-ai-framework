@@ -17,6 +17,13 @@ dist/
 build/
 .eggs/
 
+# Testing / Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
 # Secrets — NEVER commit
 .env
 .streamlit/secrets.toml
