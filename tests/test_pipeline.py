@@ -179,6 +179,27 @@ class TestEntryPointValidation:
         assert result.status == "ERROR"
         assert "finite" in result.error_message
 
+    def test_string_panel_age_returns_error_result(self):
+        img = Image.new("RGB", (10, 10))
+        result = run_pipeline(image=img, panel_age="abc")
+        assert result.status == "ERROR"
+        assert "panel_age" in result.error_message
+        assert result.error_type == "InputValidationError"
+
+    def test_none_voltage_returns_error_result(self):
+        img = Image.new("RGB", (10, 10))
+        result = run_pipeline(image=img, voltage=None)
+        assert result.status == "ERROR"
+        assert "voltage" in result.error_message
+        assert result.error_type == "InputValidationError"
+
+    def test_boolean_current_returns_error_result(self):
+        img = Image.new("RGB", (10, 10))
+        result = run_pipeline(image=img, current=True)
+        assert result.status == "ERROR"
+        assert "current" in result.error_message
+        assert result.error_type == "InputValidationError"
+
     def test_validation_stops_before_models(self, monkeypatch):
         img = Image.new("RGB", (10, 10))
         called = []
@@ -298,8 +319,58 @@ class TestNormalOrchestration:
         monkeypatch.setattr("services.pipeline.build_feature_dataframe", lambda **kw: MagicMock())
         monkeypatch.setattr("services.pipeline.generate_recommendations", lambda **kw: MagicMock(overall_severity=MagicMock(value="OK")))
 
-        result = run_pipeline(image=img)
+        result = run_pipeline(image=img, city="Chennai")
         assert result.processing_time >= 0.0
+
+    def test_rgba_image_converted_to_rgb(self, monkeypatch):
+        img = Image.new("RGBA", (224, 224), (255, 0, 0, 128))
+        original_mode = img.mode
+        mm = _make_mock_model_manager()
+        detector = _make_detector()
+        clf = _make_classifier()
+        predictor = _make_predictor()
+
+        monkeypatch.setattr("services.pipeline.model_manager", mm)
+        monkeypatch.setattr("services.pipeline.SolarPanelDetector", lambda: detector)
+        monkeypatch.setattr("services.pipeline.SolarFaultClassifier", lambda: clf)
+        monkeypatch.setattr("services.pipeline.EnergyPredictor", lambda: predictor)
+        monkeypatch.setattr("services.pipeline.fetch_weather", lambda city: MagicMock(fetch_successful=True, city=city))
+        monkeypatch.setattr("services.pipeline.compute_physics", lambda **kw: MagicMock())
+        monkeypatch.setattr("services.pipeline.build_feature_dataframe", lambda **kw: MagicMock())
+        monkeypatch.setattr("services.pipeline.generate_recommendations", lambda **kw: MagicMock(overall_severity=MagicMock(value="OK")))
+
+        result = run_pipeline(image=img, city="Chennai")
+        assert result.status == "SUCCESS"
+        assert img.mode == original_mode
+        detector.detect.assert_called_once()
+        clf.classify.assert_called_once()
+        assert detector.detect.call_args[0][0].mode == "RGB"
+        assert clf.classify.call_args[0][0].mode == "RGB"
+
+    def test_grayscale_image_converted_to_rgb(self, monkeypatch):
+        img = Image.new("L", (224, 224), 128)
+        original_mode = img.mode
+        mm = _make_mock_model_manager()
+        detector = _make_detector()
+        clf = _make_classifier()
+        predictor = _make_predictor()
+
+        monkeypatch.setattr("services.pipeline.model_manager", mm)
+        monkeypatch.setattr("services.pipeline.SolarPanelDetector", lambda: detector)
+        monkeypatch.setattr("services.pipeline.SolarFaultClassifier", lambda: clf)
+        monkeypatch.setattr("services.pipeline.EnergyPredictor", lambda: predictor)
+        monkeypatch.setattr("services.pipeline.fetch_weather", lambda city: MagicMock(fetch_successful=True, city=city))
+        monkeypatch.setattr("services.pipeline.compute_physics", lambda **kw: MagicMock())
+        monkeypatch.setattr("services.pipeline.build_feature_dataframe", lambda **kw: MagicMock())
+        monkeypatch.setattr("services.pipeline.generate_recommendations", lambda **kw: MagicMock(overall_severity=MagicMock(value="OK")))
+
+        result = run_pipeline(image=img, city="Chennai")
+        assert result.status == "SUCCESS"
+        assert img.mode == original_mode
+        detector.detect.assert_called_once()
+        clf.classify.assert_called_once()
+        assert detector.detect.call_args[0][0].mode == "RGB"
+        assert clf.classify.call_args[0][0].mode == "RGB"
 
 
 # ---------------------------------------------------------------------------
