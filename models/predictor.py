@@ -19,6 +19,7 @@ the UI, weather fetching, or physics computations.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 from typing import Optional
 
 import pandas as pd
@@ -122,7 +123,14 @@ class EnergyPredictor:
         except Exception as exc:
             raise PredictionError("XGBoost", str(exc)) from exc
 
-        efficiency_loss_pct: float = float(raw_pred[0])
+        try:
+            efficiency_loss_pct: float = float(raw_pred[0])
+        except (ValueError, TypeError, IndexError) as exc:
+            raise PredictionError("XGBoost", f"Invalid prediction output: {exc}") from exc
+
+        # Reject NaN/inf before clamping (clamping would silently convert nan to 100.0)
+        if not math.isfinite(efficiency_loss_pct):
+            raise PredictionError("XGBoost", "Prediction output must be finite")
 
         # Clamp to [0, 100] — model might predict slight negatives or >100
         efficiency_loss_pct = max(0.0, min(100.0, efficiency_loss_pct))

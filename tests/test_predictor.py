@@ -183,7 +183,7 @@ class TestEfficiencyLossClamping:
 # ---------------------------------------------------------------------------
 
 class TestInferenceExceptionHandling:
-    """Inference errors are wrapped in PredictionError."""
+    """Inference and post-processing errors are wrapped in PredictionError."""
 
     def test_pipeline_predict_exception_raises_prediction_error(self):
         predictor = EnergyPredictor()
@@ -198,19 +198,31 @@ class TestInferenceExceptionHandling:
         assert "XGBoost inference failed" in str(exc_info.value)
         assert exc_info.value.__cause__ is not None
 
-    def test_non_standard_prediction_output_raises_value_error(self):
-        """REGRESSION: non-standard prediction output causes unhandled ValueError.
+    @pytest.mark.parametrize("bad_output,expected_match", [
+        ("not_an_array", "Invalid prediction output"),
+        (None, "Invalid prediction output"),
+        ([], "Invalid prediction output"),
+        ([float("nan")], "Prediction output must be finite"),
+        ([float("inf")], "Prediction output must be finite"),
+        ([float("-inf")], "Prediction output must be finite"),
+    ])
+    def test_invalid_prediction_output_raises_prediction_error(self, bad_output, expected_match):
+        """Invalid prediction outputs are caught and wrapped in PredictionError.
         
-        The predict() method catches exceptions from pipeline.predict() but NOT
-        from float(raw_pred[0]) or subsequent clamping/output calculation.
+        Covers:
+        - Non-numeric string (ValueError from float())
+        - None (TypeError from float())
+        - Empty array (IndexError from [0])
+        - NaN (silent corruption → explicit rejection)
+        - +/-inf (silent corruption → explicit rejection)
         """
         predictor = EnergyPredictor()
         pipeline = _make_mock_pipeline()
-        pipeline.predict.return_value = "not_an_array"
+        pipeline.predict.return_value = bad_output
         predictor.set_model(pipeline)
         
         features = pd.DataFrame({"irradiance_wm2": [500.0]})
-        with pytest.raises(ValueError, match="could not convert string to float"):
+        with pytest.raises(PredictionError, match=expected_match):
             predictor.predict(features)
 
 
