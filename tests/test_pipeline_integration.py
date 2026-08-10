@@ -100,20 +100,24 @@ def _make_classification(label="Clean", confidence=0.95):
     )
 
 
-def _make_weather(city="Chennai", fetch_successful=True):
+def _make_weather(city="Chennai", fetch_successful=True, **kwargs):
     from services.weather import WeatherData
+    defaults = {
+        "ambient_temp_c": 25.0,
+        "humidity_pct": 50.0,
+        "wind_speed_ms": 2.0,
+        "cloud_cover_pct": 30.0,
+        "pressure_hpa": 1013.25,
+        "latitude": 13.08,
+        "longitude": 80.27,
+        "timestamp": None,
+        "description": "clear sky",
+    }
+    defaults.update(kwargs)
     return WeatherData(
         city=city,
-        ambient_temp_c=25.0,
-        humidity_pct=50.0,
-        wind_speed_ms=2.0,
-        cloud_cover_pct=30.0,
-        pressure_hpa=1013.25,
-        latitude=13.08,
-        longitude=80.27,
-        timestamp=None,
-        description="clear sky",
         fetch_successful=fetch_successful,
+        **defaults,
     )
 
 
@@ -412,3 +416,88 @@ class TestPipelineInputValidation:
 
         result = run_pipeline(image=img, city="Chennai")
         assert result.status == "SUCCESS"
+
+
+# ---------------------------------------------------------------------------
+# F. Complete cross-stage data-flow contract
+# ---------------------------------------------------------------------------
+
+class TestPipelineCrossStageDataFlow:
+    """Every upstream field reaches the expected downstream consumer."""
+
+    def test_complete_feature_vector_matches_upstream_sources(self, monkeypatch):
+        img = Image.new("RGB", (224, 224))
+
+        weather = _make_weather(
+            city="Chennai",
+            ambient_temp_c=30.0,
+            humidity_pct=65.0,
+            wind_speed_ms=3.5,
+            cloud_cover_pct=40.0,
+        )
+        detection = _make_detection(panel_count=3, confidence=0.92)
+        classification = _make_classification(label="Dusty", confidence=0.88)
+
+        _patch_external(monkeypatch,
+                        weather=weather,
+                        detection=detection,
+                        classification=classification)
+
+        result = run_pipeline(image=img, city="Chennai")
+        assert result.status == "SUCCESS"
+
+        features = result.feature_dataframe
+        row = features.iloc[0]
+
+        assert row["irradiance_wm2"] == pytest.approx(result.physics_data.irradiance_wm2)
+        assert row["module_temp_c"] == pytest.approx(result.physics_data.module_temp_c)
+        assert row["ambient_temp_c"] == pytest.approx(weather.ambient_temp_c)
+        assert row["humidity_pct"] == pytest.approx(weather.humidity_pct)
+        assert row["wind_speed_ms"] == pytest.approx(weather.wind_speed_ms)
+        assert row["cloud_cover_pct"] == pytest.approx(weather.cloud_cover_pct)
+        assert row["soiling_ratio"] == pytest.approx(result.physics_data.soiling_ratio)
+        assert row["detection_confidence"] == pytest.approx(detection.best_confidence)
+
+        expected_fault_id = {"Clean": 0, "Dusty": 1, "Bird-Drop": 2,
+                             "Electrical-Damage": 3, "Physical-Damage": 4, "Hotspot": 5}
+        assert row["fault_class_id"] == pytest.approx(expected_fault_id[classification.label])
+
+    def test_derived_features_computed_before_strict_schema_strip(self, monkeypatch):
+        """Intermediate feature DataFrame includes derived columns; final output is strict schema."""
+        from services.feature_engineering import build_features
+
+        img = Image.new("RGB", (224, 224))
+        weather = _make_weather(
+            city="Chennai",
+            ambient_temp_c=30.0,
+            humidity_pct=65.0,
+            wind_speed_ms=3.5,
+            cloud_cover_pct=40.0,
+        )
+        detection = _make_detection(panel_count=3, confidence=0.92)
+        classification = _make_classification(label="Dusty", confidence=0.88)
+
+        _patch_external(monkeypatch,
+                        weather=weather,
+                        detection=detection,
+                        classification=classification)
+
+        result = run_pipeline(image=img, city="Chennai")
+        assert result.status == "SUCCESS"
+
+        raw_features = build_features(
+            weather=result.weather_data,
+            physics=result.physics_data,
+            classification=result.classification_result,
+            detection=result.detection_result,
+        )
+        assert "temperature_difference_c" in raw_features.columns
+        assert "cloud_factor" in raw_features.columns
+        assert "wind_cooling_factor" in raw_features.columns
+
+        row = raw_features.iloc[0]
+        assert row["temperature_difference_c"] == pytest.approx(
+            result.physics_data.module_temp_c - weather.ambient_temp_c
+        )
+        assert row["cloud_factor"] == pytest.approx(result.physics_data.cloud_factor)
+        assert row["wind_cooling_factor"] == pytest.approx(result.physics_data.wind_cooling_factor)
