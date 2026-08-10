@@ -192,6 +192,38 @@ class TestMissingDependencyErrors:
         with pytest.raises(ModelLoadError, match="MobileNet"):
             mm.get_classifier()
 
+    def test_missing_torch_in_resolve_device_raises_model_load_error(self, monkeypatch):
+        monkeypatch.setitem(sys.modules, "torch", None)
+        monkeypatch.delitem(sys.modules, "torch", raising=False)
+
+        mm = ModelManager()
+
+        with pytest.raises(ModelLoadError, match="torch") as exc_info:
+            mm._resolve_device()
+
+        assert "torch is not installed" in str(exc_info.value)
+        assert exc_info.value.__cause__ is not None
+        assert mm._device is None
+
+    def test_resolve_device_failure_preserves_manager_state(self, monkeypatch):
+        fake_torch = _make_fake_torch()
+
+        monkeypatch.setitem(sys.modules, "torch", None)
+        monkeypatch.delitem(sys.modules, "torch", raising=False)
+
+        mm = ModelManager()
+
+        with pytest.raises(ModelLoadError, match="torch"):
+            mm._resolve_device()
+
+        assert mm._device is None
+
+        monkeypatch.setitem(sys.modules, "torch", fake_torch)
+
+        device = mm._resolve_device()
+        assert device == fake_torch.device.return_value
+        assert mm._device is device
+
     def test_missing_ultralytics_for_detector(self, monkeypatch):
         monkeypatch.setitem(sys.modules, "ultralytics", None)
 
