@@ -141,7 +141,7 @@ def fetch_weather(city: str) -> WeatherData:
         logger.warning(
             "Weather API HTTP error for city '%s': %s. Using defaults.", city, exc,
         )
-    except (KeyError, ValueError, requests.exceptions.RequestException) as exc:
+    except (KeyError, TypeError, ValueError, requests.exceptions.RequestException) as exc:
         logger.warning(
             "Weather API error for city '%s' (%s): %s. Using defaults.",
             city, type(exc).__name__, exc,
