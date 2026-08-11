@@ -2,7 +2,7 @@
 
 > **A Multimodal AI Framework for Intelligent Solar Panel Fault Diagnosis, Efficiency Prediction, and Maintenance Recommendation**
 
-![Python](https://img.shields.io/badge/Python-3.11-blue)
+![Python](https://img.shields.io/badge/Python-3.12-blue)
 ![Streamlit](https://img.shields.io/badge/Streamlit-WebApp-red)
 ![PyTorch](https://img.shields.io/badge/PyTorch-DeepLearning-orange)
 ![YOLOv8](https://img.shields.io/badge/YOLOv8-ObjectDetection-green)
@@ -380,6 +380,72 @@ Required models include:
 - YOLOv8 detection model
 - MobileNetV2 classification model
 - XGBoost regression model
+
+---
+
+# Testing
+
+Install development dependencies:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+Run the full test suite with coverage:
+
+```bash
+py -3.12 -m pytest -q
+```
+
+Run import verification:
+
+```bash
+py -3.12 verify_imports.py
+```
+
+Run a single test file:
+
+```bash
+py -3.12 -m pytest tests/test_physics.py
+```
+
+Run a single test:
+
+```bash
+py -3.12 -m pytest tests/test_pipeline.py::TestEntryPointValidation::test_panel_age_at_boundary_100_is_accepted
+```
+
+Coverage is configured in `pytest.ini` and reports term-missing output for `services/`, `models/`, and `utils/`.
+
+Current validated results:
+
+- 676 tests collected
+- ~94% statement coverage
+- Core business-logic modules at 100% statement coverage
+
+---
+
+# Continuous Integration
+
+GitHub Actions runs on every push to `feature/testing-infrastructure` and on pull requests to `main`.
+
+CI environment:
+
+- Runner: `windows-latest`
+- Python: 3.12
+- Steps: dependency installation → `verify_imports.py` → `pytest -q`
+
+The CI workflow is defined in `.github/workflows/ci.yml`.
+
+---
+
+# Known Limitations
+
+- **Model weights not included:** The `weights/` directory contains only `.gitkeep`. Trained model files (`yolo_solar.pt`, `mobilenet_solar.pth`, `xgboost_solar.joblib`) must be provided separately.
+- **Weather API required:** OpenWeatherMap API key must be configured via `.env` or `.streamlit/secrets.toml`.
+- **Python 3.12 required:** The test suite and full dependency stack (torch, torchvision, ultralytics) require Python 3.12. Python 3.14 is not supported.
+- **No network in tests:** All tests are designed to run without network access. Model weights and API calls are mocked.
+- **Windows CI only:** GitHub Actions currently runs on `windows-latest`.
 
 ---
 

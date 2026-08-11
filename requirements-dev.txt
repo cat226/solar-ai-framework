@@ -1,0 +1,12 @@
+# Solar AI Framework - Development dependencies
+# Install with: pip install -r requirements-dev.txt
+#
+# Canonical test environment: Python 3.12
+#   pytest/pytest-cov run against Python 3.12 -- the only interpreter that can
+#   import the full application stack, including torch. Python 3.14 currently
+#   lacks torch and is NOT a supported test environment.
+#
+# Development-only dependencies MUST NOT be added to requirements.txt.
+
+pytest>=8.0
+pytest-cov>=5.0
