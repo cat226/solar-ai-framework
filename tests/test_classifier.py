@@ -27,29 +27,9 @@ from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
 import numpy as np
+import torch
 import pytest
 from PIL import Image
-
-# ---------------------------------------------------------------------------
-# Lightweight stubs for heavy optional dependencies
-# ---------------------------------------------------------------------------
-
-if "torch" not in sys.modules:
-    torch_stub = MagicMock()
-    torch_stub.device = MagicMock()
-    torch_stub.cuda = MagicMock()
-    torch_stub.cuda.is_available = MagicMock(return_value=False)
-    torch_stub.nn = MagicMock()
-    torch_stub.nn.functional = MagicMock()
-    torch_stub.nn.Linear = MagicMock()
-    sys.modules["torch"] = torch_stub
-    sys.modules["torch.nn"] = torch_stub.nn
-    sys.modules["torch.nn.functional"] = torch_stub.nn.functional
-if "torchvision" not in sys.modules:
-    tv_stub = MagicMock()
-    tv_stub.transforms = MagicMock()
-    sys.modules["torchvision"] = tv_stub
-    sys.modules["torchvision.transforms"] = tv_stub.transforms
 
 from models.classifier import ClassificationResult, SolarFaultClassifier
 from utils.config import CFG
@@ -65,7 +45,7 @@ def _make_mock_model(has_params=True, device=None):
     model = MagicMock()
     if has_params:
         param = MagicMock()
-        param.device = device or MagicMock()
+        param.device = device or torch.device("cpu")
         model.parameters.return_value = iter([param])
     else:
         model.parameters.return_value = iter([])

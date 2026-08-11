@@ -21,26 +21,7 @@ Design rules honoured:
 from __future__ import annotations
 
 import math
-import sys
 from unittest.mock import MagicMock
-
-# Lightweight stubs for heavy optional dependencies so the test module can be
-# collected in environments without torch/torchvision installed.
-if "torch" not in sys.modules:
-    torch_stub = MagicMock()
-    torch_stub.nn = MagicMock()
-    torch_stub.nn.functional = MagicMock()
-    torch_stub.device = MagicMock()
-    torch_stub.cuda = MagicMock()
-    torch_stub.cuda.is_available = MagicMock(return_value=False)
-    sys.modules["torch"] = torch_stub
-    sys.modules["torch.nn"] = torch_stub.nn
-    sys.modules["torch.nn.functional"] = torch_stub.nn.functional
-if "torchvision" not in sys.modules:
-    tv_stub = MagicMock()
-    tv_stub.transforms = MagicMock()
-    sys.modules["torchvision"] = tv_stub
-    sys.modules["torchvision.transforms"] = tv_stub.transforms
 
 import pytest
 from PIL import Image
