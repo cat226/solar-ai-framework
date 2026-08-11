@@ -22,6 +22,7 @@ Design rules honoured:
 from __future__ import annotations
 
 import sys
+import builtins
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -36,25 +37,9 @@ from utils.exceptions import ModelLoadError
 # Lightweight stubs for heavy optional dependencies
 # ---------------------------------------------------------------------------
 
-def _install_stubs():
-    """Install lightweight mocks for torch/ultralytics/joblib if missing."""
-    if "torch" not in sys.modules:
-        torch_stub = MagicMock()
-        torch_stub.device = MagicMock()
-        torch_stub.cuda = MagicMock()
-        torch_stub.cuda.is_available = MagicMock(return_value=False)
-        torch_stub.nn = MagicMock()
-        torch_stub.nn.Linear = MagicMock()
-        sys.modules["torch"] = torch_stub
-        sys.modules["torch.nn"] = torch_stub.nn
-        sys.modules["torch.nn.functional"] = MagicMock()
-    if "ultralytics" not in sys.modules:
-        sys.modules["ultralytics"] = MagicMock()
-    if "joblib" not in sys.modules:
-        sys.modules["joblib"] = MagicMock()
-
-
-_install_stubs()
+# NOTE: Module-level stub installation removed to prevent global sys.modules
+# pollution that breaks order-independence. Every test in this file now sets
+# up its own mocks explicitly via monkeypatch.setitem where required.
 
 
 # ---------------------------------------------------------------------------
@@ -80,6 +65,31 @@ def _make_fake_joblib():
     j = MagicMock()
     j.load = MagicMock(return_value=MagicMock())
     return j
+
+
+def _simulate_missing_torch(monkeypatch):
+    """Simulate torch/torchvision being unavailable without re-importing real torch.
+
+    Patches builtins.__import__ first, then removes torch/torchvision from
+    sys.modules. This ensures that any subsequent `import torch` attempt hits
+    the patched __import__ and raises ImportError, avoiding the TORCH_LIBRARY
+    re-registration issue that occurs when the real torch package is deleted
+    from sys.modules and then re-imported.
+    """
+    original_import = builtins.__import__
+
+    def mock_import(name, *args, **kwargs):
+        if name in ("torch", "torchvision"):
+            raise ImportError(f"No module named '{name}'")
+        return original_import(name, *args, **kwargs)
+
+    # Patch __import__ BEFORE removing modules from sys.modules
+    monkeypatch.setattr(builtins, "__import__", mock_import)
+
+    # Remove torch-related modules so the import machinery attempts to load them
+    # The patched __import__ will raise ImportError instead of loading real torch
+    for mod_name in ("torch", "torch.nn", "torch.nn.functional", "torchvision", "torchvision.transforms"):
+        monkeypatch.delitem(sys.modules, mod_name, raising=False)
 
 
 # ---------------------------------------------------------------------------
@@ -183,8 +193,7 @@ class TestMissingDependencyErrors:
     """Missing heavy dependencies raise ModelLoadError with actionable messages."""
 
     def test_missing_torch_for_classifier(self, monkeypatch):
-        monkeypatch.setitem(sys.modules, "torch", None)
-        monkeypatch.delitem(sys.modules, "torch", raising=False)
+        _simulate_missing_torch(monkeypatch)
 
         mm = ModelManager()
         monkeypatch.setattr("models.model_manager._MN_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
@@ -193,8 +202,7 @@ class TestMissingDependencyErrors:
             mm.get_classifier()
 
     def test_missing_torch_in_resolve_device_raises_model_load_error(self, monkeypatch):
-        monkeypatch.setitem(sys.modules, "torch", None)
-        monkeypatch.delitem(sys.modules, "torch", raising=False)
+        _simulate_missing_torch(monkeypatch)
 
         mm = ModelManager()
 
@@ -208,17 +216,33 @@ class TestMissingDependencyErrors:
     def test_resolve_device_failure_preserves_manager_state(self, monkeypatch):
         fake_torch = _make_fake_torch()
 
-        monkeypatch.setitem(sys.modules, "torch", None)
+        # Simulate missing torch using __import__ patch to avoid re-importing
+        # the real installed torch package, which can trigger TORCH_LIBRARY
+        # registration errors.
+        original_import = builtins.__import__
+        def mock_import(name, *args, **kwargs):
+            if name == "torch":
+                raise ImportError("No module named 'torch'")
+            return original_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", mock_import)
         monkeypatch.delitem(sys.modules, "torch", raising=False)
+        monkeypatch.delitem(sys.modules, "torch.nn", raising=False)
+        monkeypatch.delitem(sys.modules, "torch.nn.functional", raising=False)
 
         mm = ModelManager()
-
         with pytest.raises(ModelLoadError, match="torch"):
             mm._resolve_device()
-
         assert mm._device is None
 
+        # Undo the missing-torch patches so we can restore torch safely.
+        # This restores the original __import__ and sys.modules state.
+        monkeypatch.undo()
+
+        # Now install the fake torch for the retry
         monkeypatch.setitem(sys.modules, "torch", fake_torch)
+        monkeypatch.setitem(sys.modules, "torch.nn", fake_torch.nn)
+        monkeypatch.setitem(sys.modules, "torch.nn.functional", MagicMock())
 
         device = mm._resolve_device()
         assert device == fake_torch.device.return_value
