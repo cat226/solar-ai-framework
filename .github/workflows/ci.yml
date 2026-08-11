@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: windows-latest
@@ -34,4 +37,4 @@ jobs:
         run: python verify_imports.py
 
       - name: Run pytest with coverage
-        run: py -3.12 -m pytest -q
+        run: python -m pytest -q
