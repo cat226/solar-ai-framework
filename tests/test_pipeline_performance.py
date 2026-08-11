@@ -21,6 +21,8 @@ from __future__ import annotations
 import logging
 import sys
 import time
+import tracemalloc
+import gc
 from unittest.mock import MagicMock
 
 import pytest
@@ -297,3 +299,55 @@ class TestPipelineResourceStability:
         assert all(r.module_temp_c == results[0].module_temp_c for r in results)
         assert all(r.soiling_ratio == results[0].soiling_ratio for r in results)
         assert all(r.cloud_factor == results[0].cloud_factor for r in results)
+
+
+# ---------------------------------------------------------------------------
+# C. Memory stability
+# ---------------------------------------------------------------------------
+
+class TestPipelineMemoryStability:
+    """Repeated execution should not cause uncontrolled memory growth."""
+
+    def test_repeated_runs_memory_growth_within_reasonable_limit(self, monkeypatch):
+        """Memory growth across repeated runs should be bounded.
+
+        Uses tracemalloc to measure aggregate memory before and after a
+        bounded number of pipeline executions. The threshold is intentionally
+        conservative relative to the baseline snapshot.
+        """
+        img = Image.new("RGB", (224, 224))
+        _patch_external(monkeypatch)
+
+        tracemalloc.start()
+        try:
+            # Warm-up run
+            run_pipeline(image=img, city="Chennai")
+
+            # Baseline after warm-up and GC
+            gc.collect()
+            snapshot_before = tracemalloc.take_snapshot()
+
+            # Repeated execution
+            for _ in range(10):
+                result = run_pipeline(image=img, city="Chennai")
+                assert result.status == "SUCCESS"
+
+            # Force collection and capture final state
+            gc.collect()
+            snapshot_after = tracemalloc.take_snapshot()
+
+            before_stats = snapshot_before.statistics("lineno")
+            after_stats = snapshot_after.statistics("lineno")
+
+            before_total = sum(s.size for s in before_stats)
+            after_total = sum(s.size for s in after_stats)
+
+            growth_ratio = after_total / before_total if before_total > 0 else 1.0
+            # Use a generous threshold; exact numbers depend on Python internals
+            assert growth_ratio < 5.0, (
+                f"Memory grew {growth_ratio:.1f}x across repeated runs "
+                f"({before_total} -> {after_total} bytes)"
+            )
+        finally:
+            tracemalloc.stop()
+
