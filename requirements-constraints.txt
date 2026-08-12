@@ -1,0 +1,15 @@
+# Solar AI Framework — Python 3.12 dependency constraints
+#
+# This file intentionally contains only constraints that have been validated in
+# the project's CI environment. Do not add guessed pins here.
+#
+# Until a known-good resolved environment is captured, CI continues to install
+# the lower-bound requirements from requirements.txt directly.
+#
+# Regeneration policy:
+#   1. Resolve on Python 3.12 in a clean environment.
+#   2. Run pip check and the complete pytest suite.
+#   3. Run the Docker smoke test.
+#   4. Commit the resulting fully resolved constraints with provenance.
+#
+# See docs/DEPENDENCY_REPRODUCIBILITY.md for the procedure.
