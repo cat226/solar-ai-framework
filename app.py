@@ -15,7 +15,7 @@ from __future__ import annotations
 import io
 
 import streamlit as st
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 
 from services.pipeline import PipelineResult, run_pipeline
 from utils.config import CFG
@@ -46,7 +46,7 @@ def _render_sidebar() -> tuple[Image.Image | None, str, float, int, float, float
     uploaded_file = st.sidebar.file_uploader(
         "Solar Panel Image",
         type=["jpg", "jpeg", "png", "webp"],
-        help="Upload a clear photo of the solar panel surface.",
+        help="Upload a clear photo of the solar panel surface (max 10 MB).",
     )
 
     city = st.sidebar.text_input(
@@ -81,7 +81,18 @@ def _render_sidebar() -> tuple[Image.Image | None, str, float, int, float, float
 
     pil_image: Image.Image | None = None
     if uploaded_file is not None:
-        pil_image = Image.open(io.BytesIO(uploaded_file.read())).convert("RGB")
+        try:
+            raw_bytes = uploaded_file.read()
+            with Image.open(io.BytesIO(raw_bytes)) as image:
+                image.verify()
+            with Image.open(io.BytesIO(raw_bytes)) as image:
+                pil_image = image.convert("RGB")
+        except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as exc:
+            logger.warning("Rejected invalid uploaded image: %s", exc)
+            st.sidebar.error(
+                "The uploaded file is not a valid or safe image. "
+                "Please upload a JPG, JPEG, PNG, or WebP image under 10 MB."
+            )
 
     return pil_image, city, panel_age, maintenance_count, voltage, current, installation_type
 
