@@ -28,7 +28,7 @@ class _MissingManager:
 
 
 def test_readiness_reports_ready_when_all_artifacts_exist(monkeypatch, capsys):
-    monkeypatch.setattr(readiness, "ModelManager", _ReadyManager)
+    monkeypatch.setattr(readiness, "model_manager", _ReadyManager())
 
     assert readiness.main() == 0
     payload = json.loads(capsys.readouterr().out)
@@ -40,7 +40,7 @@ def test_readiness_reports_ready_when_all_artifacts_exist(monkeypatch, capsys):
 
 
 def test_readiness_reports_not_ready_without_fabricating_artifacts(monkeypatch, capsys):
-    monkeypatch.setattr(readiness, "ModelManager", _MissingManager)
+    monkeypatch.setattr(readiness, "model_manager", _MissingManager())
 
     assert readiness.main() == 2
     payload = json.loads(capsys.readouterr().out)
