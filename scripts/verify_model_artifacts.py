@@ -29,6 +29,21 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _resolve_artifact_path(manifest_path: Path, relative_path: str) -> Path:
+    """Resolve an artifact path while preventing manifest-directory escapes."""
+    root = manifest_path.resolve().parent
+    candidate = Path(relative_path)
+    if candidate.is_absolute():
+        raise ValueError("artifact path must be relative to the manifest directory")
+
+    resolved = (root / candidate).resolve()
+    try:
+        resolved.relative_to(root)
+    except ValueError as exc:
+        raise ValueError("artifact path escapes the manifest directory") from exc
+    return resolved
+
+
 def verify_manifest(manifest_path: Path) -> tuple[bool, list[str]]:
     if not manifest_path.is_file():
         return False, [f"manifest not found: {manifest_path}"]
@@ -57,9 +72,12 @@ def verify_manifest(manifest_path: Path) -> tuple[bool, list[str]]:
             errors.append(f"{relative_path}: missing valid SHA-256 digest")
             continue
 
-        path = Path(relative_path)
-        if not path.is_absolute():
-            path = manifest_path.parent / path
+        try:
+            path = _resolve_artifact_path(manifest_path, relative_path)
+        except ValueError as exc:
+            errors.append(f"{relative_path}: {exc}")
+            continue
+
         if not path.is_file():
             errors.append(f"{relative_path}: artifact missing")
             continue
