@@ -272,7 +272,7 @@ class TestMissingDependencyErrors:
 # ---------------------------------------------------------------------------
 
 class TestMissingWeightFileErrors:
-    """Missing weight files raise ModelLoadError with path information."""
+    """Missing weight files raise ModelLoadError without leaking filesystem paths."""
 
     def test_detector_missing_weights(self, monkeypatch):
         fake_yolo = _make_fake_yolo()
@@ -283,6 +283,20 @@ class TestMissingWeightFileErrors:
 
         with pytest.raises(ModelLoadError, match="YOLO"):
             mm.get_detector()
+
+    def test_detector_missing_weights_error_message_has_no_absolute_path(self, monkeypatch):
+        fake_yolo = _make_fake_yolo()
+        monkeypatch.setitem(sys.modules, "ultralytics", fake_yolo)
+
+        mm = ModelManager()
+        fake_path = MagicMock(exists=MagicMock(return_value=False))
+        fake_path.__str__ = MagicMock(return_value="/abs/path/weights/yolo_solar.pt")
+        monkeypatch.setattr("models.model_manager._YOLO_WEIGHTS", fake_path)
+
+        with pytest.raises(ModelLoadError, match="YOLO") as exc_info:
+            mm.get_detector()
+        assert "/abs/path" not in str(exc_info.value)
+        assert "configured path" in str(exc_info.value)
 
     def test_classifier_missing_weights(self, monkeypatch):
         fake_torch = _make_fake_torch()
@@ -298,6 +312,24 @@ class TestMissingWeightFileErrors:
         with pytest.raises(ModelLoadError, match="MobileNet"):
             mm.get_classifier()
 
+    def test_classifier_missing_weights_error_message_has_no_absolute_path(self, monkeypatch):
+        fake_torch = _make_fake_torch()
+        fake_models = MagicMock()
+        fake_models.mobilenet_v2 = MagicMock(return_value=MagicMock())
+        fake_torch.models = fake_models
+        monkeypatch.setitem(sys.modules, "torch", fake_torch)
+        monkeypatch.setitem(sys.modules, "torchvision", MagicMock(models=fake_models))
+
+        mm = ModelManager()
+        fake_path = MagicMock(exists=MagicMock(return_value=False))
+        fake_path.__str__ = MagicMock(return_value="C:\\Users\\secret\\weights\\mobilenet_solar.pth")
+        monkeypatch.setattr("models.model_manager._MN_WEIGHTS", fake_path)
+
+        with pytest.raises(ModelLoadError, match="MobileNet") as exc_info:
+            mm.get_classifier()
+        assert "C:\\Users\\secret" not in str(exc_info.value)
+        assert "configured path" in str(exc_info.value)
+
     def test_predictor_missing_weights(self, monkeypatch):
         fake_joblib = _make_fake_joblib()
         monkeypatch.setitem(sys.modules, "joblib", fake_joblib)
@@ -307,6 +339,20 @@ class TestMissingWeightFileErrors:
 
         with pytest.raises(ModelLoadError, match="XGBoost"):
             mm.get_predictor()
+
+    def test_predictor_missing_weights_error_message_has_no_absolute_path(self, monkeypatch):
+        fake_joblib = _make_fake_joblib()
+        monkeypatch.setitem(sys.modules, "joblib", fake_joblib)
+
+        mm = ModelManager()
+        fake_path = MagicMock(exists=MagicMock(return_value=False))
+        fake_path.__str__ = MagicMock(return_value="/home/user/project/weights/xgboost_solar.joblib")
+        monkeypatch.setattr("models.model_manager._XGB_WEIGHTS", fake_path)
+
+        with pytest.raises(ModelLoadError, match="XGBoost") as exc_info:
+            mm.get_predictor()
+        assert "/home/user" not in str(exc_info.value)
+        assert "configured path" in str(exc_info.value)
 
 
 # ---------------------------------------------------------------------------

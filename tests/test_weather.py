@@ -502,3 +502,68 @@ class TestBoundaryAndMalformedCases:
         monkeypatch.setattr("services.weather.get_secret", lambda key, fallback=None: None)
         result = fetch_weather("Kolkata")
         assert result.city == "Kolkata"
+
+
+# ---------------------------------------------------------------------------
+# H. City input validation
+# ---------------------------------------------------------------------------
+
+class TestCityInputValidation:
+    """User-provided city strings are sanitized before network use."""
+
+    def test_empty_city_returns_defaults(self, monkeypatch):
+        monkeypatch.setattr("services.weather.get_secret", lambda key, fallback=None: "fake-key")
+        result = fetch_weather("")
+        assert result.fetch_successful is False
+        assert result.city == ""
+
+    def test_whitespace_only_city_returns_defaults(self, monkeypatch):
+        monkeypatch.setattr("services.weather.get_secret", lambda key, fallback=None: "fake-key")
+        result = fetch_weather("   ")
+        assert result.fetch_successful is False
+        assert result.city == "   "
+
+    def test_control_characters_rejected(self, monkeypatch, caplog):
+        monkeypatch.setattr("services.weather.get_secret", lambda key, fallback=None: "fake-key")
+        import logging
+        with caplog.at_level(logging.WARNING):
+            result = fetch_weather("Chennai\x00\x01")
+        assert result.fetch_successful is False
+        assert "Invalid city name" in caplog.text
+
+    def test_newline_control_characters_rejected(self, monkeypatch, caplog):
+        monkeypatch.setattr("services.weather.get_secret", lambda key, fallback=None: "fake-key")
+        import logging
+        with caplog.at_level(logging.WARNING):
+            result = fetch_weather("Chennai\r\n")
+        assert result.fetch_successful is False
+        assert "Invalid city name" in caplog.text
+
+    def test_long_city_truncated(self, monkeypatch):
+        monkeypatch.setattr("services.weather.get_secret", lambda key, fallback=None: "fake-key")
+        long_city = "A" * 150
+        result = fetch_weather(long_city)
+        assert result.fetch_successful is False
+        assert len(result.city) == 100
+
+    def test_normal_international_city_preserved(self, monkeypatch):
+        monkeypatch.setattr("services.weather.get_secret", lambda key, fallback=None: "fake-key")
+        monkeypatch.setattr("services.weather.requests.get", lambda *a, **kw: _make_response(_success_payload(city="São Paulo")))
+        result = fetch_weather("São Paulo")
+        assert result.fetch_successful is True
+        assert result.city == "São Paulo"
+
+    def test_whitespace_stripped_from_city(self, monkeypatch):
+        monkeypatch.setattr("services.weather.get_secret", lambda key, fallback=None: "fake-key")
+        monkeypatch.setattr("services.weather.requests.get", lambda *a, **kw: _make_response(_success_payload(city="Chennai")))
+        result = fetch_weather("  Chennai  ")
+        assert result.fetch_successful is True
+        assert result.city == "Chennai"
+
+    def test_api_key_never_logged(self, monkeypatch, caplog):
+        monkeypatch.setattr("services.weather.get_secret", lambda key, fallback=None: "super-secret-key")
+        monkeypatch.setattr("services.weather.requests.get", lambda *a, **kw: _make_response(_success_payload()))
+        import logging
+        with caplog.at_level(logging.INFO):
+            fetch_weather("Chennai")
+        assert "super-secret-key" not in caplog.text
