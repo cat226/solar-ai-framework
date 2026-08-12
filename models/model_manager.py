@@ -258,6 +258,23 @@ class ModelManager:
             "XGBoost": self._predictor is not None,
         }
 
+    @property
+    def artifact_status(self) -> dict[str, dict[str, object]]:
+        """Report configured model artifact paths and whether each exists.
+
+        This is diagnostic only. It never creates, downloads, or substitutes
+        trained model artifacts.
+        """
+        artifacts = {
+            "YOLO": _YOLO_WEIGHTS,
+            "MobileNet": _MN_WEIGHTS,
+            "XGBoost": _XGB_WEIGHTS,
+        }
+        return {
+            name: {"path": str(path), "exists": path.is_file()}
+            for name, path in artifacts.items()
+        }
+
 
 # ---------------------------------------------------------------------------
 # Module-level singleton — import this everywhere instead of the class.

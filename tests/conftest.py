@@ -65,6 +65,43 @@ def fixed_utc_noon() -> datetime:
 
 
 # ---------------------------------------------------------------------------
+# Deterministic E2E weather
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def deterministic_e2e_weather(monkeypatch, request):
+    """Give E2E weather factories a fixed observation time.
+
+    ``tests/test_pipeline_e2e.py`` intentionally exercises the real physics
+    stage. Its weather factory previously left ``timestamp`` as ``None``,
+    which made ``calculate_irradiance`` depend on the CI runner's current
+    clock. Keep the test deterministic without changing production behavior.
+
+    The fixed 04:00 UTC observation corresponds to a realistic morning solar
+    position in Chennai and, together with the 90% cloud cover scenario,
+    remains below the test's low-irradiance threshold.
+    """
+    path = getattr(request, "path", None)
+    if path is None or path.name != "test_pipeline_e2e.py":
+        return
+
+    module = request.module
+    original_make_weather = module._make_weather
+    fixed_observation = datetime(2026, 7, 14, 4, 0, 0, tzinfo=timezone.utc)
+
+    def _deterministic_make_weather(city="Chennai", fetch_successful=True, **kwargs):
+        kwargs.setdefault("timestamp", fixed_observation)
+        return original_make_weather(
+            city=city,
+            fetch_successful=fetch_successful,
+            **kwargs,
+        )
+
+    monkeypatch.setattr(module, "_make_weather", _deterministic_make_weather)
+
+
+# ---------------------------------------------------------------------------
 # Deterministic domain data objects
 # ---------------------------------------------------------------------------
 

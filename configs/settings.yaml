@@ -13,7 +13,7 @@ weather:
   base_url: "https://api.openweathermap.org/data/2.5/weather"
   timeout_seconds: 10
   default_city: "Chennai"
-  units: "metric"                               # metric = Celsius
+  units: "metric"
   defaults:
     ambient_temp_c: 25.0
     humidity_pct: 50.0
@@ -57,17 +57,17 @@ classification:
 physics:
   # Irradiance
   max_irradiance_wm2: 1000.0          # Peak irradiance W/m² (clear sky, noon)
-  irradiance_cloud_factor: 0.75       # Fraction transmitted under full cloud cover
+  irradiance_cloud_factor: 0.75       # Legacy compatibility; runtime derives attenuation from cloud cover
 
   # Module Temperature — NOCT model: Tcell = Ta + (NOCT-20)/800 * G
-  noct_celsius: 45.0                  # Nominal Operating Cell Temperature
-  noct_irradiance_ref: 800.0          # Reference irradiance for NOCT (W/m²)
-  noct_ambient_ref: 20.0              # Reference ambient temperature (°C)
-  wind_cooling_coefficient: 1.5       # °C reduction per m/s wind speed
+  noct_celsius: 45.0
+  noct_irradiance_ref: 800.0
+  noct_ambient_ref: 20.0
+  wind_cooling_coefficient: 1.5
 
   # Temperature coefficient of power
-  temp_coefficient_pmax: -0.004       # %/°C (−0.4 %/°C, typical Si panel)
-  stc_temperature: 25.0               # Standard Test Conditions temperature (°C)
+  temp_coefficient_pmax: -0.004
+  stc_temperature: 25.0
 
   # Soiling ratios per fault class
   soiling_ratios:
@@ -79,7 +79,7 @@ physics:
     "Hotspot": 0.70
 
   # Default panel rating
-  panel_rated_power_wp: 400.0         # Watts peak
+  panel_rated_power_wp: 400.0
 
 # ---------------------------------------------------------------------------
 # Feature Engineering
@@ -100,15 +100,15 @@ feature_engineering:
 # Recommendation Thresholds
 # ---------------------------------------------------------------------------
 recommendations:
-  efficiency_loss_critical_pct: 20.0  # Trigger urgent action above this loss
-  efficiency_loss_warning_pct: 10.0   # Trigger advisory above this loss
-  hotspot_max_temp_c: 65.0            # Module temp threshold for hotspot warning
-  cleaning_humidity_threshold_pct: 85 # Skip cleaning recommendation if very humid
+  efficiency_loss_critical_pct: 20.0
+  efficiency_loss_warning_pct: 10.0
+  hotspot_max_temp_c: 65.0
+  cleaning_humidity_threshold_pct: 85
 
 # ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------
 logging:
-  level: "INFO"                        # DEBUG | INFO | WARNING | ERROR
+  level: "INFO"
   format: "%(asctime)s [%(levelname)s] %(name)s — %(message)s"
   datefmt: "%Y-%m-%d %H:%M:%S"
