@@ -53,7 +53,7 @@ REQUIRED_TOP_LEVEL_SECTIONS = [
 # Physics constants consumed by services/physics.py at import time and required
 # by _validate_config_schema().
 PHYSICS_CONSUMER_KEYS = [
-    "max_irradiance_wm2", "irradiance_cloud_factor",
+    "max_irradiance_wm2",
     "noct_celsius", "noct_irradiance_ref", "noct_ambient_ref",
     "wind_cooling_coefficient", "temp_coefficient_pmax",
     "stc_temperature", "soiling_ratios", "panel_rated_power_wp",
@@ -286,8 +286,6 @@ RANGE_CASES = [
     ("mobilenet num_classes zero", ("models", "mobilenet", "num_classes"), 0, ">= 1"),
     ("mobilenet input_size zero", ("models", "mobilenet", "input_size"), 0, ">= 1"),
     ("physics max irradiance negative", ("physics", "max_irradiance_wm2"), -1, ">= 0"),
-    ("physics cloud factor above 1", ("physics", "irradiance_cloud_factor"), 1.5, "<= 1"),
-    ("physics cloud factor below 0", ("physics", "irradiance_cloud_factor"), -0.5, ">= 0"),
     ("physics noct irradiance ref zero", ("physics", "noct_irradiance_ref"), 0, ">= 1"),
     ("physics panel rating negative", ("physics", "panel_rated_power_wp"), -400, ">= 0"),
     ("critical loss pct above 100", ("recommendations", "efficiency_loss_critical_pct"), 120, "<= 100"),
@@ -315,7 +313,6 @@ class TestNumericRangeValidation:
         cfg = _set(cfg, ("weather", "defaults", "longitude"), -180.0)
         cfg = _set(cfg, ("models", "yolo", "confidence_threshold"), 1.0)
         cfg = _set(cfg, ("models", "yolo", "iou_threshold"), 0.0)
-        cfg = _set(cfg, ("physics", "irradiance_cloud_factor"), 0.0)
         cfg = _set(cfg, ("physics", "max_irradiance_wm2"), 0)
         cfg = _set(cfg, ("physics", "noct_irradiance_ref"), 1)
         cfg = _set(cfg, ("physics", "panel_rated_power_wp"), 0)
@@ -335,7 +332,6 @@ class TestNumericRangeValidation:
         cfg = _set(cfg, ("models", "yolo", "image_size"), 1)
         cfg = _set(cfg, ("models", "mobilenet", "num_classes"), 1)
         cfg = _set(cfg, ("models", "mobilenet", "input_size"), 1)
-        cfg = _set(cfg, ("physics", "irradiance_cloud_factor"), 0.0)
         cfg = _set(cfg, ("physics", "max_irradiance_wm2"), 0)
         cfg = _set(cfg, ("physics", "noct_irradiance_ref"), 1)
         cfg = _set(cfg, ("physics", "panel_rated_power_wp"), 0)
@@ -351,7 +347,6 @@ class TestNumericRangeValidation:
 TYPE_CASES = [
     ("bool confidence rejected", ("models", "yolo", "confidence_threshold"), True, "must be numeric, got bool"),
     ("bool timeout rejected", ("weather", "timeout_seconds"), False, "must be numeric, got bool"),
-    ("bool cloud factor rejected", ("physics", "irradiance_cloud_factor"), True, "must be numeric, got bool"),
     ("str humidity rejected", ("weather", "defaults", "humidity_pct"), "50", "must be numeric, got str"),
     ("str image size rejected", ("models", "yolo", "image_size"), "640", "must be numeric, got str"),
     ("float latitude accepted", ("weather", "defaults", "latitude"), 13.08, None),
@@ -481,7 +476,6 @@ class TestPhysicsConfigurationValidation:
     def test_real_physics_values_in_expected_ranges(self, project_config):
         physics = project_config["physics"]
         assert physics["max_irradiance_wm2"] > 0
-        assert 0.0 < physics["irradiance_cloud_factor"] <= 1.0
         assert physics["noct_irradiance_ref"] >= 1
         assert physics["panel_rated_power_wp"] > 0
 

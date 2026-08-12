@@ -57,7 +57,6 @@ classification:
 physics:
   # Irradiance
   max_irradiance_wm2: 1000.0          # Peak irradiance W/m² (clear sky, noon)
-  irradiance_cloud_factor: 0.75       # Fraction transmitted under full cloud cover
 
   # Module Temperature — NOCT model: Tcell = Ta + (NOCT-20)/800 * G
   noct_celsius: 45.0                  # Nominal Operating Cell Temperature

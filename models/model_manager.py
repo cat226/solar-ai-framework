@@ -34,18 +34,21 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from utils.config import CFG
+from utils.config import CFG, _PROJECT_ROOT
 from utils.exceptions import ModelLoadError
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 # ---------------------------------------------------------------------------
-# Pull paths from config once
+# Pull paths from config once, resolved relative to the project root.
+# This makes the application robust to being launched from any working
+# directory and prevents developer-specific absolute paths from leaking into
+# error messages or file lookups.
 # ---------------------------------------------------------------------------
-_YOLO_WEIGHTS: Path = Path(CFG["models"]["yolo"]["weights"])
-_MN_WEIGHTS: Path = Path(CFG["models"]["mobilenet"]["weights"])
-_XGB_WEIGHTS: Path = Path(CFG["models"]["xgboost"]["weights"])
+_YOLO_WEIGHTS: Path = _PROJECT_ROOT / CFG["models"]["yolo"]["weights"]
+_MN_WEIGHTS: Path = _PROJECT_ROOT / CFG["models"]["mobilenet"]["weights"]
+_XGB_WEIGHTS: Path = _PROJECT_ROOT / CFG["models"]["xgboost"]["weights"]
 
 
 # ---------------------------------------------------------------------------
@@ -110,8 +113,10 @@ class ModelManager:
         if not _YOLO_WEIGHTS.exists():
             raise ModelLoadError(
                 "YOLO",
-                f"Weights not found at {_YOLO_WEIGHTS.resolve()}. "
-                "Update 'models.yolo.weights' in configs/settings.yaml.",
+                f"Model weights not found at {_YOLO_WEIGHTS}.\n"
+                f"Expected artifact: weights/yolo_solar.pt\n"
+                "Ensure model artifacts are installed. "
+                "Update 'models.yolo.weights' in configs/settings.yaml if using custom paths.",
             )
 
         self._detector = YOLO(str(_YOLO_WEIGHTS))
@@ -149,8 +154,10 @@ class ModelManager:
         if not _MN_WEIGHTS.exists():
             raise ModelLoadError(
                 "MobileNet",
-                f"Weights not found at {_MN_WEIGHTS.resolve()}. "
-                "Update 'models.mobilenet.weights' in configs/settings.yaml.",
+                f"Model weights not found at {_MN_WEIGHTS}.\n"
+                f"Expected artifact: weights/mobilenet_solar.pth\n"
+                "Ensure model artifacts are installed. "
+                "Update 'models.mobilenet.weights' in configs/settings.yaml if using custom paths.",
             )
 
         device = self._resolve_device()
@@ -206,8 +213,10 @@ class ModelManager:
         if not _XGB_WEIGHTS.exists():
             raise ModelLoadError(
                 "XGBoost",
-                f"Pipeline not found at {_XGB_WEIGHTS.resolve()}. "
-                "Update 'models.xgboost.weights' in configs/settings.yaml.",
+                f"Pipeline not found at {_XGB_WEIGHTS}.\n"
+                f"Expected artifact: weights/xgboost_solar.joblib\n"
+                "Ensure model artifacts are installed. "
+                "Update 'models.xgboost.weights' in configs/settings.yaml if using custom paths.",
             )
 
         self._predictor = joblib.load(str(_XGB_WEIGHTS))

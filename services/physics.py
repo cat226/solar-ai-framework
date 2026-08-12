@@ -26,7 +26,6 @@ logger = get_logger(__name__)
 # Pull physics constants once
 _PHYSICS_CFG: dict = CFG["physics"]
 _MAX_IRRADIANCE_WM2: float = float(_PHYSICS_CFG["max_irradiance_wm2"])
-_CLOUD_FACTOR_MIN: float = float(_PHYSICS_CFG["irradiance_cloud_factor"])
 _NOCT_CELSIUS: float = float(_PHYSICS_CFG["noct_celsius"])
 _NOCT_IRRADIANCE_REF: float = float(_PHYSICS_CFG["noct_irradiance_ref"])
 _NOCT_AMBIENT_REF: float = float(_PHYSICS_CFG["noct_ambient_ref"])
@@ -70,16 +69,17 @@ class PhysicsResult:
 def calculate_cloud_factor(cloud_cover_pct: float) -> float:
     """Calculate the cloud transmission factor.
     
+    Uses the intended linear attenuation model:
+        cloud_factor = clamp(1.0 - cloud_cover_pct / 100.0, 0.0, 1.0)
+    
     Args:
         cloud_cover_pct: Fractional cloud cover (0–100 %).
-        
+         
     Returns:
         Fractional transmission factor in [0.0, 1.0].
     """
-    cloud_fraction = cloud_cover_pct / 100.0
-    # Linearly interpolate between 1.0 (clear) and _CLOUD_FACTOR_MIN (fully cloudy)
-    factor = 1.0 - (1.0 - _CLOUD_FACTOR_MIN) * cloud_fraction
-    return round(factor, 4)
+    factor = 1.0 - cloud_cover_pct / 100.0
+    return round(max(0.0, factor), 4)
 
 
 def calculate_wind_cooling(wind_speed_ms: float) -> float:

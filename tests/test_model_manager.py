@@ -418,3 +418,86 @@ class TestDeterminism:
         r2 = mm.get_detector()
         assert r1 is r2
         assert fake_yolo.YOLO.call_count == 1
+
+
+# ---------------------------------------------------------------------------
+# I. Model path resolution
+# ---------------------------------------------------------------------------
+
+class TestModelPathResolution:
+    """Model weight paths are resolved relative to the project root."""
+
+    def test_yolo_weights_path_resolves_from_project_root(self):
+        from utils.config import _PROJECT_ROOT
+        from models.model_manager import _YOLO_WEIGHTS
+
+        expected = _PROJECT_ROOT / "weights/yolo_solar.pt"
+        assert _YOLO_WEIGHTS == expected
+
+    def test_mobilenet_weights_path_resolves_from_project_root(self):
+        from utils.config import _PROJECT_ROOT
+        from models.model_manager import _MN_WEIGHTS
+
+        expected = _PROJECT_ROOT / "weights/mobilenet_solar.pth"
+        assert _MN_WEIGHTS == expected
+
+    def test_xgboost_weights_path_resolves_from_project_root(self):
+        from utils.config import _PROJECT_ROOT
+        from models.model_manager import _XGB_WEIGHTS
+
+        expected = _PROJECT_ROOT / "weights/xgboost_solar.joblib"
+        assert _XGB_WEIGHTS == expected
+
+    def test_config_uses_relative_weight_paths(self):
+        assert CFG["models"]["yolo"]["weights"] == "weights/yolo_solar.pt"
+        assert CFG["models"]["mobilenet"]["weights"] == "weights/mobilenet_solar.pth"
+        assert CFG["models"]["xgboost"]["weights"] == "weights/xgboost_solar.joblib"
+
+    def test_detector_missing_weights_error_is_actionable(self, monkeypatch, tmp_path):
+        fake_yolo = _make_fake_yolo()
+        monkeypatch.setitem(sys.modules, "ultralytics", fake_yolo)
+
+        mm = ModelManager()
+        missing_path = tmp_path / "nonexistent" / "yolo_solar.pt"
+        monkeypatch.setattr("models.model_manager._YOLO_WEIGHTS", missing_path)
+
+        with pytest.raises(ModelLoadError, match="YOLO") as exc_info:
+            mm.get_detector()
+
+        msg = str(exc_info.value)
+        assert "yolo_solar.pt" in msg
+        assert "Ensure model artifacts" in msg
+
+    def test_classifier_missing_weights_error_is_actionable(self, monkeypatch, tmp_path):
+        fake_torch = _make_fake_torch()
+        fake_models = MagicMock()
+        fake_models.mobilenet_v2 = MagicMock(return_value=MagicMock())
+        fake_torch.models = fake_models
+        monkeypatch.setitem(sys.modules, "torch", fake_torch)
+        monkeypatch.setitem(sys.modules, "torchvision", MagicMock(models=fake_models))
+
+        mm = ModelManager()
+        missing_path = tmp_path / "nonexistent" / "mobilenet_solar.pth"
+        monkeypatch.setattr("models.model_manager._MN_WEIGHTS", missing_path)
+
+        with pytest.raises(ModelLoadError, match="MobileNet") as exc_info:
+            mm.get_classifier()
+
+        msg = str(exc_info.value)
+        assert "mobilenet_solar.pth" in msg
+        assert "Ensure model artifacts" in msg
+
+    def test_predictor_missing_weights_error_is_actionable(self, monkeypatch, tmp_path):
+        fake_joblib = _make_fake_joblib()
+        monkeypatch.setitem(sys.modules, "joblib", fake_joblib)
+
+        mm = ModelManager()
+        missing_path = tmp_path / "nonexistent" / "xgboost_solar.joblib"
+        monkeypatch.setattr("models.model_manager._XGB_WEIGHTS", missing_path)
+
+        with pytest.raises(ModelLoadError, match="XGBoost") as exc_info:
+            mm.get_predictor()
+
+        msg = str(exc_info.value)
+        assert "xgboost_solar.joblib" in msg
+        assert "Ensure model artifacts" in msg

@@ -441,11 +441,35 @@ The CI workflow is defined in `.github/workflows/ci.yml`.
 
 # Known Limitations
 
-- **Model weights not included:** The `weights/` directory contains only `.gitkeep`. Trained model files (`yolo_solar.pt`, `mobilenet_solar.pth`, `xgboost_solar.joblib`) must be provided separately.
+- **Model weights not included:** The `weights/` directory contains only `.gitkeep`. Trained model files (`yolo_solar.pt`, `mobilenet_solar.pth`, `xgboost_solar.joblib`) must be provided separately. See `weights/README.md` for the artifact contract.
 - **Weather API required:** OpenWeatherMap API key must be configured via `.env` or `.streamlit/secrets.toml`.
 - **Python 3.12 required:** The test suite and full dependency stack (torch, torchvision, ultralytics) require Python 3.12. Python 3.14 is not supported.
 - **No network in tests:** All tests are designed to run without network access. Model weights and API calls are mocked.
 - **Windows CI only:** GitHub Actions currently runs on `windows-latest`.
+
+---
+
+# Model Artifacts
+
+Real inference requires three trained model artifacts that are **not** committed to this repository.
+
+| Artifact | Role |
+|----------|------|
+| `weights/yolo_solar.pt` | YOLOv8 solar panel detection |
+| `weights/mobilenet_solar.pth` | MobileNetV2 fault classification |
+| `weights/xgboost_solar.joblib` | XGBoost efficiency prediction |
+
+**CI and unit tests do not require these files.** Tests use controlled model boundaries and mocks.
+
+**Real inference requires compatible trained artifacts** fine-tuned on the solar panel fault dataset with the class labels defined in `configs/settings.yaml`. Generic pretrained models are not compatible.
+
+To validate whether artifacts are present, run:
+
+```bash
+py -3.12 scripts/check_model_artifacts.py
+```
+
+See `weights/README.md` for the complete artifact contract, expected formats, and acquisition guidance.
 
 ---
 

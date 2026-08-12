@@ -44,35 +44,31 @@ EARLY_MORNING = datetime(2026, 7, 14, 7, 0, 0, tzinfo=timezone.utc)
 
 
 class TestCloudFactor:
-    """``calculate_cloud_factor`` linear transmission model."""
+    """``calculate_cloud_factor`` linear attenuation model."""
 
     def test_zero_cloud_cover_is_clear_sky(self):
         assert calculate_cloud_factor(0.0) == 1.0
 
-    def test_full_cloud_cover_matches_configured_minimum(self, project_config):
-        min_factor = float(project_config["physics"]["irradiance_cloud_factor"])
-        assert min_factor == 0.75  # pin the configured minimum
-        assert calculate_cloud_factor(100.0) == pytest.approx(min_factor)
+    def test_full_cloud_cover_returns_zero(self):
+        assert calculate_cloud_factor(100.0) == 0.0
 
     def test_partial_cloud_cover_linear_interpolation(self):
-        # 50% cover -> halfway between 1.0 and the cloudy minimum
-        assert calculate_cloud_factor(50.0) == pytest.approx(0.875)
+        assert calculate_cloud_factor(50.0) == pytest.approx(0.5)
 
-    def test_example_value_matches_fixture(self):
-        # 30% cover -> 0.925 (same as the shared default_physics fixture)
-        assert calculate_cloud_factor(30.0) == pytest.approx(0.925)
+    def test_example_value_matches_formula(self):
+        assert calculate_cloud_factor(30.0) == pytest.approx(0.7)
 
-    def test_values_outside_range_are_extrapolated_not_clamped(self):
-        # Implementation performs no clamping; linear extrapolation is the
-        # documented/current behaviour for out-of-range inputs.
-        assert calculate_cloud_factor(200.0) == pytest.approx(0.5)
-        assert calculate_cloud_factor(-100.0) == pytest.approx(1.25)
+    def test_values_above_100_are_clamped_to_zero(self):
+        assert calculate_cloud_factor(200.0) == 0.0
+
+    def test_negative_cloud_cover_extrapolates_above_one(self):
+        assert calculate_cloud_factor(-100.0) == pytest.approx(2.0)
 
     def test_monotonic_decreasing_with_cloud_cover(self):
         assert calculate_cloud_factor(20.0) > calculate_cloud_factor(60.0)
 
     def test_rounding_to_four_decimals(self):
-        assert calculate_cloud_factor(33.33) == 0.9167
+        assert calculate_cloud_factor(33.33) == pytest.approx(0.6667)
 
     def test_deterministic(self):
         assert calculate_cloud_factor(45.5) == calculate_cloud_factor(45.5)
@@ -106,9 +102,9 @@ class TestIrradiance:
 
     def test_cloud_cover_reduces_irradiance(self):
         clear = calculate_irradiance(1.0, NOON, 0.0, 0.0)
-        cloudy = calculate_irradiance(0.75, NOON, 0.0, 0.0)
+        cloudy = calculate_irradiance(0.25, NOON, 0.0, 0.0)
         assert cloudy < clear
-        assert cloudy == pytest.approx(750.0)
+        assert cloudy == pytest.approx(250.0)
 
     def test_latitude_is_accepted(self):
         # At noon, cos(60 deg) -> 0.5 factor
@@ -347,10 +343,11 @@ class TestComputePhysics:
     def test_cloud_cover_reduces_irradiance_and_temperature(self, fixed_utc_noon):
         args = {**_CLEAR_ARGS, "cloud_cover_pct": 100.0}
         result = compute_physics(**args, observation_time=fixed_utc_noon)
-        assert result.cloud_factor == pytest.approx(0.75)
-        assert result.irradiance_wm2 == pytest.approx(750.0)
-        assert result.module_temp_c < 53.25
-        assert result.temp_loss_pct < 11.3
+        assert result.cloud_factor == 0.0
+        assert result.irradiance_wm2 == 0.0
+        assert result.module_temp_c == pytest.approx(22.0)
+        assert result.temp_loss_pct == 0.0
+        assert result.effective_efficiency == pytest.approx(1.0)
 
     def test_nighttime_zero_irradiance(self, fixed_utc_midnight):
         result = compute_physics(**_CLEAR_ARGS, observation_time=fixed_utc_midnight)
@@ -384,7 +381,7 @@ class TestBoundaryConditions:
 
     def test_cloud_cover_zero_and_full(self):
         assert calculate_cloud_factor(0.0) == 1.0
-        assert calculate_cloud_factor(100.0) == pytest.approx(0.75)
+        assert calculate_cloud_factor(100.0) == 0.0
 
     def test_wind_speed_zero(self):
         assert calculate_wind_cooling(0.0) == 0.0

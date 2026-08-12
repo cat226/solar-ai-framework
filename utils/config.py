@@ -208,14 +208,13 @@ def _validate_config_schema(config: dict[str, Any]) -> None:
     physics = config["physics"]
     _require_keys(
         physics,
-        ["max_irradiance_wm2", "irradiance_cloud_factor", "noct_celsius",
+        ["max_irradiance_wm2", "noct_celsius",
          "noct_irradiance_ref", "noct_ambient_ref", "wind_cooling_coefficient",
          "temp_coefficient_pmax", "stc_temperature", "soiling_ratios",
          "panel_rated_power_wp"],
         "physics",
     )
     _require_number(physics, "max_irradiance_wm2", "physics", minimum=0)
-    _require_number(physics, "irradiance_cloud_factor", "physics", minimum=0, maximum=1)
     _require_number(physics, "noct_irradiance_ref", "physics", minimum=1)
     _require_number(physics, "panel_rated_power_wp", "physics", minimum=0)
     if not isinstance(physics["soiling_ratios"], dict) or not physics["soiling_ratios"]:
