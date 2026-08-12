@@ -2,7 +2,7 @@
 import sys
 sys.path.insert(0, '.')
 
-errors = []
+aerrors = []
 passes = []
 
 tests = [
@@ -101,7 +101,7 @@ for name, code in tests:
         print(f'[PASS] {name}')
     except ImportError as e:
         errors.append((name, f'ImportError: {e}'))
-        print(f'[SKIP] {name} — missing dep: {e}')
+        print(f'[FAIL] {name} — missing dependency: {e}')
     except AssertionError as e:
         errors.append((name, f'AssertionError: {e}'))
         print(f'[FAIL] {name} — assertion: {e}')
@@ -110,8 +110,11 @@ for name, code in tests:
         print(f'[FAIL] {name} — {e}')
 
 print()
-print(f'Results: {len(passes)}/{len(tests)} passed, {len(errors)} failed/skipped')
+print(f'Results: {len(passes)}/{len(tests)} passed, {len(errors)} failed')
 if errors:
     print('Failures:')
     for n, e in errors:
         print(f'  [{n}]: {e}')
+    sys.exit(1)
+
+sys.exit(0)
