@@ -9,10 +9,11 @@ from pathlib import Path
 from scripts.verify_model_artifacts import verify_manifest
 
 
-def _write_manifest(tmp_path: Path, artifact: Path, digest: str) -> Path:
+def _write_manifest(tmp_path: Path, artifact: Path, digest: str, *, relative: bool = False) -> Path:
     manifest = tmp_path / "manifest.json"
+    artifact_path = artifact.relative_to(tmp_path) if relative else artifact
     manifest.write_text(
-        json.dumps({"artifacts": [{"path": str(artifact), "sha256": digest}]}),
+        json.dumps({"artifacts": [{"path": str(artifact_path), "sha256": digest}]}),
         encoding="utf-8",
     )
     return manifest
@@ -24,6 +25,24 @@ def test_verify_manifest_accepts_matching_sha256(tmp_path: Path) -> None:
     digest = hashlib.sha256(artifact.read_bytes()).hexdigest()
 
     ok, errors = verify_manifest(_write_manifest(tmp_path, artifact, digest))
+
+    assert ok is True
+    assert errors == []
+
+
+def test_verify_manifest_resolves_relative_paths_from_manifest_directory(tmp_path: Path) -> None:
+    weights = tmp_path / "weights"
+    weights.mkdir()
+    artifact = weights / "model.bin"
+    artifact.write_bytes(b"trusted model bytes")
+    digest = hashlib.sha256(artifact.read_bytes()).hexdigest()
+    manifest = weights / "manifest.json"
+    manifest.write_text(
+        json.dumps({"artifacts": [{"path": artifact.name, "sha256": digest}]}),
+        encoding="utf-8",
+    )
+
+    ok, errors = verify_manifest(manifest)
 
     assert ok is True
     assert errors == []
@@ -48,12 +67,12 @@ def test_verify_manifest_rejects_missing_artifact(tmp_path: Path) -> None:
     assert "artifact missing" in errors[0]
 
 
-def test_verify_manifest_rejects_missing_digest(tmp_path: Path) -> None:
+def test_verify_manifest_rejects_missing_or_non_hex_digest(tmp_path: Path) -> None:
     artifact = tmp_path / "model.bin"
     artifact.write_bytes(b"model")
     manifest = tmp_path / "manifest.json"
     manifest.write_text(
-        json.dumps({"artifacts": [{"path": str(artifact)}]}),
+        json.dumps({"artifacts": [{"path": str(artifact), "sha256": "g" * 64}]}),
         encoding="utf-8",
     )
 
