@@ -1,33 +1,37 @@
-# Dependency Reproducibility
+# Dependency reproducibility
 
 ## Supported environment
 
-The supported CI and development interpreter is **Python 3.12**. The application stack includes PyTorch and Ultralytics, so the supported interpreter must be one for which the complete dependency set is available.
+The supported interpreter is **Python 3.12**. The application stack includes PyTorch and Ultralytics, so the supported interpreter must be one for which the complete dependency set is available.
 
 ## Dependency policy
 
-`requirements.txt` intentionally expresses minimum supported versions rather than pretending that those lower bounds constitute a fully locked environment. CI installs the current compatible releases from those requirements and then validates the resulting environment with `python -m pip check`.
+`requirements.txt` intentionally expresses minimum supported versions rather than pretending those lower bounds are a fully locked environment. CI resolves those requirements on every run and validates the resulting environment with `python -m pip check`, import checks, and the full test suite.
 
-This gives us two separate guarantees:
+A reproducible deployment should consume a separately generated, reviewed constraints/lock set from a known-good Python 3.12 environment. Versions must never be guessed or fabricated in source control.
 
-1. **Compatibility:** the repository declares minimum versions and CI verifies that the current dependency resolver can produce a coherent environment.
-2. **Reproducibility:** deployments that require byte-for-byte dependency reproduction should consume a separately generated, reviewed lock/constraints file from a known-good Python 3.12 environment. Such a file must be generated from actual verified installations; versions must not be guessed or fabricated in source control.
+## Resolution procedure
+
+From a clean Python 3.12 environment:
+
+```text
+python -m venv .venv
+. .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt -r requirements-dev.txt
+python -m pip freeze --all > requirements-constraints.txt
+python -m pip check
+python -m pytest -q --cov=. --cov-report=term-missing
+```
+
+Then run the repository Docker build and smoke test. Review the generated set for Python 3.12 compatibility, platform-specific packages, duplicate/conflicting requirements, unexpected direct dependencies, and PyTorch/torchvision compatibility.
+
+Only a resolution that passes those checks should replace the placeholder constraints file.
 
 ## CI contract
 
-CI performs, in order:
+CI continues to use the canonical lower-bound requirements until a validated resolved environment is captured. This preserves a meaningful compatibility test without creating a false claim of reproducibility.
 
-```text
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-python -m pip install -r requirements-dev.txt
-python -m pip check
-python verify_imports.py
-python -m pytest -q
-```
+## Updating the constraints set
 
-`pip check` is deliberately a separate gate. Import tests can pass while package metadata still contains an incompatible dependency relationship.
-
-## Future lockfile work
-
-Before creating a committed lock/constraints file, capture a successful Python 3.12 installation from CI or a controlled deployment environment, review the complete resolved dependency graph, and verify the lock on the supported Windows CI runner. PyTorch/torchvision compatibility should be validated as a pair rather than pinned independently.
+When direct dependencies change, regenerate from a clean Python 3.12 environment and repeat `pip check`, the complete test suite, and the Docker smoke test. Record the resolution date and source environment in the pull request description. Validate the resolved set on the supported CI runner before merging.
