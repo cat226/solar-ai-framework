@@ -12,11 +12,13 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+import re
 import sys
 from typing import Any
 
 
 DEFAULT_MANIFEST = Path("weights/manifest.json")
+_SHA256_RE = re.compile(r"^[0-9a-fA-F]{64}$")
 
 
 def _sha256(path: Path) -> str:
@@ -51,11 +53,13 @@ def verify_manifest(manifest_path: Path) -> tuple[bool, list[str]]:
         if not isinstance(relative_path, str) or not relative_path:
             errors.append("artifact entry is missing a valid 'path'")
             continue
-        if not isinstance(expected, str) or len(expected) != 64:
+        if not isinstance(expected, str) or not _SHA256_RE.fullmatch(expected):
             errors.append(f"{relative_path}: missing valid SHA-256 digest")
             continue
 
         path = Path(relative_path)
+        if not path.is_absolute():
+            path = manifest_path.parent / path
         if not path.is_file():
             errors.append(f"{relative_path}: artifact missing")
             continue
