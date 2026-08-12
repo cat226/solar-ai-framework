@@ -13,6 +13,7 @@ This file must remain under 120-150 lines.
 from __future__ import annotations
 
 import io
+import re
 
 import streamlit as st
 from PIL import Image, UnidentifiedImageError
@@ -35,6 +36,16 @@ st.set_page_config(
 )
 
 
+def _sanitize_city(value: str) -> str:
+    """Normalize user-supplied city text before API calls and log messages.
+
+    Limits input length and removes control characters so untrusted text cannot
+    create oversized requests or inject misleading multiline log records.
+    """
+    cleaned = re.sub(r"[\x00-\x1f\x7f]", " ", str(value))
+    return " ".join(cleaned.split())[:100]
+
+
 # ---------------------------------------------------------------------------
 # Sidebar — inputs
 # ---------------------------------------------------------------------------
@@ -52,8 +63,10 @@ def _render_sidebar() -> tuple[Image.Image | None, str, float, int, float, float
     city = st.sidebar.text_input(
         "Location (City)",
         value=CFG["weather"]["default_city"],
+        max_chars=100,
         help="Used to fetch live weather data from OpenWeatherMap.",
     )
+    city = _sanitize_city(city)
 
     st.sidebar.markdown("---")
     st.sidebar.subheader("Panel Details")
