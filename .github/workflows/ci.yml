@@ -2,9 +2,13 @@ name: CI
 
 on:
   push:
-    branches: [feature/testing-infrastructure]
+    branches:
+      - main
+      - 'feature/**'
+      - 'audit/**'
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
