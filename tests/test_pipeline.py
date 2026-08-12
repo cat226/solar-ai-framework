@@ -160,7 +160,6 @@ class TestEntryPointValidation:
         assert result.status == "ERROR"
         assert "finite" in result.error_message
 
-<<<<<<< HEAD
     def test_string_panel_age_returns_error_result(self):
         img = Image.new("RGB", (10, 10))
         result = run_pipeline(image=img, panel_age="abc")
@@ -182,8 +181,6 @@ class TestEntryPointValidation:
         assert "current" in result.error_message
         assert result.error_type == "InputValidationError"
 
-=======
->>>>>>> 9e2fe55 (TEST-003: Add pipeline orchestration test coverage)
     def test_validation_stops_before_models(self, monkeypatch):
         img = Image.new("RGB", (10, 10))
         called = []
@@ -303,7 +300,6 @@ class TestNormalOrchestration:
         monkeypatch.setattr("services.pipeline.build_feature_dataframe", lambda **kw: MagicMock())
         monkeypatch.setattr("services.pipeline.generate_recommendations", lambda **kw: MagicMock(overall_severity=MagicMock(value="OK")))
 
-<<<<<<< HEAD
         result = run_pipeline(image=img, city="Chennai")
         assert result.processing_time >= 0.0
 
@@ -357,11 +353,6 @@ class TestNormalOrchestration:
         assert detector.detect.call_args[0][0].mode == "RGB"
         assert clf.classify.call_args[0][0].mode == "RGB"
 
-=======
-        result = run_pipeline(image=img)
-        assert result.processing_time >= 0.0
-
->>>>>>> 9e2fe55 (TEST-003: Add pipeline orchestration test coverage)
 
 # ---------------------------------------------------------------------------
 # C. Execution order
