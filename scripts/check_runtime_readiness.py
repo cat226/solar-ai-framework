@@ -11,11 +11,11 @@ from __future__ import annotations
 import json
 import sys
 
-from models.model_manager import ModelManager
+from models.model_manager import model_manager
 
 
 def main() -> int:
-    status = ModelManager().artifact_status
+    status = model_manager.artifact_status
     missing = [name for name, entry in status.items() if not entry["exists"]]
 
     payload = {
