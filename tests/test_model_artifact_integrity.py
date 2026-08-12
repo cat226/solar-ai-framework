@@ -9,9 +9,9 @@ from pathlib import Path
 from scripts.verify_model_artifacts import verify_manifest
 
 
-def _write_manifest(tmp_path: Path, artifact: Path, digest: str, *, relative: bool = False) -> Path:
+def _write_manifest(tmp_path: Path, artifact: Path, digest: str) -> Path:
     manifest = tmp_path / "manifest.json"
-    artifact_path = artifact.relative_to(tmp_path) if relative else artifact
+    artifact_path = artifact.relative_to(tmp_path)
     manifest.write_text(
         json.dumps({"artifacts": [{"path": str(artifact_path), "sha256": digest}]}),
         encoding="utf-8",
@@ -72,7 +72,7 @@ def test_verify_manifest_rejects_missing_or_non_hex_digest(tmp_path: Path) -> No
     artifact.write_bytes(b"model")
     manifest = tmp_path / "manifest.json"
     manifest.write_text(
-        json.dumps({"artifacts": [{"path": str(artifact), "sha256": "g" * 64}]}),
+        json.dumps({"artifacts": [{"path": artifact.name, "sha256": "g" * 64}]}),
         encoding="utf-8",
     )
 
