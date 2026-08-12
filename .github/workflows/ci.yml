@@ -40,6 +40,17 @@ jobs:
       - name: Validate dependency consistency
         run: python -m pip check
 
+      - name: Capture resolved dependency set
+        run: python -m pip freeze --all | Out-File -Encoding utf8 resolved-dependencies.txt
+
+      - name: Upload resolved dependency set
+        uses: actions/upload-artifact@v4
+        with:
+          name: resolved-dependencies-python312-windows
+          path: resolved-dependencies.txt
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Verify imports
         run: python verify_imports.py
 
