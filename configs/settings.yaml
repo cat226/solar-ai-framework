@@ -57,7 +57,7 @@ classification:
 physics:
   # Irradiance
   max_irradiance_wm2: 1000.0          # Peak irradiance W/m² (clear sky, noon)
-  irradiance_cloud_factor: 0.0        # Transmission at 100% cloud cover
+  irradiance_cloud_factor: 0.75       # Legacy compatibility; runtime derives attenuation from cloud cover
 
   # Module Temperature — NOCT model: Tcell = Ta + (NOCT-20)/800 * G
   noct_celsius: 45.0
