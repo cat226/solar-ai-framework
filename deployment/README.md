@@ -30,11 +30,34 @@ Required files for real inference:
 
 Do not substitute generated, placeholder, or unverified model files.
 
-## Health
+## Model artifact verification
+
+Trusted deployment artifacts should be accompanied by a reviewed JSON
+manifest containing the SHA-256 digest of every artifact. Verify the mounted
+artifacts before starting an inference-capable deployment:
+
+```bash
+python scripts/verify_model_artifacts.py --manifest /app/weights/manifest.json
+```
+
+The verifier reads local files only. It never downloads or creates model
+artifacts and fails on missing files or digest mismatches.
+
+## Health and readiness
 
 The container exposes Streamlit's process health endpoint through Docker's
 `HEALTHCHECK`. A healthy container means the web process is accepting health
 requests; it does **not** mean trained model artifacts are present.
+
+For inference readiness, run:
+
+```bash
+python scripts/check_runtime_readiness.py
+```
+
+This reports liveness and inference readiness separately and exits non-zero
+when required model artifacts are missing. This distinction allows a service
+orchestrator to keep process health separate from model availability.
 
 ## Secrets
 
