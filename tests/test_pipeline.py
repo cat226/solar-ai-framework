@@ -734,3 +734,21 @@ class TestDeterminism:
 
         run_pipeline(image=img, city="Chennai")
         assert img.mode == original_mode
+
+    def test_sanitized_logging_strips_control_characters(self, monkeypatch, caplog):
+        img = Image.new("RGB", (224, 224))
+        mm = _make_mock_model_manager()
+        monkeypatch.setattr("services.pipeline.model_manager", mm)
+        monkeypatch.setattr("services.pipeline.SolarPanelDetector", lambda: _make_detector())
+        monkeypatch.setattr("services.pipeline.SolarFaultClassifier", lambda: _make_classifier())
+        monkeypatch.setattr("services.pipeline.EnergyPredictor", lambda: _make_predictor())
+        monkeypatch.setattr("services.pipeline.fetch_weather", lambda city: MagicMock(fetch_successful=True, city=city))
+        monkeypatch.setattr("services.pipeline.compute_physics", lambda **kw: MagicMock())
+        monkeypatch.setattr("services.pipeline.build_feature_dataframe", lambda **kw: MagicMock())
+        monkeypatch.setattr("services.pipeline.generate_recommendations", lambda **kw: MagicMock(overall_severity=MagicMock(value="OK")))
+
+        import logging
+        with caplog.at_level(logging.INFO):
+            run_pipeline(image=img, city="Chennai\x00\x01")
+        assert "Chennai\x00\x01" not in caplog.text
+        assert "Chennai" in caplog.text

@@ -55,6 +55,7 @@ from utils.exceptions import (
     SolarAIError,
 )
 from utils.logger import get_logger
+from utils.security import sanitize_for_log
 
 logger = get_logger(__name__)
 
@@ -210,8 +211,12 @@ def run_pipeline(
         "Pipeline started — city='%s', panel_age=%.1f yr, "
         "maintenance_count=%d, voltage=%.2f V, current=%.2f A, "
         "installation='%s'",
-        result.city, panel_age, maintenance_count,
-        voltage, current, installation_type,
+        sanitize_for_log(result.city),
+        panel_age,
+        maintenance_count,
+        voltage,
+        current,
+        sanitize_for_log(installation_type),
     )
 
     try:
@@ -246,7 +251,7 @@ def run_pipeline(
         result.classification_result = classifier.classify(image)
 
         # ── Step 3: Weather ─────────────────────────────────────────────────
-        logger.info("Pipeline step 3/7: Weather fetch for '%s'", result.city)
+        logger.info("Weather fetch for '%s'", sanitize_for_log(result.city))
         result.weather_data = fetch_weather(result.city)
 
         # ── Step 4: Physics ─────────────────────────────────────────────────

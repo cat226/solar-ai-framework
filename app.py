@@ -13,6 +13,7 @@ This file must remain under 120-150 lines.
 from __future__ import annotations
 
 import io
+import re
 
 import streamlit as st
 from PIL import Image, UnidentifiedImageError
@@ -20,6 +21,7 @@ from PIL import Image, UnidentifiedImageError
 from services.pipeline import PipelineResult, run_pipeline
 from utils.config import CFG
 from utils.logger import get_logger
+from utils.security import sanitize_for_log
 from utils.ui_helpers import display_results
 
 logger = get_logger(__name__)
@@ -33,6 +35,16 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+
+def _sanitize_city(value: str) -> str:
+    """Normalize user-supplied city text before API calls and log messages.
+
+    Limits input length and removes control characters so untrusted text cannot
+    create oversized requests or inject misleading multiline log records.
+    """
+    cleaned = re.sub(r"[\x00-\x1f\x7f]", " ", str(value))
+    return " ".join(cleaned.split())[:100]
 
 
 # ---------------------------------------------------------------------------
@@ -52,8 +64,10 @@ def _render_sidebar() -> tuple[Image.Image | None, str, float, int, float, float
     city = st.sidebar.text_input(
         "Location (City)",
         value=CFG["weather"]["default_city"],
+        max_chars=100,
         help="Used to fetch live weather data from OpenWeatherMap.",
     )
+    city = _sanitize_city(city)
 
     st.sidebar.markdown("---")
     st.sidebar.subheader("Panel Details")
@@ -115,17 +129,27 @@ def main() -> None:
     st.image(pil_image, caption="Uploaded Image", use_container_width=True)
 
     with st.spinner("Running analysis pipeline…"):
-        result: PipelineResult = run_pipeline(
-            image=pil_image,
-            city=city,
-            panel_age=panel_age,
-            maintenance_count=maintenance_count,
-            voltage=voltage,
-            current=current,
-            installation_type=installation_type,
-        )
+        try:
+            result: PipelineResult = run_pipeline(
+                image=pil_image,
+                city=city,
+                panel_age=panel_age,
+                maintenance_count=maintenance_count,
+                voltage=voltage,
+                current=current,
+                installation_type=installation_type,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("Unhandled pipeline exception in UI layer")
+            st.error(
+                "An unexpected error occurred while analysing the image. "
+                "Please try again; if the problem persists, check the logs."
+            )
+            return
         logger.info(
-            "Pipeline returned status=%s for city='%s'.", result.status, city
+            "Pipeline returned status=%s for city='%s'.",
+            result.status,
+            sanitize_for_log(city),
         )
 
     if result.status == "ERROR":

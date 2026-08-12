@@ -14,6 +14,7 @@ This module has no knowledge of images, models, or the UI.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Optional
@@ -31,6 +32,45 @@ _BASE_URL: str = _W_CFG["base_url"]
 _TIMEOUT: int = int(_W_CFG["timeout_seconds"])
 _UNITS: str = _W_CFG["units"]
 _DEFAULTS: dict = _W_CFG["defaults"]
+
+_CITY_MAX_LENGTH = 100
+_CITY_CONTROL_CHAR_RE = re.compile(r"[\x00-\x1f\x7f]")
+
+
+def _validate_city(city: str) -> str:
+    """Validate and sanitize a city name for safe external API use.
+
+    Rules:
+    - Reject non-string values.
+    - Reject control characters (C0 controls and DEL).
+    - Strip leading/trailing whitespace.
+    - Reject empty/whitespace-only strings.
+    - Truncate to a safe maximum length.
+
+    Args:
+        city: Raw city name from caller.
+
+    Returns:
+        Sanitized city string.
+
+    Raises:
+        ValueError: If the city is invalid.
+    """
+    if not isinstance(city, str):
+        raise ValueError("City must be a string.")
+
+    if _CITY_CONTROL_CHAR_RE.search(city):
+        raise ValueError("City contains invalid control characters.")
+
+    city = city.strip()
+    if not city:
+        raise ValueError("City must not be empty.")
+
+    if len(city) > _CITY_MAX_LENGTH:
+        city = city[:_CITY_MAX_LENGTH]
+        logger.warning("City name truncated to %d characters.", _CITY_MAX_LENGTH)
+
+    return city
 
 
 # ---------------------------------------------------------------------------
@@ -84,21 +124,26 @@ def fetch_weather(city: str) -> WeatherData:
         ``fetch_successful=False`` and safe default values so the pipeline
         can continue degraded rather than crash.
     """
-    # Resolve API key at call time so .env / secrets.toml changes take effect
+    try:
+        sanitized_city = _validate_city(city)
+    except ValueError as exc:
+        logger.warning("Invalid city name '%s': %s. Using defaults.", city, exc)
+        return WeatherData(city=city, fetch_successful=False)
+
     api_key = get_secret("OPENWEATHER_API_KEY")
     if not api_key:
         logger.warning(
-            "OPENWEATHER_API_KEY is not set. Using weather defaults for '%s'.", city
+            "OPENWEATHER_API_KEY is not set. Using weather defaults for '%s'.", sanitized_city
         )
-        return WeatherData(city=city, fetch_successful=False)
+        return WeatherData(city=sanitized_city, fetch_successful=False)
 
     params = {
-        "q": city,
+        "q": sanitized_city,
         "appid": api_key,
         "units": _UNITS,
     }
 
-    logger.info("Weather Request: Fetching data for city '%s'", city)
+    logger.info("Weather Request: Fetching data for city '%s'", sanitized_city)
 
     try:
         response = requests.get(_BASE_URL, params=params, timeout=_TIMEOUT)
@@ -106,7 +151,7 @@ def fetch_weather(city: str) -> WeatherData:
         data: dict = response.json()
 
         weather = WeatherData(
-            city=data.get("name", city),
+            city=data.get("name", sanitized_city),
             ambient_temp_c=float(data["main"]["temp"]),
             humidity_pct=float(data["main"]["humidity"]),
             wind_speed_ms=float(data["wind"]["speed"]),
@@ -135,17 +180,17 @@ def fetch_weather(city: str) -> WeatherData:
     except requests.exceptions.Timeout:
         logger.warning(
             "Weather API timed out after %d s for city '%s'. Using defaults.",
-            _TIMEOUT, city,
+            _TIMEOUT, sanitized_city,
         )
     except requests.exceptions.HTTPError as exc:
         logger.warning(
-            "Weather API HTTP error for city '%s': %s. Using defaults.", city, exc,
+            "Weather API HTTP error for city '%s': %s. Using defaults.", sanitized_city, exc,
         )
     except (KeyError, TypeError, ValueError, requests.exceptions.RequestException) as exc:
         logger.warning(
             "Weather API error for city '%s' (%s): %s. Using defaults.",
-            city, type(exc).__name__, exc,
+            sanitized_city, type(exc).__name__, exc,
         )
 
     # Return safe defaults so the pipeline can continue
-    return WeatherData(city=city, fetch_successful=False)
+    return WeatherData(city=sanitized_city, fetch_successful=False)
