@@ -23,6 +23,7 @@ import requests
 
 from utils.config import CFG, get_secret
 from utils.logger import get_logger
+from utils.security import sanitize_for_log
 
 logger = get_logger(__name__)
 
@@ -127,7 +128,7 @@ def fetch_weather(city: str) -> WeatherData:
     try:
         sanitized_city = _validate_city(city)
     except ValueError as exc:
-        logger.warning("Invalid city name '%s': %s. Using defaults.", city, exc)
+        logger.warning("Invalid city name '%s': %s. Using defaults.", sanitize_for_log(city), exc)
         return WeatherData(city=city, fetch_successful=False)
 
     api_key = get_secret("OPENWEATHER_API_KEY")
