@@ -31,7 +31,7 @@ def _sha256(path: Path) -> str:
 
 def _resolve_artifact_path(manifest_path: Path, relative_path: str) -> Path:
     """Resolve an artifact path while preventing manifest-directory escapes."""
-    root = manifest_path.resolve().parent
+    root = manifest_path.parent.resolve()
     candidate = Path(relative_path)
     if candidate.is_absolute():
         raise ValueError("artifact path must be relative to the manifest directory")
