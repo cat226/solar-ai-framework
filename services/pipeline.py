@@ -32,6 +32,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Optional
+import math
 import time
 
 import pandas as pd
@@ -280,6 +281,15 @@ def run_pipeline(
         predictor = EnergyPredictor()
         predictor.set_model(model_manager.get_predictor())
         result.efficiency_prediction = predictor.predict(result.feature_dataframe)
+
+        if not all(math.isfinite(v) for v in (
+            result.efficiency_prediction.efficiency_loss_pct,
+            result.efficiency_prediction.estimated_output_w,
+        )):
+            raise PredictionError(
+                "XGBoost",
+                "Prediction output contains non-finite values.",
+            )
 
         # ── Step 7: Recommendations ──────────────────────────────────────────
         logger.info("Pipeline step 7/7: Recommendation generation")

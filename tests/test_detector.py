@@ -354,3 +354,77 @@ class TestDeterminism:
         detector.detect(img)
         
         assert fake_model.call_count == 2
+
+
+# ---------------------------------------------------------------------------
+# G. Malformed model output validation
+# ---------------------------------------------------------------------------
+
+class TestMalformedOutputValidation:
+    """Detector rejects non-finite or out-of-range model outputs."""
+
+    def test_nan_confidence_raises_prediction_error(self):
+        import math
+        detector = SolarPanelDetector()
+        fake_model = _make_mock_yolo_model()
+        boxes = [[10.0, 20.0, 100.0, 200.0]]
+        confs = [float("nan")]
+        cls_ids = [0]
+        fake_model.return_value = [_make_yolo_result(boxes, confs, cls_ids)]
+        detector.set_model(fake_model)
+
+        img = Image.new("RGB", (640, 640))
+        with pytest.raises(PredictionError, match="non-finite"):
+            detector.detect(img)
+
+    def test_inf_confidence_raises_prediction_error(self):
+        detector = SolarPanelDetector()
+        fake_model = _make_mock_yolo_model()
+        boxes = [[10.0, 20.0, 100.0, 200.0]]
+        confs = [float("inf")]
+        cls_ids = [0]
+        fake_model.return_value = [_make_yolo_result(boxes, confs, cls_ids)]
+        detector.set_model(fake_model)
+
+        img = Image.new("RGB", (640, 640))
+        with pytest.raises(PredictionError, match="non-finite"):
+            detector.detect(img)
+
+    def test_negative_confidence_raises_prediction_error(self):
+        detector = SolarPanelDetector()
+        fake_model = _make_mock_yolo_model()
+        boxes = [[10.0, 20.0, 100.0, 200.0]]
+        confs = [-0.1]
+        cls_ids = [0]
+        fake_model.return_value = [_make_yolo_result(boxes, confs, cls_ids)]
+        detector.set_model(fake_model)
+
+        img = Image.new("RGB", (640, 640))
+        with pytest.raises(PredictionError, match="out of range"):
+            detector.detect(img)
+
+    def test_confidence_above_one_raises_prediction_error(self):
+        detector = SolarPanelDetector()
+        fake_model = _make_mock_yolo_model()
+        boxes = [[10.0, 20.0, 100.0, 200.0]]
+        confs = [1.1]
+        cls_ids = [0]
+        fake_model.return_value = [_make_yolo_result(boxes, confs, cls_ids)]
+        detector.set_model(fake_model)
+
+        img = Image.new("RGB", (640, 640))
+        with pytest.raises(PredictionError, match="out of range"):
+            detector.detect(img)
+
+    def test_nan_box_coordinate_raises_prediction_error(self):
+        detector = SolarPanelDetector()
+        fake_model = _make_mock_yolo_model()
+        boxes = [[float("nan"), 20.0, 100.0, 200.0]]
+        confs = [0.9]
+        cls_ids = [0]
+        fake_model.return_value = [_make_yolo_result(boxes, confs, cls_ids)]
+        detector.set_model(fake_model)
+
+        img = Image.new("RGB", (640, 640))
+        with pytest.raises(PredictionError, match="non-finite"):
+            detector.detect(img)

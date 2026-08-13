@@ -479,3 +479,76 @@ class TestPipelineCrossStageDataFlow:
         )
         assert row["cloud_factor"] == pytest.approx(result.physics_data.cloud_factor)
         assert row["wind_cooling_factor"] == pytest.approx(result.physics_data.wind_cooling_factor)
+
+
+# ---------------------------------------------------------------------------
+# G. Malformed model output propagation
+# ---------------------------------------------------------------------------
+
+class TestMalformedModelOutputPropagation:
+    """Malformed model outputs are caught by validation and stop the pipeline."""
+
+    def test_detector_nan_confidence_stops_pipeline(self, monkeypatch):
+        img = Image.new("RGB", (224, 224))
+        mm = MagicMock()
+        detector = MagicMock()
+        from models.detector import DetectionResult
+        detector.detect.return_value = DetectionResult(
+            boxes=[[10.0, 10.0, 210.0, 190.0]],
+            confidences=[float("nan")],
+            class_ids=[0],
+            panel_count=1,
+            best_confidence=float("nan"),
+            detection_successful=True,
+        )
+
+        monkeypatch.setattr("services.pipeline.model_manager", mm)
+        monkeypatch.setattr("services.pipeline.SolarPanelDetector", lambda: detector)
+        monkeypatch.setattr("services.pipeline.SolarFaultClassifier", lambda: MagicMock())
+        monkeypatch.setattr("services.pipeline.EnergyPredictor", lambda: MagicMock())
+        monkeypatch.setattr("services.pipeline.fetch_weather", lambda city: _make_weather())
+
+        result = run_pipeline(image=img, city="Chennai")
+        assert result.status == "ERROR"
+
+    def test_classifier_nan_probability_stops_pipeline(self, monkeypatch):
+        img = Image.new("RGB", (224, 224))
+        mm = MagicMock()
+        clf = MagicMock()
+        from models.classifier import ClassificationResult
+        clf.classify.return_value = ClassificationResult(
+            label="Clean",
+            class_id=0,
+            confidence=float("nan"),
+            probabilities={"Clean": float("nan")},
+            classification_successful=True,
+        )
+
+        monkeypatch.setattr("services.pipeline.model_manager", mm)
+        monkeypatch.setattr("services.pipeline.SolarPanelDetector", lambda: _make_mock_detector())
+        monkeypatch.setattr("services.pipeline.SolarFaultClassifier", lambda: clf)
+        monkeypatch.setattr("services.pipeline.EnergyPredictor", lambda: MagicMock())
+        monkeypatch.setattr("services.pipeline.fetch_weather", lambda city: _make_weather())
+
+        result = run_pipeline(image=img, city="Chennai")
+        assert result.status == "ERROR"
+
+    def test_predictor_nan_output_stops_pipeline(self, monkeypatch):
+        img = Image.new("RGB", (224, 224))
+        mm = MagicMock()
+        predictor = MagicMock()
+        from models.predictor import PredictionResult
+        predictor.predict.return_value = PredictionResult(
+            efficiency_loss_pct=float("nan"),
+            estimated_output_w=float("nan"),
+            prediction_successful=True,
+        )
+
+        monkeypatch.setattr("services.pipeline.model_manager", mm)
+        monkeypatch.setattr("services.pipeline.SolarPanelDetector", lambda: _make_mock_detector())
+        monkeypatch.setattr("services.pipeline.SolarFaultClassifier", lambda: _make_mock_classifier())
+        monkeypatch.setattr("services.pipeline.EnergyPredictor", lambda: predictor)
+        monkeypatch.setattr("services.pipeline.fetch_weather", lambda city: _make_weather())
+
+        result = run_pipeline(image=img, city="Chennai")
+        assert result.status == "ERROR"
