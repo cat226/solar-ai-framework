@@ -71,7 +71,7 @@ or environment configuration. Never bake secrets into the image or commit
 - The image runs as an unprivileged `appuser`.
 - Uploaded files are capped at 10 MB by Streamlit configuration and are
   validated before decoding.
-- XSRF protection is enabled and CORS is disabled.
+- XSRF protection is enabled.
 - Model loading remains lazy so the application can start without model
   artifacts; an inference request fails with a typed `ModelLoadError` until
   the required artifacts are supplied.
