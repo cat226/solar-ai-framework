@@ -43,9 +43,9 @@ jobs:
           assert payload["liveness"] == "ok"
           assert payload["inference_readiness"] == "not_ready"
           assert set(payload["missing_artifacts"]) == {
-              "detector",
-              "classifier",
-              "predictor",
+              "YOLO",
+              "MobileNet",
+              "XGBoost",
           }
           PY
 
