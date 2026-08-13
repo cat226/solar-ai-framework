@@ -373,13 +373,13 @@ Do **not** commit this file.
 
 # Models Required
 
-Place the trained models inside the appropriate models directory.
+Place the trained models inside the `weights/` directory:
 
-Required models include:
+- `weights/yolo_solar.pt`
+- `weights/mobilenet_solar.pth`
+- `weights/xgboost_solar.joblib`
 
-- YOLOv8 detection model
-- MobileNetV2 classification model
-- XGBoost regression model
+These files are not included in the repository and must be supplied separately.
 
 ---
 
