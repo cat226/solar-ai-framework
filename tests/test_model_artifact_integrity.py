@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
+
+import pytest
 
 from scripts.verify_model_artifacts import verify_manifest
 
@@ -114,6 +117,34 @@ def test_verify_manifest_rejects_paths_that_escape_manifest_directory(tmp_path: 
 
     assert ok is False
     assert "escapes the manifest directory" in errors[0]
+
+
+def test_verify_manifest_anchors_boundary_to_supplied_manifest_parent(tmp_path: Path) -> None:
+    """A manifest symlink must not redirect its artifact root to the target directory."""
+    real_dir = tmp_path / "real"
+    supplied_dir = tmp_path / "bundle"
+    real_dir.mkdir()
+    supplied_dir.mkdir()
+
+    artifact = supplied_dir / "model.bin"
+    artifact.write_bytes(b"trusted model bytes")
+    digest = hashlib.sha256(artifact.read_bytes()).hexdigest()
+
+    target_manifest = real_dir / "manifest.json"
+    target_manifest.write_text(
+        json.dumps({"artifacts": [{"path": artifact.name, "sha256": digest}]}),
+        encoding="utf-8",
+    )
+    supplied_manifest = supplied_dir / "manifest.json"
+    try:
+        os.symlink(target_manifest, supplied_manifest)
+    except (OSError, NotImplementedError) as exc:
+        pytest.skip(f"symlink creation unavailable: {exc}")
+
+    ok, errors = verify_manifest(supplied_manifest)
+
+    assert ok is True
+    assert errors == []
 
 
 def test_verify_manifest_does_not_create_missing_files(tmp_path: Path) -> None:
