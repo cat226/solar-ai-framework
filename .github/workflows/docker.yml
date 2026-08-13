@@ -31,7 +31,7 @@ jobs:
       - name: Verify artifact readiness fails closed without model files
         run: |
           set +e
-          docker run --rm --entrypoint python solar-ai-framework:ci scripts/check_runtime_readiness.py > readiness.json
+          docker run --rm -e PYTHONPATH=/app --entrypoint python solar-ai-framework:ci scripts/check_runtime_readiness.py > readiness.json
           status=$?
           set -e
           test "$status" -eq 2
