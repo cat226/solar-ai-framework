@@ -23,6 +23,7 @@ from utils.config import CFG
 from utils.logger import get_logger
 from utils.security import sanitize_for_log
 from utils.ui_helpers import display_results
+from models.model_manager import model_manager
 
 logger = get_logger(__name__)
 
@@ -45,6 +46,19 @@ def _sanitize_city(value: str) -> str:
     """
     cleaned = re.sub(r"[\x00-\x1f\x7f]", " ", str(value))
     return " ".join(cleaned.split())[:100]
+
+
+def _display_readiness_status() -> None:
+    """Show model artifact readiness in the sidebar."""
+    status = model_manager.artifact_status
+    missing = [name for name, entry in status.items() if not entry["exists"]]
+    if not missing:
+        st.sidebar.success("✅ All model artifacts ready")
+    else:
+        st.sidebar.warning(
+            f"⚠️ Model artifacts not ready: {', '.join(missing)}. "
+            "Inference requires genuine trained weights in the `weights/` directory."
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -92,6 +106,8 @@ def _render_sidebar() -> tuple[Image.Image | None, str, float, int, float, float
         "Installation Type",
         options=["rooftop", "ground-mount", "carport", "floating"],
     )
+
+    _display_readiness_status()
 
     pil_image: Image.Image | None = None
     if uploaded_file is not None:

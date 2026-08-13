@@ -447,6 +447,23 @@ The CI workflow is defined in `.github/workflows/ci.yml`.
 - **No network in tests:** All tests are designed to run without network access. Model weights and API calls are mocked.
 - **Windows CI only:** GitHub Actions currently runs on `windows-latest`.
 
+## Health and Readiness
+
+The application distinguishes between **liveness** (process is running) and **readiness** (production inference dependencies are available):
+
+- **Liveness:** Docker healthcheck probes `/_stcore/health`. A healthy container means the Streamlit process is accepting requests.
+- **Readiness:** The sidebar displays model artifact readiness. When genuine weights are absent, the UI shows a warning. The CLI tool `scripts/check_runtime_readiness.py` reports `not_ready` with a non-zero exit code.
+
+## Model Output Validation
+
+Model wrappers validate their outputs before downstream consumption:
+
+- **YOLO detector:** Validates that bounding box coordinates, confidences, and class IDs are finite. Confidences must be in `[0, 1]`.
+- **MobileNet classifier:** Validates that all probabilities are finite and non-negative. Confidence must be in `[0, 1]`.
+- **XGBoost predictor:** Validates that prediction outputs are finite before clamping to `[0, 100]`.
+
+Invalid model outputs raise `PredictionError` and stop the pipeline with a controlled error.
+
 ---
 
 # Current Project Status

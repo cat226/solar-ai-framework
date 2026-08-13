@@ -19,6 +19,7 @@ of the UI, weather data, or downstream prediction logic.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from typing import List, Optional
 
@@ -162,6 +163,21 @@ class SolarPanelDetector:
             )
 
             for box, conf, cls_id in zip(boxes_xyxy, confs, cls_ids):
+                if not all(math.isfinite(v) for v in box):
+                    raise PredictionError(
+                        "YOLO",
+                        f"Detection box contains non-finite coordinates: {box.tolist()}",
+                    )
+                if not math.isfinite(conf):
+                    raise PredictionError(
+                        "YOLO",
+                        f"Detection confidence is non-finite: {conf}",
+                    )
+                if not 0.0 <= conf <= 1.0:
+                    raise PredictionError(
+                        "YOLO",
+                        f"Detection confidence out of range [0,1]: {conf}",
+                    )
                 result.boxes.append(box.tolist())
                 result.confidences.append(float(conf))
                 result.class_ids.append(int(cls_id))

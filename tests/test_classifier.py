@@ -409,3 +409,44 @@ class TestConfigurationBehavior:
         
         expected_labels = project_config["classification"]["labels"]
         assert set(result.probabilities.keys()) == set(expected_labels)
+
+
+# ---------------------------------------------------------------------------
+# J. Malformed model output validation
+# ---------------------------------------------------------------------------
+
+class TestMalformedOutputValidation:
+    """Classifier rejects non-finite or out-of-range model outputs."""
+
+    def test_nan_probability_raises_prediction_error(self):
+        model = _make_mock_model()
+        clf = SolarFaultClassifier()
+        clf.set_model(model)
+
+        probs = np.array([0.1, float("nan"), 0.05, 0.05, 0.05, 0.05], dtype=np.float32)
+        with _classification_mocks(model, probs):
+            img = Image.new("RGB", (224, 224))
+            with pytest.raises(PredictionError, match="non-finite"):
+                clf.classify(img)
+
+    def test_inf_probability_raises_prediction_error(self):
+        model = _make_mock_model()
+        clf = SolarFaultClassifier()
+        clf.set_model(model)
+
+        probs = np.array([0.1, float("inf"), 0.05, 0.05, 0.05, 0.05], dtype=np.float32)
+        with _classification_mocks(model, probs):
+            img = Image.new("RGB", (224, 224))
+            with pytest.raises(PredictionError, match="non-finite"):
+                clf.classify(img)
+
+    def test_negative_probability_raises_prediction_error(self):
+        model = _make_mock_model()
+        clf = SolarFaultClassifier()
+        clf.set_model(model)
+
+        probs = np.array([-0.1, 0.9, 0.05, 0.05, 0.05, 0.05], dtype=np.float32)
+        with _classification_mocks(model, probs):
+            img = Image.new("RGB", (224, 224))
+            with pytest.raises(PredictionError, match="negative values"):
+                clf.classify(img)

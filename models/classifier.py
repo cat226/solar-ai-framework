@@ -20,6 +20,7 @@ knowledge of the UI, weather data, or downstream prediction logic.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
@@ -157,8 +158,32 @@ class SolarFaultClassifier:
 
         probs_np = probs.squeeze(0).cpu().numpy()
 
+        if not all(math.isfinite(p) for p in probs_np):
+            raise PredictionError(
+                "MobileNet",
+                f"Classification probabilities contain non-finite values: {probs_np.tolist()}",
+            )
+
+        if any(p < 0.0 for p in probs_np):
+            raise PredictionError(
+                "MobileNet",
+                f"Classification probabilities contain negative values: {probs_np.tolist()}",
+            )
+
         class_id: int = int(probs_np.argmax())
         confidence: float = float(probs_np[class_id])
+
+        if not math.isfinite(confidence):
+            raise PredictionError(
+                "MobileNet",
+                f"Classification confidence is non-finite: {confidence}",
+            )
+        if not 0.0 <= confidence <= 1.0:
+            raise PredictionError(
+                "MobileNet",
+                f"Classification confidence out of range [0,1]: {confidence}",
+            )
+
         label: str = _LABELS[class_id] if class_id < len(_LABELS) else "Unknown"
 
         prob_dict: Dict[str, float] = {
