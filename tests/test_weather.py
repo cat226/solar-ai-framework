@@ -530,6 +530,8 @@ class TestCityInputValidation:
             result = fetch_weather("Chennai\x00\x01")
         assert result.fetch_successful is False
         assert "Invalid city name" in caplog.text
+        assert "\x00" not in caplog.text
+        assert "\x01" not in caplog.text
 
     def test_newline_control_characters_rejected(self, monkeypatch, caplog):
         monkeypatch.setattr("services.weather.get_secret", lambda key, fallback=None: "fake-key")
