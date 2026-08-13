@@ -7,10 +7,19 @@ from pathlib import Path
 import torch
 from torch import nn
 from torch.optim import AdamW
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, WeightedRandomSampler
 from torchvision import datasets, models, transforms
 
 CLASSES = ["Clean", "Dusty", "Bird-Drop", "Electrical-Damage", "Physical-Damage", "Hotspot"]
+
+
+def _dataset(root: Path, transform: transforms.Compose) -> datasets.ImageFolder:
+    ds = datasets.ImageFolder(root, transform=transform)
+    if sorted(ds.classes) != sorted(CLASSES):
+        raise RuntimeError(f"dataset classes must exactly equal {CLASSES}; got {ds.classes}")
+    mapping = {ds.class_to_idx[name]: CLASSES.index(name) for name in CLASSES}
+    ds.targets = [mapping[target] for target in ds.targets]
+    return ds
 
 
 def build_loaders(root: Path, batch_size: int) -> tuple[DataLoader, DataLoader]:
@@ -27,12 +36,15 @@ def build_loaders(root: Path, batch_size: int) -> tuple[DataLoader, DataLoader]:
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
     ])
-    train = datasets.ImageFolder(root / "train", transform=train_tf)
-    val = datasets.ImageFolder(root / "val", transform=eval_tf)
-    if train.classes != CLASSES or val.classes != CLASSES:
-        raise RuntimeError(f"dataset classes must exactly equal {CLASSES}; train={train.classes}, val={val.classes}")
+    train = _dataset(root / "train", train_tf)
+    val = _dataset(root / "val", eval_tf)
+    counts = torch.bincount(torch.tensor(train.targets), minlength=len(CLASSES)).float()
+    if (counts == 0).any():
+        raise RuntimeError(f"every class must have training samples; counts={counts.tolist()}")
+    weights = 1.0 / counts
+    sampler = WeightedRandomSampler(weights[torch.tensor(train.targets)], len(train), replacement=True)
     return (
-        DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=0),
+        DataLoader(train, batch_size=batch_size, sampler=sampler, num_workers=0),
         DataLoader(val, batch_size=batch_size, shuffle=False, num_workers=0),
     )
 
@@ -51,7 +63,7 @@ def main() -> int:
     torch.manual_seed(args.seed)
     train_loader, val_loader = build_loaders(args.data_root, args.batch_size)
     model = models.mobilenet_v2(weights=models.MobileNet_V2_Weights.DEFAULT)
-    model.classifier[1] = nn.Linear(model.last_channel, 6)
+    model.classifier[1] = nn.Linear(model.last_channel, len(CLASSES))
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
     optimizer = AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
@@ -81,7 +93,7 @@ def main() -> int:
             best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
     if best_state is None:
         raise RuntimeError("training produced no checkpoint")
-    if list(model.classifier[1].weight.shape) != [6, model.last_channel]:
+    if list(model.classifier[1].weight.shape) != [len(CLASSES), model.last_channel]:
         raise RuntimeError("unexpected classifier output shape")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     torch.save(best_state, args.output)
