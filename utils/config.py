@@ -9,13 +9,13 @@ Secret resolution
 Sensitive values (API keys, credentials) must **not** live in YAML.
 Use :func:`get_secret` to read them in priority order:
 
-1. ``st.secrets["OPENWEATHER_API_KEY"]``  — if running inside Streamlit
-2. ``os.environ["OPENWEATHER_API_KEY"]``  — from a ``.env`` or shell export
+1. ``st.secrets[key]``  — if running inside Streamlit
+2. ``os.environ[key]``  — from a shell export, ``.env`` file loaded via
+   ``python-dotenv``, or platform secret injection
 3. *fallback* — optional default value supplied by the caller
 
-To load ``.env`` automatically, install ``python-dotenv`` and call
-``load_dotenv()`` at the top of ``app.py`` (before any imports that need
-the env var).
+If you use a ``.env`` file, ensure ``python-dotenv`` is installed and
+``load_dotenv()`` is called before any imports that need the env var.
 """
 
 from __future__ import annotations
