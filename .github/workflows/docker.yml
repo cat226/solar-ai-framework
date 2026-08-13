@@ -25,6 +25,30 @@ jobs:
       - name: Build container
         run: docker build --tag solar-ai-framework:ci .
 
+      - name: Verify container runs as unprivileged user
+        run: test "$(docker run --rm solar-ai-framework:ci id -u)" != "0"
+
+      - name: Verify artifact readiness fails closed without model files
+        run: |
+          set +e
+          docker run --rm solar-ai-framework:ci python scripts/check_runtime_readiness.py > readiness.json
+          status=$?
+          set -e
+          test "$status" -eq 2
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path("readiness.json").read_text())
+          assert payload["liveness"] == "ok"
+          assert payload["inference_readiness"] == "not_ready"
+          assert set(payload["missing_artifacts"]) == {
+              "detector",
+              "classifier",
+              "predictor",
+          }
+          PY
+
       - name: Start container
         run: docker run --detach --name solar-ai-framework-ci --publish 8501:8501 solar-ai-framework:ci
 
