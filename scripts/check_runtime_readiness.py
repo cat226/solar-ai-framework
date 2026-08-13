@@ -10,6 +10,11 @@ from __future__ import annotations
 
 import json
 import sys
+from pathlib import Path
+
+# Ensure the project root is importable when this script is executed directly
+# (e.g. ``python scripts/check_runtime_readiness.py`` from the repo root).
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from models.model_manager import model_manager
 
