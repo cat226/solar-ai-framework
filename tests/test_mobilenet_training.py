@@ -264,3 +264,52 @@ class TestPrepareDataset:
             assert "class_name" in rec
             assert rec["class_name"] in REQUIRED_CLASSES
             assert rec["split"] in SPLITS
+
+    def test_no_class_dominates_single_split(self, tmp_path: Path):
+        """No single class should be entirely confined to one split when there are enough samples."""
+        source = tmp_path / "source"
+        for cls in REQUIRED_CLASSES:
+            (source / cls).mkdir(parents=True)
+            for i in range(20):
+                img = Image.new("RGB", (32, 32), _unique_color(cls, i))
+                img.save(source / cls / f"{cls}_{i}.jpg")
+
+        output = tmp_path / "output"
+        prepare_dataset([source], output, seed=42)
+
+        manifest = json.loads((output / "manifest.json").read_text())
+        class_splits: dict[str, set[str]] = {cls: set() for cls in REQUIRED_CLASSES}
+        for rec in manifest["records"]:
+            class_splits[rec["class_name"]].add(rec["split"])
+
+        for cls in REQUIRED_CLASSES:
+            assert len(class_splits[cls]) == 3, (
+                f"Class {cls} only appears in splits: {class_splits[cls]}"
+            )
+
+    def test_stratified_proportions_per_class(self, tmp_path: Path):
+        """Each class should be split approximately 80/10/10 when no grouping metadata exists."""
+        source = tmp_path / "source"
+        for cls in REQUIRED_CLASSES:
+            (source / cls).mkdir(parents=True)
+            for i in range(100):
+                img = Image.new("RGB", (32, 32), _unique_color(cls, i))
+                img.save(source / cls / f"{cls}_{i}.jpg")
+
+        output = tmp_path / "output"
+        prepare_dataset([source], output, seed=42)
+
+        manifest = json.loads((output / "manifest.json").read_text())
+        class_splits: dict[str, dict[str, int]] = {cls: {"train": 0, "val": 0, "test": 0} for cls in REQUIRED_CLASSES}
+        for rec in manifest["records"]:
+            class_splits[rec["class_name"]][rec["split"]] += 1
+
+        for cls in REQUIRED_CLASSES:
+            counts = class_splits[cls]
+            total = sum(counts.values())
+            train_frac = counts["train"] / total
+            val_frac = counts["val"] / total
+            test_frac = counts["test"] / total
+            assert 0.6 <= train_frac <= 0.95, f"Class {cls} train fraction {train_frac} out of expected range"
+            assert 0.0 <= val_frac <= 0.3, f"Class {cls} val fraction {val_frac} out of expected range"
+            assert 0.0 <= test_frac <= 0.3, f"Class {cls} test fraction {test_frac} out of expected range"

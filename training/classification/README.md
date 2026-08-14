@@ -35,14 +35,23 @@ training/data/classification/
 
 ## Split policy
 
-Split original images before augmentation. Augmented copies must remain confined to the training split. When source metadata permits, group by panel/module/source before splitting to reduce leakage. Keep the test set untouched until final evaluation.
+Split original images before augmentation. Augmented copies must remain confined to the training split.
+
+**Class labels are NOT grouping identifiers.** The dataset preparation utility only treats records as belonging to the same group when real panel/module/source identity metadata exists (e.g., from filename patterns or directory structure). When no grouping metadata is available, images are split deterministically *within each class* to preserve class stratification, targeting approximately 80/10/10 train/val/test proportions per class.
+
+This means:
+- Each class is independently represented in train, val, and test whenever there are enough samples.
+- No single class is confined to a single split unless it has fewer than ~10 images.
+- The same SHA-256 never appears in more than one split.
+
+Keep the test set untouched until final evaluation.
 
 ## Commands
 
 From the repository root:
 
 ```bash
-python training/classification/prepare_dataset.py --source-root /path/to/raw --output-root training/data/classification --manifest training/data/classification/manifest.json
+python training/classification/prepare_dataset.py --source /path/to/raw --output training/data/classification
 python training/classification/train_mobilenet.py --data-root training/data/classification --output weights/mobilenet_solar.pth
 python training/classification/evaluate_mobilenet.py --data-root training/data/classification --checkpoint weights/mobilenet_solar.pth
 ```

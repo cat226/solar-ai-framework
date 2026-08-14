@@ -57,6 +57,11 @@ def _collect_images(source: Path) -> tuple[list[dict[str, Any]], list[str]]:
     Returns a tuple of:
         records: list of dicts with keys: path, class_name, sha256, group
         unknown_classes: list of class directory names not in REQUIRED_CLASSES
+
+    Note:
+        The class directory name is NOT used as a grouping identifier.
+        ``group`` is only set when real source/panel/module metadata exists
+        in the filename or directory structure. Otherwise it is ``None``.
     """
     records: list[dict[str, Any]] = []
     seen_hashes: dict[str, str] = {}
@@ -87,14 +92,13 @@ def _collect_images(source: Path) -> tuple[list[dict[str, Any]], list[str]]:
                 )
 
             seen_hashes[digest] = str(img_path)
-            group = entry.name
 
             records.append({
                 "source_path": str(img_path),
                 "original_filename": img_path.name,
                 "class_name": class_name,
                 "sha256": digest,
-                "group": group,
+                "group": None,
             })
 
     return records, unknown_classes
@@ -110,27 +114,25 @@ def _split_records(
 
     When a group identifier is present, all records with the same group are
     assigned to the same split to prevent leakage.
+
+    When no group identifier is present, records are split deterministically
+    *within each class* to preserve class stratification.
     """
     if not (0.0 < train_frac < 1.0 and 0.0 < val_frac < 1.0 and train_frac + val_frac < 1.0):
         raise ValueError("invalid split fractions")
 
     rng = random.Random(seed)
 
-    groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
-    no_group: list[dict[str, Any]] = []
+    grouped: dict[str | None, list[dict[str, Any]]] = defaultdict(list)
     for rec in records:
-        g = rec.get("group")
-        if g:
-            groups[g].append(rec)
-        else:
-            no_group.append(rec)
+        grouped[rec.get("group")].append(rec)
 
-    def _assign(group_items: list[dict[str, Any]]) -> None:
-        rng.shuffle(group_items)
-        n = len(group_items)
+    def _assign(items: list[dict[str, Any]]) -> None:
+        rng.shuffle(items)
+        n = len(items)
         train_end = int(n * train_frac)
         val_end = train_end + int(n * val_frac)
-        for i, item in enumerate(group_items):
+        for i, item in enumerate(items):
             if i < train_end:
                 item["split"] = "train"
             elif i < val_end:
@@ -138,9 +140,15 @@ def _split_records(
             else:
                 item["split"] = "test"
 
-    for group_items in groups.values():
-        _assign(group_items)
-    _assign(no_group)
+    for group_value, items in grouped.items():
+        if group_value is not None:
+            _assign(items)
+        else:
+            by_class: dict[str, list[dict[str, Any]]] = defaultdict(list)
+            for item in items:
+                by_class[item["class_name"]].append(item)
+            for class_items in by_class.values():
+                _assign(class_items)
 
     return records
 
