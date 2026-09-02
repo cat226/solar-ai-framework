@@ -22,7 +22,7 @@ from services.pipeline import PipelineResult, run_pipeline
 from utils.config import CFG
 from utils.logger import get_logger
 from utils.security import sanitize_for_log
-from utils.ui_helpers import display_results
+from utils.ui_helpers import apply_custom_theme, display_results
 from models.model_manager import model_manager
 
 logger = get_logger(__name__)
@@ -36,6 +36,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+apply_custom_theme()
 
 
 def _sanitize_city(value: str) -> str:
@@ -52,13 +53,15 @@ def _display_readiness_status() -> None:
     """Show model artifact readiness in the sidebar."""
     status = model_manager.artifact_status
     missing = [name for name, entry in status.items() if not entry["exists"]]
-    if not missing:
-        st.sidebar.success("✅ All model artifacts ready")
-    else:
-        st.sidebar.warning(
-            f"⚠️ Model artifacts not ready: {', '.join(missing)}. "
-            "Inference requires genuine trained weights in the `weights/` directory."
-        )
+    with st.sidebar.container(border=True):
+        st.caption("MODEL STATUS")
+        if not missing:
+            st.success("✅ All model artifacts ready")
+        else:
+            st.warning(
+                f"⚠️ Model artifacts not ready: {', '.join(missing)}. "
+                "Inference requires genuine trained weights in the `weights/` directory."
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -84,7 +87,7 @@ def _render_sidebar() -> tuple[Image.Image | None, str, float, int, float, float
     city = _sanitize_city(city)
 
     st.sidebar.markdown("---")
-    st.sidebar.subheader("Panel Details")
+    st.sidebar.subheader("🔧 Panel Details")
 
     panel_age = st.sidebar.number_input(
         "Panel Age (years)", min_value=0.0, max_value=40.0,
@@ -132,8 +135,13 @@ def _render_sidebar() -> tuple[Image.Image | None, str, float, int, float, float
 # ---------------------------------------------------------------------------
 def main() -> None:
     """Main Streamlit entry point."""
-    st.title("☀️ Solar AI Framework")
-    st.caption("Automated solar panel fault detection and energy output prediction.")
+    st.markdown(
+        '<div class="solar-hero"><h1>☀️ Solar AI Framework</h1>'
+        "<p>AI-powered inspection pipeline — panel detection, fault "
+        "classification, and energy-loss prediction from a single image.</p>"
+        "</div>",
+        unsafe_allow_html=True,
+    )
 
     pil_image, city, panel_age, maintenance_count, \
         voltage, current, installation_type = _render_sidebar()
@@ -172,7 +180,7 @@ def main() -> None:
         st.error(f"Pipeline error [{result.error_type}]: {result.error_message}")
         return
 
-    st.success(f"Pipeline completed in {result.processing_time:.2f}s")
+    st.success(f"✅ Pipeline completed in {result.processing_time:.2f}s")
     display_results(result)
 
 
