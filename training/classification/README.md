@@ -58,6 +58,24 @@ python training/classification/evaluate_mobilenet.py --data-root training/data/c
 
 The scripts must fail closed on missing classes, malformed images, duplicate inputs, invalid splits, or incompatible checkpoints. They must never download or fabricate training data.
 
+## Interim (non-production) runs on a class subset
+
+When one or more production classes are legitimately blocked on data access/licensing (see
+`DATASET_SOURCES.md` for current status), all three scripts accept an opt-in `--classes` flag
+naming a subset of the six production classes:
+
+```bash
+python training/classification/prepare_dataset.py --source /path/to/raw --output training/data/classification_interim --classes Clean Dusty Hotspot
+python training/classification/train_mobilenet.py --data-root training/data/classification_interim --output weights/mobilenet_interim.pth --classes Clean Dusty Hotspot
+python training/classification/evaluate_mobilenet.py --data-root training/data/classification_interim --checkpoint weights/mobilenet_interim.pth --classes Clean Dusty Hotspot
+```
+
+Omitting `--classes` preserves the exact original behavior: all six production classes required,
+fail-closed if any is missing. A checkpoint trained on a subset is **not** compatible with the
+production `ModelManager` and must never be saved to `weights/mobilenet_solar.pth` or otherwise
+presented as the production model. Manifests and evaluation output from a subset run record
+`is_production_class_set: false` so this is never ambiguous.
+
 ## Evaluation gate
 
 Report per-class precision, recall, F1, support, overall accuracy, macro-F1, weighted-F1, and a confusion matrix. Training accuracy alone is not a production gate. The final checkpoint must load through the repository MobileNet model manager and pass output-shape/probability validation.
