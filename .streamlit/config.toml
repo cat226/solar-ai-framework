@@ -7,3 +7,13 @@ enableXsrfProtection = true
 
 [browser]
 gatherUsageStats = false
+
+[theme]
+# Solar-panel inspection theme: warm amber/gold "sun" accent on a deep
+# charcoal-navy "sky" background, for a professional technical-tool feel.
+base = "dark"
+primaryColor = "#F5A623"
+backgroundColor = "#101826"
+secondaryBackgroundColor = "#1C2B3A"
+textColor = "#EDF1F5"
+font = "sans serif"
