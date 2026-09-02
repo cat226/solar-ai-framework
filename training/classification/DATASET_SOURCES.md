@@ -14,9 +14,20 @@ Six production classes are required:
 5. Physical-Damage
 6. Hotspot
 
+## CORRECTION (2026-09-03)
+
+Bird-Drop was previously marked resolved based on a license-compatibility review, but that review
+assumed the DeepSolarEye dataset provided a discrete `bird-dropping` label. On actually downloading
+and inspecting the full 45,755-file archive (`Solar_Panel_Soiling_Image_dataset/PanelImages/`), its
+own README confirms every image is labeled only with continuous power-loss and irradiance values for
+regression (`solar_..._L_<loss>_I_<irradiance>.jpg`) — there is no discrete soiling-type label, folder,
+or metadata anywhere in the release. There is therefore no legitimate way to derive `Bird-Drop` ground
+truth from this source without fabricating labels. **Bird-Drop reverts to NO USABLE SOURCE FOUND.**
+See LICENSE_COMPATIBILITY.md for the full correction note.
+
 Three classes (Clean, Dusty, Hotspot) have verified, accessible, clearly licensed sources.
-Bird-Drop has a verified, accessible source; its NonCommercial license restriction was resolved
-on 2026-09-03 based on the project's current non-commercial intent (see LICENSE_COMPATIBILITY.md).
+Bird-Drop has no usable source (see correction above — the only public download for the previously
+identified candidate lacks any discrete class label).
 Two classes (Electrical-Damage, Physical-Damage) remain access-restricted on Zenodo pending
 owner approval.
 
@@ -36,7 +47,7 @@ owner approval.
 | Clean | Solar Panel Dust Detection Dataset (SolNET) | MDPI Energies 2023 / Onimee58 | https://github.com/Onimee58/SolNET | CC BY 4.0 | VERIFIED (Google Drive) | clean | Direct | VERIFIED + USABLE |
 | Dusty | Solar Panel Dust Detection Dataset (SolNET) | MDPI Energies 2023 / Onimee58 | https://github.com/Onimee58/SolNET | CC BY 4.0 | VERIFIED (Google Drive) | dirty/dusty | Direct | VERIFIED + USABLE |
 | Hotspot | PVMD — Photovoltaic module dataset for automated fault detection | Tshwane University of Technology | https://data.mendeley.com/datasets/5ssmfpgrpc/1 | CC BY 4.0 | VERIFIED (Mendeley) | Hotspots | Direct | VERIFIED + USABLE |
-| Bird-Drop | Solar Panel Soiling Image Dataset (SPSI/DeepSolarEye) | IBM Research / IEEE WACV 2018 | https://deep-solar-eye.github.io/ | CC BY-NC-SA 2.0 | VERIFIED (Google Drive) | bird-dropping | Direct | VERIFIED + USABLE (non-commercial) |
+| Bird-Drop | Solar Panel Soiling Image Dataset (SPSI/DeepSolarEye) | IBM Research / IEEE WACV 2018 | https://deep-solar-eye.github.io/ | CC BY-NC-SA 2.0 | Downloaded, inspected 2026-09-03 | none (regression-only, no class labels) | N/A — no discrete label exists | NO USABLE SOURCE FOUND |
 | Electrical-Damage | Two-Stage Lightweight CNN RGB Dataset | Hamdan Gani / Politeknik ATI Makassar | https://doi.org/10.5281/zenodo.18205662 | CC BY 4.0 | RESTRICTED | Electrical Damage | Direct | RESTRICTED |
 | Physical-Damage | Two-Stage Lightweight CNN RGB Dataset | Hamdan Gani / Politeknik ATI Makassar | https://doi.org/10.5281/zenodo.18205662 | CC BY 4.0 | RESTRICTED | Physical Damage | Direct | RESTRICTED |
 
@@ -93,7 +104,7 @@ owner approval.
 - **Data download**: https://drive.google.com/open?id=1qB5dPWZMi2-12sLHDykHb9i6GibbJ46l
 - **License**: Creative Commons Attribution-NonCommercial-ShareAlike 2.0 Generic (CC BY-NC-SA 2.0)
 - **Original label**: `bird-dropping`
-- **Production mapping**: bird-dropping → Bird-Drop (direct)
+- **Production mapping**: NONE — see 2026-09-03 correction at top of this document. The full 45,755-file archive was downloaded and inspected; it contains one flat `PanelImages/` folder with images labeled only by continuous power-loss/irradiance values in the filename (per the archive's own README). No `bird-dropping` folder, tag, or metadata exists anywhere in the release.
 - **Approx. image count**: 45,754 RGB images total; bird-dropping is one of 6 soiling types
 - **Access verified**: Yes — direct Google Drive link on project page
 - **Status**: VERIFIED + USABLE (non-commercial) — CC BY-NC-SA 2.0 imposes a NonCommercial restriction. Project maintainer confirmed on 2026-09-03 that Solar AI is research/non-commercial at this time, so this class is cleared for use under that intent. See LICENSE_COMPATIBILITY.md for full analysis.
@@ -148,7 +159,7 @@ owner approval.
 
 | Class | Searches Performed | Sources Investigated | Best Candidate | License | Access Status | Reason Blocked | Author Contact Required |
 |-------|-------------------|---------------------|----------------|---------|---------------|----------------||----------------------|
-| Bird-Drop | Web search across arXiv, Mendeley, Zenodo, Roboflow, Kaggle, GitHub, IEEE, institutional repos | 15+ datasets | SPSI/DeepSolarEye | CC BY-NC-SA 2.0 | VERIFIED | RESOLVED 2026-09-03 — non-commercial intent confirmed, cleared for use | NO |
+| Bird-Drop | Web search across arXiv, Mendeley, Zenodo, Roboflow, Kaggle, GitHub, IEEE, institutional repos, plus direct archive inspection 2026-09-03 | 15+ datasets | none — SPSI/DeepSolarEye ruled out, no other candidate found | N/A | N/A | Only candidate dataset has no discrete class labels (regression-only) | NO — needs a new source, not owner contact |
 | Electrical-Damage | Web search across arXiv, Mendeley, Zenodo, GitHub, IEEE | 12+ datasets | Two-Stage Lightweight CNN RGB Dataset (Zenodo 18205662) | CC BY 4.0 | RESTRICTED | Access controls prevent download | YES |
 | Physical-Damage | Web search across arXiv, Mendeley, Zenodo, GitHub, IEEE | 12+ datasets | Two-Stage Lightweight CNN RGB Dataset (Zenodo 18205662) | CC BY 4.0 | RESTRICTED | Access controls prevent download | YES |
 
@@ -157,7 +168,7 @@ owner approval.
 **Electrical-Damage / Physical-Damage access request must be submitted and approved**
 
 Rationale:
-- Bird-Drop: RESOLVED. Project maintainer confirmed on 2026-09-03 that Solar AI is research/non-commercial at this time, clearing the CC BY-NC-SA 2.0 NonCommercial restriction under that intent. This must be revisited if commercial deployment is later planned (see LICENSE_COMPATIBILITY.md).
+- Bird-Drop: BLOCKED (new reason as of 2026-09-03). The license question is moot — the only identified candidate dataset (SPSI/DeepSolarEye) was downloaded and inspected in full and contains no discrete class labels at all, only continuous power-loss/irradiance regression values. A genuinely new, labeled source must be found; none has been identified yet.
 - Electrical-Damage and Physical-Damage: Only candidate with explicit class labels and permissive license (CC BY 4.0) is the Zenodo 18205662 RGB dataset, but it is access-restricted. Access request must be submitted to author Hamdan Gani (Politeknik ATI Makassar) via Zenodo or direct email — see DATA_ACCESS_REQUEST.md.
 
 **Until access is granted for Electrical-Damage and Physical-Damage, six-class training cannot proceed.**
@@ -170,7 +181,7 @@ Training may begin only when ALL of the following conditions are satisfied:
 
 - [x] Clean provenance verified
 - [x] Dusty provenance verified
-- [x] Bird-Drop license/use approved (non-commercial intent confirmed 2026-09-03; revisit before commercial deployment)
+- [ ] Bird-Drop data source found (reopened 2026-09-03 — prior candidate has no usable labels; license question is moot until a labeled source exists)
 - [ ] Electrical-Damage data legitimately accessible (Zenodo access request pending)
 - [ ] Physical-Damage data legitimately accessible (Zenodo access request pending)
 - [ ] All six class mappings verified
@@ -193,6 +204,6 @@ Training may begin only when ALL of the following conditions are satisfied:
 ## Current Blocker Summary
 
 1. **Electrical-Damage / Physical-Damage**: Access-restricted on Zenodo. Data access request must be submitted to Hamdan Gani (Politeknik ATI Makassar). See DATA_ACCESS_REQUEST.md.
-2. **Bird-Drop**: RESOLVED 2026-09-03 — non-commercial intent confirmed by project maintainer, CC BY-NC-SA 2.0 compatible under that intent. See LICENSE_COMPATIBILITY.md. Must be revisited before any commercial deployment.
+2. **Bird-Drop**: BLOCKED (reopened 2026-09-03) — the only identified candidate dataset (SPSI/DeepSolarEye) was downloaded and inspected in full; it has no discrete class labels (regression-only). See LICENSE_COMPATIBILITY.md correction note. A new, genuinely labeled source is needed.
 
 **NO TRAINING PERFORMED — PROVENANCE/ACCESS GATE NOT YET SATISFIED (Zenodo access remains the sole blocker).**

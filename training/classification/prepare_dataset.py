@@ -51,18 +51,20 @@ def _sha256(path: Path, chunk_size: int = 1024 * 1024) -> str:
     return digest.hexdigest()
 
 
-def _collect_images(source: Path) -> tuple[list[dict[str, Any]], list[str]]:
+def _collect_images(source: Path, allowed_classes: list[str] | None = None) -> tuple[list[dict[str, Any]], list[str]]:
     """Walk a source root and collect image records.
 
     Returns a tuple of:
         records: list of dicts with keys: path, class_name, sha256, group
-        unknown_classes: list of class directory names not in REQUIRED_CLASSES
+        unknown_classes: list of class directory names not in allowed_classes
 
     Note:
         The class directory name is NOT used as a grouping identifier.
         ``group`` is only set when real source/panel/module metadata exists
         in the filename or directory structure. Otherwise it is ``None``.
     """
+    if allowed_classes is None:
+        allowed_classes = REQUIRED_CLASSES
     records: list[dict[str, Any]] = []
     seen_hashes: dict[str, str] = {}
     unknown_classes: list[str] = []
@@ -71,7 +73,7 @@ def _collect_images(source: Path) -> tuple[list[dict[str, Any]], list[str]]:
         if not entry.is_dir():
             continue
         class_name = entry.name
-        if class_name not in REQUIRED_CLASSES:
+        if class_name not in allowed_classes:
             unknown_classes.append(class_name)
             continue
 
@@ -157,6 +159,7 @@ def prepare_dataset(
     source_roots: list[Path],
     output_root: Path,
     seed: int = 42,
+    classes: list[str] | None = None,
 ) -> Path:
     """Prepare dataset from one or more source roots.
 
@@ -164,13 +167,28 @@ def prepare_dataset(
         source_roots: Directories containing class subdirectories.
         output_root: Directory where the prepared dataset will be written.
         seed: Random seed for deterministic splitting.
+        classes: Which classes to require/include. Defaults to all six
+            production classes. Passing a subset produces an explicitly
+            non-production, interim dataset (e.g. while some production
+            classes are still blocked on data access) — the manifest records
+            ``is_production_class_set: False`` in that case so downstream
+            tooling and readers can tell it apart from a real production run.
 
     Returns:
         Path to the written manifest file.
     """
+    if classes is None:
+        classes = REQUIRED_CLASSES
+    else:
+        unknown_requested = sorted(set(classes) - set(REQUIRED_CLASSES))
+        if unknown_requested:
+            raise RuntimeError(f"--classes contains classes outside the production set: {unknown_requested}")
+        if not classes:
+            raise RuntimeError("--classes must not be empty")
+
     output_root = output_root.resolve()
     for split in SPLITS:
-        for class_name in REQUIRED_CLASSES:
+        for class_name in classes:
             (output_root / split / class_name).mkdir(parents=True, exist_ok=True)
 
     all_records: list[dict[str, Any]] = []
@@ -180,7 +198,7 @@ def prepare_dataset(
         if not source.is_dir():
             raise RuntimeError(f"source root is not a directory: {source}")
 
-        records, unknown = _collect_images(source)
+        records, unknown = _collect_images(source, allowed_classes=classes)
         all_records.extend(records)
         all_unknown.extend(unknown)
 
@@ -191,7 +209,7 @@ def prepare_dataset(
     for rec in all_records:
         class_counts[rec["class_name"]] += 1
 
-    missing = [c for c in REQUIRED_CLASSES if class_counts.get(c, 0) == 0]
+    missing = [c for c in classes if class_counts.get(c, 0) == 0]
     if missing:
         raise RuntimeError(f"missing required classes with no images: {missing}")
 
@@ -201,7 +219,7 @@ def prepare_dataset(
 
     _split_records(all_records, seed=seed)
 
-    split_counts: dict[str, dict[str, int]] = {split: {c: 0 for c in REQUIRED_CLASSES} for split in SPLITS}
+    split_counts: dict[str, dict[str, int]] = {split: {c: 0 for c in classes} for split in SPLITS}
     for rec in all_records:
         src = Path(rec["source_path"])
         dst = output_root / rec["split"] / rec["class_name"] / src.name
@@ -212,7 +230,9 @@ def prepare_dataset(
     manifest = {
         "source_roots": [str(r) for r in source_roots],
         "seed": seed,
-        "classes": REQUIRED_CLASSES,
+        "classes": classes,
+        "is_production_class_set": classes == REQUIRED_CLASSES,
+        "production_classes": REQUIRED_CLASSES,
         "splits": {},
         "counts": split_counts,
         "records": all_records,
@@ -220,7 +240,7 @@ def prepare_dataset(
     for split in SPLITS:
         manifest["splits"][split] = {
             class_name: str(output_root / split / class_name)
-            for class_name in REQUIRED_CLASSES
+            for class_name in classes
         }
 
     manifest_path = output_root / "manifest.json"
@@ -244,10 +264,22 @@ def main() -> int:
         help="Output root directory for the prepared dataset.",
     )
     parser.add_argument("--seed", type=int, default=42, help="Random seed for deterministic splitting.")
+    parser.add_argument(
+        "--classes",
+        type=str,
+        nargs="+",
+        default=None,
+        choices=REQUIRED_CLASSES,
+        help=(
+            "Subset of the six production classes to require/include, for an explicitly "
+            "non-production interim dataset (e.g. while some classes are still blocked on "
+            "data access). Defaults to all six production classes."
+        ),
+    )
     args = parser.parse_args()
 
     try:
-        manifest_path = prepare_dataset(args.source, args.output, seed=args.seed)
+        manifest_path = prepare_dataset(args.source, args.output, seed=args.seed, classes=args.classes)
     except RuntimeError as exc:
         print(f"ERROR: {exc}", file=__import__("sys").stderr)
         return 1

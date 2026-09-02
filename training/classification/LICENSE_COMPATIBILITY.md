@@ -4,6 +4,21 @@ Generated: 2026-08-14
 Repository: https://github.com/cat226/solar-ai-framework
 Branch: feat/mobilenet-training-pipeline
 
+## CORRECTION (2026-09-03) — Bird-Drop source is NOT usable; entire analysis below is moot
+
+The actual publicly downloadable dataset (`https://drive.google.com/drive/folders/1qB5dPWZMi2-12sLHDykHb9i6GibbJ46l`, 45,755 files, 825 MiB, verified by direct download) contains **no discrete class labels at all**. Its own `README.md` states:
+
+> Image files names contains the time of the day and %age power_loss of the panel with respect to the clean panel and irradiance level. These informations can be used for regression.
+> Example: `solar_Wed_Jun_28_7__5__6_2017_L_0.0123268698061_I_0.0566274509804.jpg`
+
+All 45,755 images sit in one flat `PanelImages/` folder, labeled only with continuous power-loss and irradiance values (`L_...`, `I_...`) — there is no `bird-dropping` folder, tag, or metadata file anywhere in the archive. The "Original label: bird-dropping" claim in `DATASET_SOURCES.md` and the license analysis below were based on the WACV 2018 paper's discussion of soiling *types* in their study, not on any label actually present in the public release. Assigning any of these images a `Bird-Drop` class would mean fabricating labels with no ground truth — this project's rules explicitly forbid that.
+
+**Bird-Drop status reverts to: NO USABLE SOURCE FOUND.** The commercial-intent resolution below no longer applies to anything, since there is no legitimate data to apply it to. See `DATASET_SOURCES.md` for the corrected status.
+
+---
+
+*(Original analysis below, preserved for audit trail — no longer actionable.)*
+
 ## Source Under Review
 
 - **Dataset**: Solar Panel Soiling Image Dataset (SPSI) / DeepSolarEye Dataset
