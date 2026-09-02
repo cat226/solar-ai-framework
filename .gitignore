@@ -6,6 +6,9 @@ weights/*.pth
 weights/*.joblib
 weights/*.pkl
 
+# Prepared/raw training data (never commit datasets)
+training/data/
+
 # Python
 __pycache__/
 *.py[cod]
