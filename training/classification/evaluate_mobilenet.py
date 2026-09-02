@@ -64,6 +64,8 @@ def main() -> int:
     )
     a = p.parse_args()
     classes = a.classes if a.classes else PRODUCTION_CLASSES
+    if len(set(classes)) != len(classes):
+        raise SystemExit(f"--classes contains duplicate entries: {classes}")
     if not a.checkpoint.is_file():
         raise SystemExit(f"checkpoint not found: {a.checkpoint}")
     tf = transforms.Compose([transforms.Resize(256), transforms.CenterCrop(224), transforms.ToTensor(), transforms.Normalize([0.485,0.456,0.406],[0.229,0.224,0.225])])

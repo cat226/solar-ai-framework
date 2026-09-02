@@ -180,11 +180,14 @@ def prepare_dataset(
     if classes is None:
         classes = REQUIRED_CLASSES
     else:
+        if not classes:
+            raise RuntimeError("--classes must not be empty")
+        duplicates = sorted({c for c in classes if classes.count(c) > 1})
+        if duplicates:
+            raise RuntimeError(f"--classes contains duplicate entries: {duplicates}")
         unknown_requested = sorted(set(classes) - set(REQUIRED_CLASSES))
         if unknown_requested:
             raise RuntimeError(f"--classes contains classes outside the production set: {unknown_requested}")
-        if not classes:
-            raise RuntimeError("--classes must not be empty")
 
     output_root = output_root.resolve()
     for split in SPLITS:

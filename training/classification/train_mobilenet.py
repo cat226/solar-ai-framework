@@ -75,6 +75,8 @@ def main() -> int:
     if args.epochs < 1 or args.batch_size < 1 or args.lr <= 0:
         raise SystemExit("epochs, batch-size, and learning rate must be positive")
     classes = args.classes if args.classes else PRODUCTION_CLASSES
+    if len(set(classes)) != len(classes):
+        raise SystemExit(f"--classes contains duplicate entries: {classes}")
     torch.manual_seed(args.seed)
     train_loader, val_loader = build_loaders(args.data_root, args.batch_size, classes)
     model = models.mobilenet_v2(weights=models.MobileNet_V2_Weights.DEFAULT)

@@ -20,6 +20,7 @@ from training.classification.prepare_dataset import (
     _collect_images,
     _split_records,
 )
+from training.classification.train_mobilenet import _dataset as _train_dataset
 
 
 def _unique_color(cls: str, idx: int) -> tuple[int, int, int]:
@@ -111,6 +112,44 @@ class TestClassMapping:
         raw_ds = datasets.ImageFolder(tmp_path, transform=transforms.ToTensor())
         with pytest.raises(RuntimeError, match="dataset classes must exactly equal"):
             _map_dataset_to_production(raw_ds)
+
+    def test_map_dataset_supports_explicit_class_subset(self, tmp_path: Path):
+        """An interim (non-production) class subset maps to its own order, not the full six."""
+        subset = ["Clean", "Dusty", "Hotspot"]
+        for cls in subset:
+            (tmp_path / cls).mkdir(parents=True)
+            img = Image.new("RGB", (32, 32), _unique_color(cls, 0))
+            img.save(tmp_path / cls / f"{cls}_1.jpg")
+
+        raw_ds = datasets.ImageFolder(tmp_path, transform=transforms.ToTensor())
+        mapped = _map_dataset_to_production(raw_ds, subset)
+
+        assert mapped.classes == subset
+        assert mapped.class_to_idx == {name: idx for idx, name in enumerate(subset)}
+        assert len(mapped) == len(subset)
+
+    def test_map_dataset_subset_rejects_mismatched_folders(self, tmp_path: Path):
+        """A subset dataset containing a class outside the requested subset must still fail closed."""
+        for cls in ["Clean", "Dusty", "Hotspot"]:
+            (tmp_path / cls).mkdir(parents=True)
+            img = Image.new("RGB", (32, 32), _unique_color(cls, 0))
+            img.save(tmp_path / cls / f"{cls}_1.jpg")
+
+        raw_ds = datasets.ImageFolder(tmp_path, transform=transforms.ToTensor())
+        with pytest.raises(RuntimeError, match="dataset classes must exactly equal"):
+            _map_dataset_to_production(raw_ds, ["Clean", "Dusty"])
+
+    def test_train_dataset_supports_explicit_class_subset(self, tmp_path: Path):
+        """train_mobilenet's _dataset() helper supports the same subset override."""
+        subset = ["Clean", "Dusty", "Hotspot"]
+        for cls in subset:
+            (tmp_path / cls).mkdir(parents=True)
+            img = Image.new("RGB", (32, 32), _unique_color(cls, 0))
+            img.save(tmp_path / cls / f"{cls}_1.jpg")
+
+        ds = _train_dataset(tmp_path, transforms.ToTensor(), subset)
+        assert set(ds.targets) == {0, 1, 2}
+        assert max(ds.targets) == len(subset) - 1
 
 
 # ---------------------------------------------------------------------------
@@ -313,3 +352,84 @@ class TestPrepareDataset:
             assert 0.6 <= train_frac <= 0.95, f"Class {cls} train fraction {train_frac} out of expected range"
             assert 0.0 <= val_frac <= 0.3, f"Class {cls} val fraction {val_frac} out of expected range"
             assert 0.0 <= test_frac <= 0.3, f"Class {cls} test fraction {test_frac} out of expected range"
+
+
+# ---------------------------------------------------------------------------
+# prepare_dataset.py --classes (interim, non-production subset runs)
+# ---------------------------------------------------------------------------
+
+class TestPrepareDatasetClassSubset:
+    """Opt-in --classes override for interim runs while some classes are blocked."""
+
+    def _make_source(self, tmp_path: Path, classes: list[str], n: int = 5) -> Path:
+        source = tmp_path / "source"
+        for cls in classes:
+            (source / cls).mkdir(parents=True)
+            for i in range(n):
+                img = Image.new("RGB", (32, 32), _unique_color(cls, i))
+                img.save(source / cls / f"{cls}_{i}.jpg")
+        return source
+
+    def test_default_behavior_unchanged(self, tmp_path: Path):
+        """Omitting --classes still requires all six and marks the set as production."""
+        source = self._make_source(tmp_path, REQUIRED_CLASSES)
+        output = tmp_path / "output"
+        prepare_dataset([source], output, seed=42)
+
+        manifest = json.loads((output / "manifest.json").read_text())
+        assert manifest["classes"] == REQUIRED_CLASSES
+        assert manifest["is_production_class_set"] is True
+        assert manifest["production_classes"] == REQUIRED_CLASSES
+
+    def test_subset_produces_interim_manifest(self, tmp_path: Path):
+        """A class subset only requires/includes the requested classes and is marked non-production."""
+        subset = ["Clean", "Dusty", "Hotspot"]
+        source = self._make_source(tmp_path, subset)
+        output = tmp_path / "output"
+        prepare_dataset([source], output, seed=42, classes=subset)
+
+        manifest = json.loads((output / "manifest.json").read_text())
+        assert manifest["classes"] == subset
+        assert manifest["is_production_class_set"] is False
+        assert manifest["production_classes"] == REQUIRED_CLASSES
+        assert {rec["class_name"] for rec in manifest["records"]} == set(subset)
+
+        for split in SPLITS:
+            for cls in subset:
+                assert (output / split / cls).is_dir()
+            # Classes outside the requested subset must not get output directories.
+            assert not (output / split / "Bird-Drop").exists()
+
+    def test_subset_still_requires_all_requested_classes(self, tmp_path: Path):
+        """A requested class with zero images still fails closed, even in subset mode."""
+        source = self._make_source(tmp_path, ["Clean", "Dusty"])
+        output = tmp_path / "output"
+        with pytest.raises(RuntimeError, match="missing required classes"):
+            prepare_dataset([source], output, seed=42, classes=["Clean", "Dusty", "Hotspot"])
+
+    def test_subset_rejects_class_outside_production_set(self, tmp_path: Path):
+        """A class not in the production six must be rejected even when passed explicitly."""
+        source = self._make_source(tmp_path, ["Clean", "Dusty"])
+        output = tmp_path / "output"
+        with pytest.raises(RuntimeError, match="outside the production set"):
+            prepare_dataset([source], output, seed=42, classes=["Clean", "Dusty", "Snow-Covered"])
+
+    def test_subset_rejects_empty_classes(self, tmp_path: Path):
+        source = self._make_source(tmp_path, ["Clean"])
+        output = tmp_path / "output"
+        with pytest.raises(RuntimeError, match="must not be empty"):
+            prepare_dataset([source], output, seed=42, classes=[])
+
+    def test_subset_rejects_duplicate_classes(self, tmp_path: Path):
+        """Duplicate class names would corrupt manifest/output-layer sizing downstream."""
+        source = self._make_source(tmp_path, ["Clean", "Dusty"])
+        output = tmp_path / "output"
+        with pytest.raises(RuntimeError, match="duplicate entries"):
+            prepare_dataset([source], output, seed=42, classes=["Clean", "Clean", "Dusty"])
+
+    def test_subset_ignores_extra_class_folders_as_unknown(self, tmp_path: Path):
+        """A source containing classes outside the requested subset must still fail closed."""
+        source = self._make_source(tmp_path, ["Clean", "Dusty", "Hotspot"])
+        output = tmp_path / "output"
+        with pytest.raises(RuntimeError, match="unknown classes found in source"):
+            prepare_dataset([source], output, seed=42, classes=["Clean", "Dusty"])
