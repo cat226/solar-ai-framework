@@ -151,6 +151,47 @@ class TestClassMapping:
         assert set(ds.targets) == {0, 1, 2}
         assert max(ds.targets) == len(subset) - 1
 
+    def test_map_dataset_getitem_returns_remapped_target_not_just_attribute(self, tmp_path: Path):
+        """Regression: ImageFolder.__getitem__ reads self.samples, not self.targets -
+        reassigning .targets alone does not change what a DataLoader actually yields.
+        A non-alphabetical requested order must produce correct __getitem__ targets."""
+        requested = ["Dusty", "Clean", "Hotspot"]  # deliberately not alphabetical
+        for cls in requested:
+            (tmp_path / cls).mkdir(parents=True)
+            img = Image.new("RGB", (32, 32), _unique_color(cls, 0))
+            img.save(tmp_path / cls / f"{cls}_1.jpg")
+
+        raw_ds = datasets.ImageFolder(tmp_path, transform=transforms.ToTensor())
+        mapped = _map_dataset_to_production(raw_ds, requested)
+
+        for idx in range(len(mapped)):
+            _, actual_target = mapped[idx]  # what a DataLoader really sees
+            assert actual_target == mapped.targets[idx], (
+                f"__getitem__ target {actual_target} does not match .targets "
+                f"{mapped.targets[idx]} at index {idx} - .targets was reassigned "
+                "but __getitem__ still reads the original alphabetical-order label"
+            )
+            # Cross-check against the source-of-truth: which folder the file came from.
+            src_class = raw_ds.classes[raw_ds.targets[idx]]
+            assert actual_target == requested.index(src_class)
+
+    def test_train_dataset_getitem_returns_remapped_target_not_just_attribute(self, tmp_path: Path):
+        """Same regression as above, for train_mobilenet.py's _dataset()/_RemappedImageFolder."""
+        requested = ["Dusty", "Clean", "Hotspot"]  # deliberately not alphabetical
+        for cls in requested:
+            (tmp_path / cls).mkdir(parents=True)
+            img = Image.new("RGB", (32, 32), _unique_color(cls, 0))
+            img.save(tmp_path / cls / f"{cls}_1.jpg")
+
+        ds = _train_dataset(tmp_path, transforms.ToTensor(), requested)
+        raw_ds = datasets.ImageFolder(tmp_path, transform=transforms.ToTensor())
+
+        for idx in range(len(ds)):
+            _, actual_target = ds[idx]  # what a DataLoader really sees
+            assert actual_target == ds.targets[idx]
+            src_class = raw_ds.classes[raw_ds.targets[idx]]
+            assert actual_target == requested.index(src_class)
+
 
 # ---------------------------------------------------------------------------
 # prepare_dataset.py
@@ -433,3 +474,20 @@ class TestPrepareDatasetClassSubset:
         output = tmp_path / "output"
         with pytest.raises(RuntimeError, match="unknown classes found in source"):
             prepare_dataset([source], output, seed=42, classes=["Clean", "Dusty"])
+
+    def test_duplicate_detected_across_multiple_source_roots(self, tmp_path: Path):
+        """Regression: duplicate detection must span ALL --source roots, not just
+        each one individually. A fresh seen_hashes dict per source root would let a
+        byte-identical image in two different roots slip into different splits."""
+        source_a = tmp_path / "source_a"
+        source_b = tmp_path / "source_b"
+        (source_a / "Clean").mkdir(parents=True)
+        (source_b / "Dusty").mkdir(parents=True)
+
+        img = Image.new("RGB", (32, 32), _unique_color("shared", 0))
+        img.save(source_a / "Clean" / "clean_1.jpg")
+        img.save(source_b / "Dusty" / "dirty_1.jpg")  # byte-identical, different root+class
+
+        output = tmp_path / "output"
+        with pytest.raises(RuntimeError, match="duplicate image detected"):
+            prepare_dataset([source_a, source_b], output, seed=42)

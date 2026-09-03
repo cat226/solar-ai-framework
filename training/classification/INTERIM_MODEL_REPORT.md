@@ -16,6 +16,45 @@ all six classes in the fixed production order) and must never be saved to or loa
 `weights/mobilenet_solar.pth`. It is saved to `weights/mobilenet_interim_3class.pth`
 (gitignored, not committed) purely as a local validation artifact.
 
+## Critical bug found and fixed (2026-09-03, pre-merge review)
+
+A `/code-review` pass on this PR, independently verified by direct execution (not just
+trusted), found that **the class-order remapping this entire PR exists to add did not
+actually work**. `train_mobilenet.py`'s `_dataset()` and `evaluate_mobilenet.py`'s
+`_map_dataset_to_production()` both reassigned `ds.targets` to the remapped
+production-order indices, but `torchvision.datasets.ImageFolder.__getitem__` reads labels
+from `self.samples`, not `self.targets` — confirmed directly against torchvision's source
+and with a live repro (`ds.targets` said `[1, 0, 2]` after remapping; `ds[i]` still
+returned the original alphabetical targets `[0, 1, 2]`). Reassigning `.targets` alone is
+dead code as far as any `DataLoader` is concerned.
+
+**Impact**: any training or evaluation run where alphabetical class order differs from the
+requested order — which includes every real six-class production run (alphabetical:
+Bird-Drop, Clean, Dusty, Electrical-Damage, Hotspot, Physical-Damage vs. production:
+Clean, Dusty, Bird-Drop, Electrical-Damage, Physical-Damage, Hotspot) — would have silently
+trained/evaluated against scrambled labels while every fail-closed check still passed.
+
+**Why this checkpoint's own results are unaffected**: `Clean, Dusty, Hotspot` happens to
+already be alphabetically sorted, so the (broken) identity-adjacent remapping coincidentally
+matched the correct one for this specific 3-class combination. The 100% test accuracy and
+the app-integration validation reported elsewhere in this file are genuine and unaffected —
+verified by re-running both after the fix and confirming byte-identical results. But the bug
+would have silently corrupted the very training run this PR was created to make correct
+(the full six-class production order), and would corrupt any future non-alphabetical
+`--classes` subset too.
+
+**Fix**: both `_dataset()`/`_map_dataset_to_production()` now return a proper dataset
+wrapper whose `__getitem__` remaps the target at access time (delegating to the wrapped
+`ImageFolder.__getitem__` for the sample, then mapping the *original* returned target
+through the production-order mapping), instead of mutating an attribute the loader never
+reads. Added regression tests that call `ds[idx]` directly with a deliberately
+non-alphabetical requested order and assert it matches both `.targets` and the true source
+folder — the previous test suite only ever exercised alphabetically-ordered class sets and
+so never caught this. A third, related bug was found and fixed in the same pass:
+`prepare_dataset.py`'s SHA-256 duplicate detection used a fresh dict per `--source` root,
+so a duplicate image spanning two different source roots (not exercised by this project's
+actual single-root runs, but supported by the CLI) would not have been caught.
+
 ## Dataset provenance
 
 | Class | Source | License | Raw downloaded | After dedup |

@@ -10,17 +10,22 @@ from torch.optim import AdamW
 from torch.utils.data import DataLoader, WeightedRandomSampler
 from torchvision import datasets, models, transforms
 
+try:
+    # Package-relative import (works when imported as training.classification.train_mobilenet,
+    # e.g. from the test suite).
+    from training.classification._dataset_remap import RemappedImageFolder, remap_to_class_order
+except ImportError:
+    # Bare import (works when run as a standalone script: `python train_mobilenet.py`, where
+    # this file's own directory - not the repo root - is on sys.path).
+    from _dataset_remap import RemappedImageFolder, remap_to_class_order
+
 PRODUCTION_CLASSES = ["Clean", "Dusty", "Bird-Drop", "Electrical-Damage", "Physical-Damage", "Hotspot"]
 CLASSES = PRODUCTION_CLASSES
 
 
-def _dataset(root: Path, transform: transforms.Compose, classes: list[str]) -> datasets.ImageFolder:
+def _dataset(root: Path, transform: transforms.Compose, classes: list[str]) -> RemappedImageFolder:
     ds = datasets.ImageFolder(root, transform=transform)
-    if sorted(ds.classes) != sorted(classes):
-        raise RuntimeError(f"dataset classes must exactly equal {classes}; got {ds.classes}")
-    mapping = {ds.class_to_idx[name]: classes.index(name) for name in classes}
-    ds.targets = [mapping[target] for target in ds.targets]
-    return ds
+    return remap_to_class_order(ds, classes)
 
 
 def build_loaders(root: Path, batch_size: int, classes: list[str]) -> tuple[DataLoader, DataLoader]:
@@ -110,8 +115,12 @@ def main() -> int:
             best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
     if best_state is None:
         raise RuntimeError("training produced no checkpoint")
-    if list(model.classifier[1].weight.shape) != [len(classes), model.last_channel]:
-        raise RuntimeError("unexpected classifier output shape")
+    # Validate the actual saved state dict, not the live model - the live model's
+    # classifier shape is fixed at construction and can never fail this check, which
+    # would silently let a corrupted/mismatched best_state through.
+    saved_classifier_shape = list(best_state["classifier.1.weight"].shape)
+    if saved_classifier_shape != [len(classes), model.last_channel]:
+        raise RuntimeError(f"unexpected classifier output shape in saved checkpoint: {saved_classifier_shape}")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     torch.save(best_state, args.output)
     is_production = classes == PRODUCTION_CLASSES

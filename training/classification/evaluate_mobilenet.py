@@ -5,16 +5,21 @@ import json
 from pathlib import Path
 
 import torch
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score, precision_score, recall_score
+from sklearn.metrics import classification_report, confusion_matrix
 from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import datasets, models, transforms
+
+try:
+    from training.classification._dataset_remap import RemappedImageFolder, remap_to_class_order
+except ImportError:
+    from _dataset_remap import RemappedImageFolder, remap_to_class_order
 
 PRODUCTION_CLASSES = ["Clean", "Dusty", "Bird-Drop", "Electrical-Damage", "Physical-Damage", "Hotspot"]
 CLASSES = PRODUCTION_CLASSES
 
 
-def _map_dataset_to_production(ds: datasets.ImageFolder, classes: list[str] | None = None) -> datasets.ImageFolder:
+def _map_dataset_to_production(ds: datasets.ImageFolder, classes: list[str] | None = None) -> RemappedImageFolder:
     """Remap ImageFolder targets from alphabetical indices to the given class order.
 
     ImageFolder sorts directory names alphabetically, but the model expects a
@@ -23,26 +28,7 @@ def _map_dataset_to_production(ds: datasets.ImageFolder, classes: list[str] | No
     """
     if classes is None:
         classes = PRODUCTION_CLASSES
-    if sorted(ds.classes) != sorted(classes):
-        raise RuntimeError(f"dataset classes must exactly equal {classes}; got {ds.classes}")
-
-    mapping = {ds.class_to_idx[name]: classes.index(name) for name in classes}
-    ds.targets = [mapping[target] for target in ds.targets]
-
-    class _RemappedDataset:
-        def __init__(self, wrapped):
-            self._wrapped = wrapped
-            self.classes = classes
-            self.class_to_idx = {name: idx for idx, name in enumerate(classes)}
-            self.targets = wrapped.targets
-
-        def __len__(self):
-            return len(self._wrapped)
-
-        def __getitem__(self, idx):
-            return self._wrapped[idx]
-
-    return _RemappedDataset(ds)
+    return remap_to_class_order(ds, classes)
 
 
 def main() -> int:
@@ -84,15 +70,18 @@ def main() -> int:
                 raise RuntimeError("invalid probability output")
             y_true.extend(y.tolist())
             y_pred.extend(out.argmax(1).tolist())
+    # classification_report's dict output already contains accuracy plus macro/weighted
+    # precision, recall, and f1 - derive from it once instead of five redundant sklearn passes.
+    report = classification_report(y_true, y_pred, target_names=classes, output_dict=True, zero_division=0)
     result = {
         "classes": classes,
         "is_production_class_set": classes == PRODUCTION_CLASSES,
-        "accuracy": accuracy_score(y_true, y_pred),
-        "macro_precision": precision_score(y_true, y_pred, average="macro", zero_division=0),
-        "macro_recall": recall_score(y_true, y_pred, average="macro", zero_division=0),
-        "macro_f1": f1_score(y_true, y_pred, average="macro", zero_division=0),
-        "weighted_f1": f1_score(y_true, y_pred, average="weighted", zero_division=0),
-        "report": classification_report(y_true, y_pred, target_names=classes, output_dict=True, zero_division=0),
+        "accuracy": report["accuracy"],
+        "macro_precision": report["macro avg"]["precision"],
+        "macro_recall": report["macro avg"]["recall"],
+        "macro_f1": report["macro avg"]["f1-score"],
+        "weighted_f1": report["weighted avg"]["f1-score"],
+        "report": report,
         "confusion_matrix": confusion_matrix(y_true, y_pred).tolist(),
     }
     print(json.dumps(result, indent=2))

@@ -51,7 +51,11 @@ def _sha256(path: Path, chunk_size: int = 1024 * 1024) -> str:
     return digest.hexdigest()
 
 
-def _collect_images(source: Path, allowed_classes: list[str] | None = None) -> tuple[list[dict[str, Any]], list[str]]:
+def _collect_images(
+    source: Path,
+    allowed_classes: list[str] | None = None,
+    seen_hashes: dict[str, str] | None = None,
+) -> tuple[list[dict[str, Any]], list[str]]:
     """Walk a source root and collect image records.
 
     Returns a tuple of:
@@ -62,11 +66,19 @@ def _collect_images(source: Path, allowed_classes: list[str] | None = None) -> t
         The class directory name is NOT used as a grouping identifier.
         ``group`` is only set when real source/panel/module metadata exists
         in the filename or directory structure. Otherwise it is ``None``.
+
+        ``seen_hashes`` defaults to a fresh dict when not supplied (e.g. when
+        called standalone), but callers preparing a dataset from *multiple*
+        source roots must pass the same dict across every call so a
+        byte-identical image appearing under two different source roots is
+        still caught - a fresh dict per call would only detect duplicates
+        within a single root.
     """
     if allowed_classes is None:
         allowed_classes = REQUIRED_CLASSES
     records: list[dict[str, Any]] = []
-    seen_hashes: dict[str, str] = {}
+    if seen_hashes is None:
+        seen_hashes = {}
     unknown_classes: list[str] = []
 
     for entry in sorted(source.iterdir()):
@@ -196,12 +208,13 @@ def prepare_dataset(
 
     all_records: list[dict[str, Any]] = []
     all_unknown: list[str] = []
+    seen_hashes: dict[str, str] = {}
     for source in source_roots:
         source = source.resolve()
         if not source.is_dir():
             raise RuntimeError(f"source root is not a directory: {source}")
 
-        records, unknown = _collect_images(source, allowed_classes=classes)
+        records, unknown = _collect_images(source, allowed_classes=classes, seen_hashes=seen_hashes)
         all_records.extend(records)
         all_unknown.extend(unknown)
 
