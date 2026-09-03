@@ -178,7 +178,7 @@ def main() -> None:
         storage.record_inspection(result, city=city, image_bytes=raw_bytes)
     except Exception:  # noqa: BLE001 — history recording must never break the live result
         logger.exception("Failed to record inspection to local history")
-    display_results(result)
+    display_results(result, source_image=pil_image)
 
 
 if __name__ == "__main__":

@@ -107,6 +107,54 @@ def resize_for_yolo(img: Image.Image) -> Image.Image:
     return canvas
 
 
+def unletterbox_box(
+    box: tuple[float, float, float, float],
+    original_size: Tuple[int, int],
+) -> tuple[float, float, float, float]:
+    """Map a detection box from :func:`resize_for_yolo`'s 640x640 letterboxed
+    coordinate space back to the original image's pixel coordinates.
+
+    YOLO detection runs on the letterboxed canvas, so
+    ``DetectionResult.boxes`` coordinates are relative to that canvas, not
+    the original uploaded image. Drawing them directly on the original image
+    would misplace every box. This performs the exact inverse of the scale
+    and offset :func:`resize_for_yolo` applied.
+
+    Args:
+        box: (x1, y1, x2, y2) in the letterboxed 640x640 canvas.
+        original_size: (width, height) of the original image the letterboxed
+                       canvas was produced from.
+
+    Returns:
+        (x1, y1, x2, y2) in the original image's pixel coordinates, clamped
+        to the image bounds.
+    """
+    orig_w, orig_h = original_size
+    target = _YOLO_SIZE
+    img_ratio = orig_w / orig_h
+    if img_ratio > 1:
+        new_w, new_h = target, int(target / img_ratio)
+    else:
+        new_w, new_h = int(target * img_ratio), target
+    offset_x = (target - new_w) // 2
+    offset_y = (target - new_h) // 2
+    scale_x = orig_w / new_w
+    scale_y = orig_h / new_h
+
+    x1, y1, x2, y2 = box
+    orig_x1 = (x1 - offset_x) * scale_x
+    orig_y1 = (y1 - offset_y) * scale_y
+    orig_x2 = (x2 - offset_x) * scale_x
+    orig_y2 = (y2 - offset_y) * scale_y
+
+    return (
+        max(0.0, min(orig_w, orig_x1)),
+        max(0.0, min(orig_h, orig_y1)),
+        max(0.0, min(orig_w, orig_x2)),
+        max(0.0, min(orig_h, orig_y2)),
+    )
+
+
 def resize_for_mobilenet(img: Image.Image) -> Image.Image:
     """Resize and centre-crop a PIL image to MobileNet's expected input size.
 

@@ -10,18 +10,41 @@ Responsibility
 """
 
 import streamlit as st
-from services.pipeline import PipelineResult
+from PIL import Image, ImageDraw
 
-def display_results(result: PipelineResult) -> None:
-    """Render all pipeline results to the Streamlit UI."""
-    _display_detection(result)
+from services.pipeline import PipelineResult
+from utils.image_utils import unletterbox_box
+
+def display_results(result: PipelineResult, source_image: Image.Image | None = None) -> None:
+    """Render all pipeline results to the Streamlit UI.
+
+    Args:
+        result: Completed pipeline result.
+        source_image: The original uploaded image, used to draw a real
+                      bounding-box overlay for detected panels. When omitted,
+                      the detection section falls back to metrics only.
+    """
+    _display_detection(result, source_image)
     _display_classification(result)
     _display_weather_physics(result)
     _display_prediction(result)
     _display_recommendations(result)
 
-def _display_detection(result: PipelineResult) -> None:
-    """Show YOLO detection metrics."""
+def _draw_detection_overlay(image: Image.Image, det) -> Image.Image:
+    """Draw real detection boxes (mapped out of letterboxed coordinates back
+    onto the original image) with per-box confidence labels."""
+    overlay = image.copy()
+    draw = ImageDraw.Draw(overlay)
+    for i, (box, conf) in enumerate(zip(det.boxes, det.confidences), start=1):
+        x1, y1, x2, y2 = unletterbox_box(tuple(box), image.size)
+        draw.rectangle([x1, y1, x2, y2], outline=(217, 123, 41), width=3)
+        label = f"#{i} {conf:.0%}"
+        draw.rectangle([x1, max(0, y1 - 18), x1 + 8 * len(label), y1], fill=(217, 123, 41))
+        draw.text((x1 + 2, max(0, y1 - 17)), label, fill=(255, 255, 255))
+    return overlay
+
+def _display_detection(result: PipelineResult, source_image: Image.Image | None) -> None:
+    """Show YOLO detection metrics and, when available, a real bounding-box overlay."""
     det = result.detection_result
     st.subheader("🔍 Panel Detection")
     col1, col2 = st.columns(2)
@@ -29,6 +52,9 @@ def _display_detection(result: PipelineResult) -> None:
     col2.metric("Best Confidence", f"{det.best_confidence:.1%}")
     if not det.detection_successful:
         st.warning("No solar panels detected in the uploaded image.")
+    elif source_image is not None and det.boxes:
+        overlay = _draw_detection_overlay(source_image, det)
+        st.image(overlay, caption="Detected panels", use_container_width=True)
 
 def _display_classification(result: PipelineResult) -> None:
     """Show MobileNet fault classification."""
