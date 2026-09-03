@@ -33,8 +33,20 @@ REVIEW REQUIRED, REQUEST REQUIRED, RESTRICTED, REJECTED, UNKNOWN.
 - **License**: CC BY 4.0 for the dataset itself. Note: underlying base imagery is from Google (subject to Google's own imagery terms) and IGN France (Open License 2.0) — attribution to both the dataset authors and imagery providers required.
 - **Access**: OPEN, no request needed. `bdappv.zip` (8.16 GB, 28,807 Google + 17,325 IGN images) and `data.zip` (17.7 MB, metadata).
 - **Annotation format**: Segmentation masks (13,303 Google + 7,686 IGN masks) generated from crowdsourced polygon annotations — **not bounding boxes directly**. Converting to YOLO-format bounding boxes requires computing the axis-aligned bounding box of each mask/polygon instance. This is a standard, well-defined, disclosed transformation (not a subjective relabeling judgment) — the resulting boxes would be documented as "derived from BDAPPV segmentation masks," not represented as originally hand-drawn bounding boxes.
-- **Open question before use**: need to confirm mask granularity — are masks per-individual-panel-installation (giving clean per-instance boxes) or coarser regional masks that would need connected-component splitting? Not yet verified; requires downloading and inspecting actual mask files.
-- **Status**: VERIFIED + USABLE (license/access), CONVERSION REQUIRED before it's YOLO-detection-ready.
+- **Mask granularity — CONFIRMED 2026-09-03** by downloading and inspecting `data.zip`
+  (17.7MB, not the full 8GB archive): the underlying annotations are **vector polygons**,
+  not raster masks. `data/replication/campaign-google/polygon-analysis.json` (13,303
+  entries) is a JSON list of `{id, polygons: [{points: [{x,y}, ...], score, area}, ...]}` —
+  one entry per image, one polygon per individual panel installation, pixel-coordinate
+  points. This is per-instance by construction (no connected-component splitting needed):
+  a YOLO bounding box is simply `(min(x), min(y), max(x), max(y))` over each polygon's
+  points, normalized by the source image's width/height. The IGN campaign has the
+  equivalent `campaign-ign/polygon-analysis.json` (7,686 entries). Still need to confirm,
+  before the full download: each image's actual pixel dimensions (to normalize
+  coordinates) and how `id` maps to the corresponding image filename inside the 8GB
+  `bdappv.zip` (not yet downloaded).
+- **Status**: VERIFIED + USABLE (license/access), conversion path confirmed straightforward.
+  Full 8GB image archive not yet downloaded (only the 17.7MB polygon metadata was).
 
 ### 2. Multi-resolution PV panel segmentation dataset (PV01/PV03/PV08)
 
