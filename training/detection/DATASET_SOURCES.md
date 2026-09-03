@@ -65,6 +65,35 @@ publicly downloadable, no-request-needed sources exist. The remaining work is en
 (mask→bbox conversion, YOLO-format dataset preparation, training pipeline), not
 provenance/access research.
 
+## Faster mirror found: Hugging Face (2026-09-03)
+
+Zenodo's direct download of `bdappv.zip` proved extremely slow in practice (~36-40KB/s
+sustained, ~63 hour ETA for the full 8.16GB, unaffected by reconnecting) — a real
+operational blocker distinct from provenance/license. The same dataset is also mirrored at
+**https://huggingface.co/datasets/gabrielkasmi/bdappv** (CC BY 4.0, no auth required),
+pre-split into train/validation/test parquet shards per campaign (Google, IGN), each row
+embedding the 400×400px image + its segmentation mask + metadata directly — no separate
+mask-file bookkeeping needed. Direct `curl` to the HF `resolve` URL sustained ~237KB/s
+(roughly 6x faster than Zenodo), though the `huggingface_hub` Python library's own
+`hf_hub_download()` call stalled indefinitely for an unclear reason — plain HTTP GET to the
+resolve URL works fine and is what should be used going forward, not the library.
+
+**License nuance discovered**: the companion fine-tuned model checkpoints
+(`gabrielkasmi/bdappv-models`) are licensed CC-BY-**NC** 4.0 for the Google-imagery variant
+specifically (inherited from Google's own base-imagery terms) vs. CC BY 4.0 for the
+IGN-imagery variant. The HF dataset repo itself states CC BY 4.0 overall, but to avoid
+reopening the same NonCommercial-license question already worked through for Bird-Drop,
+**IGN is the recommended subset to actually train on** — unambiguously CC BY 4.0 through
+the whole chain (dataset license + IGN Open License 2.0 base imagery), matching the
+cleanliness of Clean/Dusty/Hotspot's sources. Trade-off: IGN's native resolution is 20cm/pixel
+vs. Google's 10cm/pixel, which may affect detection quality; this can be revisited if IGN
+alone proves insufficient.
+
+IGN shards (11 parquet files: 2 test, 7 train, 2 validation) are being downloaded via a
+resumable retry-hardened script to `E:/Solar AI Training Images/yolo_source/bdappv_hf/ign/`
+as of this writing — not yet complete, not yet inspected for per-row schema (image/mask
+column names, polygon coordinates if included alongside the raster mask).
+
 ## Recommended next steps (not yet performed)
 
 1. Download a small sample from one dataset (not the full 8GB/6.8GB) to inspect actual mask
