@@ -49,8 +49,10 @@ from scipy import ndimage
 CLASS_ID = 0
 CLASS_NAME = "solar panel"
 SPLITS = ["train", "val", "test"]
-# The parquet 'split' column uses "validation", not "val" - map to our directory name.
-_SPLIT_MAP = {"train": "train", "validation": "val", "test": "test"}
+# The parquet 'split' column values, verified directly against the actual downloaded
+# shards (not assumed from shard filenames, which use "validation-*" but whose row
+# content actually says "val"): {'train', 'val', 'test'}.
+_SPLIT_MAP = {"train": "train", "val": "val", "test": "test"}
 
 
 def _sha256_bytes(data: bytes) -> str:
