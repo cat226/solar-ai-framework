@@ -42,6 +42,10 @@ env/
 *.swp
 *.swo
 
+# Local AI-tooling state (not project content)
+.claude/
+.kilo/
+
 # OS
 .DS_Store
 Thumbs.db
