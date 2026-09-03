@@ -105,11 +105,11 @@ owner approval.
 - **License**: Creative Commons Attribution-NonCommercial-ShareAlike 2.0 Generic (CC BY-NC-SA 2.0)
 - **Original label**: `bird-dropping`
 - **Production mapping**: NONE — see 2026-09-03 correction at top of this document. The full 45,755-file archive was downloaded and inspected; it contains one flat `PanelImages/` folder with images labeled only by continuous power-loss/irradiance values in the filename (per the archive's own README). No `bird-dropping` folder, tag, or metadata exists anywhere in the release.
-- **Approx. image count**: 45,754 RGB images total; bird-dropping is one of 6 soiling types
-- **Access verified**: Yes — direct Google Drive link on project page
-- **Status**: VERIFIED + USABLE (non-commercial) — CC BY-NC-SA 2.0 imposes a NonCommercial restriction. Project maintainer confirmed on 2026-09-03 that Solar AI is research/non-commercial at this time, so this class is cleared for use under that intent. See LICENSE_COMPATIBILITY.md for full analysis.
-- **Access notes**: Data is publicly downloadable via Google Drive. Attribution to IBM Research / DeepSolarEye authors must be preserved in documentation and any model card.
-- **Action required**: None under current non-commercial intent. If commercial deployment is later planned, this determination must be revisited and owner permission requested (see LICENSE_COMPATIBILITY.md).
+- **Approx. image count**: 45,755 RGB images total, confirmed by full download and inspection 2026-09-03 — but none carry a discrete class label; the "6 soiling types" language in the paper is a description of the authors' own analysis categories, not a label present in the released data.
+- **Access verified**: Yes — direct Google Drive link on project page; full archive downloaded and opened 2026-09-03.
+- **Status**: NO USABLE SOURCE FOUND (reopened 2026-09-03). The earlier non-commercial license resolution is moot — it answered a licensing question for a dataset that turns out not to have the class labels this project needs at all. See LICENSE_COMPATIBILITY.md correction and DATA_ACCESS_REQUEST.md are not applicable here; a genuinely new labeled source must be identified.
+- **Access notes**: Not applicable — the license/access question is moot until a labeled source exists.
+- **Action required**: Identify and verify (by actual download and inspection, not paper/webpage description) a new Bird-Drop source with real discrete labels.
 
 ### REQUEST REQUIRED Sources
 
