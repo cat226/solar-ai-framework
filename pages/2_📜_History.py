@@ -51,7 +51,9 @@ if fault_filter:
 if severity_filter:
     filtered = filtered[filtered["severity"].isin(severity_filter)]
 if city_filter:
-    filtered = filtered[filtered["city"].str.contains(city_filter, case=False, na=False)]
+    # regex=False: treat user input as a literal substring, not a pattern -
+    # avoids both ReDoS from a pathological pattern and a crash on invalid regex syntax.
+    filtered = filtered[filtered["city"].str.contains(city_filter, case=False, na=False, regex=False)]
 
 st.caption(f"Showing {len(filtered)} of {len(df)} recorded inspections.")
 
