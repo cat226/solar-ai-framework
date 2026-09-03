@@ -36,6 +36,7 @@ from utils.image_utils import (
     pil_to_numpy,
     resize_for_mobilenet,
     resize_for_yolo,
+    unletterbox_box,
 )
 from utils.config import CFG
 from utils.exceptions import ImageValidationError
@@ -190,6 +191,63 @@ class TestResizeForYolo:
         # The non-grey area should reflect the original aspect ratio
         assert result.width == _YOLO_SIZE
         assert result.height == _YOLO_SIZE
+
+
+# ---------------------------------------------------------------------------
+# B2. unletterbox_box — must be the exact inverse of resize_for_yolo's transform
+# ---------------------------------------------------------------------------
+
+class TestUnletterboxBox:
+    """Detection boxes are in letterboxed 640x640 space; this must map them
+    back to the original image's coordinates, or every overlay drawn on the
+    original image would be misplaced."""
+
+    def test_wide_image_known_coordinates(self):
+        # 800x400, ratio=2 -> new_w=640, new_h=320, offset_x=0, offset_y=160, scale=1.25
+        box = unletterbox_box((100.0, 210.0, 300.0, 410.0), (800, 400))
+        assert box == pytest.approx((125.0, 62.5, 375.0, 312.5))
+
+    def test_tall_image_known_coordinates(self):
+        # 400x800, ratio=0.5 -> new_w=320, new_h=640, offset_x=160, offset_y=0, scale=1.25
+        box = unletterbox_box((210.0, 100.0, 410.0, 300.0), (400, 800))
+        assert box == pytest.approx((62.5, 125.0, 312.5, 375.0))
+
+    def test_square_image_no_offset(self):
+        # 640x640 original -> no scaling, no offset at all.
+        box = unletterbox_box((50.0, 60.0, 200.0, 220.0), (640, 640))
+        assert box == pytest.approx((50.0, 60.0, 200.0, 220.0))
+
+    def test_clamps_to_image_bounds(self):
+        # A box reaching into the grey padding region must clamp, not go negative
+        # or exceed the original image size.
+        box = unletterbox_box((-10.0, -10.0, 700.0, 700.0), (800, 400))
+        x1, y1, x2, y2 = box
+        assert 0.0 <= x1 <= 800.0
+        assert 0.0 <= y1 <= 400.0
+        assert 0.0 <= x2 <= 800.0
+        assert 0.0 <= y2 <= 400.0
+
+    def test_round_trip_against_real_resize_for_yolo(self):
+        """A box drawn at a known fractional position on the original image,
+        mapped forward through the real letterbox geometry by hand, must map
+        back via unletterbox_box to (approximately) the original position -
+        proving this is the true inverse of resize_for_yolo, not a
+        coincidentally-similar formula."""
+        orig_w, orig_h = 800, 400
+        img = Image.new("RGB", (orig_w, orig_h))
+        letterboxed = resize_for_yolo(img)
+        assert letterboxed.size == (_YOLO_SIZE, _YOLO_SIZE)
+
+        # A point at the original image's exact centre must letterbox to the
+        # letterboxed canvas's exact centre (640x640 centre = (320, 320)),
+        # regardless of the aspect-ratio padding, and unletterbox_box must
+        # map that canvas centre back to the original centre.
+        canvas_centre_box = (315.0, 315.0, 325.0, 325.0)
+        mapped_back = unletterbox_box(canvas_centre_box, (orig_w, orig_h))
+        cx = (mapped_back[0] + mapped_back[2]) / 2
+        cy = (mapped_back[1] + mapped_back[3]) / 2
+        assert cx == pytest.approx(orig_w / 2, abs=1.0)
+        assert cy == pytest.approx(orig_h / 2, abs=1.0)
 
 
 # ---------------------------------------------------------------------------

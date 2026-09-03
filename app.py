@@ -18,11 +18,14 @@ import re
 import streamlit as st
 from PIL import Image, UnidentifiedImageError
 
+from services import storage
 from services.pipeline import PipelineResult, run_pipeline
+from utils.auth import require_access
 from utils.config import CFG
 from utils.logger import get_logger
 from utils.security import sanitize_for_log
 from utils.ui_helpers import display_results
+from utils.ui_theme import apply_page_chrome
 from models.model_manager import model_manager
 
 logger = get_logger(__name__)
@@ -30,12 +33,8 @@ logger = get_logger(__name__)
 # ---------------------------------------------------------------------------
 # Page configuration
 # ---------------------------------------------------------------------------
-st.set_page_config(
-    page_title="Solar AI Framework",
-    page_icon="☀️",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
+apply_page_chrome("Inspect")
+require_access()
 
 
 def _sanitize_city(value: str) -> str:
@@ -64,7 +63,7 @@ def _display_readiness_status() -> None:
 # ---------------------------------------------------------------------------
 # Sidebar — inputs
 # ---------------------------------------------------------------------------
-def _render_sidebar() -> tuple[Image.Image | None, str, float, int, float, float, str]:
+def _render_sidebar() -> tuple[Image.Image | None, bytes | None, str, float, int, float, float, str]:
     """Render sidebar inputs and return all pipeline parameters."""
     st.sidebar.title("☀️ Solar AI Framework")
     st.sidebar.markdown("Upload a solar panel image to begin analysis.")
@@ -110,6 +109,7 @@ def _render_sidebar() -> tuple[Image.Image | None, str, float, int, float, float
     _display_readiness_status()
 
     pil_image: Image.Image | None = None
+    raw_bytes: bytes | None = None
     if uploaded_file is not None:
         try:
             raw_bytes = uploaded_file.read()
@@ -123,8 +123,9 @@ def _render_sidebar() -> tuple[Image.Image | None, str, float, int, float, float
                 "The uploaded file is not a valid or safe image. "
                 "Please upload a JPG, JPEG, PNG, or WebP image under 10 MB."
             )
+            raw_bytes = None
 
-    return pil_image, city, panel_age, maintenance_count, voltage, current, installation_type
+    return pil_image, raw_bytes, city, panel_age, maintenance_count, voltage, current, installation_type
 
 
 # ---------------------------------------------------------------------------
@@ -132,10 +133,10 @@ def _render_sidebar() -> tuple[Image.Image | None, str, float, int, float, float
 # ---------------------------------------------------------------------------
 def main() -> None:
     """Main Streamlit entry point."""
-    st.title("☀️ Solar AI Framework")
-    st.caption("Automated solar panel fault detection and energy output prediction.")
+    st.title("☀️ Solar AI — Inspect")
+    st.caption("Upload a solar panel image for automated fault detection and energy output prediction.")
 
-    pil_image, city, panel_age, maintenance_count, \
+    pil_image, raw_bytes, city, panel_age, maintenance_count, \
         voltage, current, installation_type = _render_sidebar()
 
     if pil_image is None:
@@ -173,7 +174,11 @@ def main() -> None:
         return
 
     st.success(f"Pipeline completed in {result.processing_time:.2f}s")
-    display_results(result)
+    try:
+        storage.record_inspection(result, city=city, image_bytes=raw_bytes)
+    except Exception:  # noqa: BLE001 — history recording must never break the live result
+        logger.exception("Failed to record inspection to local history")
+    display_results(result, source_image=pil_image)
 
 
 if __name__ == "__main__":

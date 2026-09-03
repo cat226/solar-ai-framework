@@ -357,6 +357,15 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
+This is a native Streamlit multi-page app. `app.py` is the **Inspect** page
+(upload an image, run the full pipeline); the sidebar navigation also lists
+**Dashboard**, **History**, **Analytics**, **Alerts**, and **Settings** —
+all driven by `services/storage.py`, a local SQLite log of every real,
+successfully-completed inspection (never fabricated data; the uploaded
+image itself is never stored, only its SHA-256 hash). With no inspections
+recorded yet, each of those pages shows an explicit empty state rather
+than invented numbers.
+
 ---
 
 # Environment Variables
@@ -365,6 +374,14 @@ Create a `.env` file:
 
 ```text
 OPENWEATHER_API_KEY=YOUR_API_KEY
+```
+
+Optional — protect the deployment behind a single shared password (see
+`utils/auth.py`; this is **not** a multi-user account system, just a gate
+against casual unauthenticated access):
+
+```text
+APP_ACCESS_PASSWORD=your-shared-password
 ```
 
 Do **not** commit this file.
@@ -446,6 +463,9 @@ The CI workflow is defined in `.github/workflows/ci.yml`.
 - **Python 3.12 required:** The test suite and full dependency stack (torch, torchvision, ultralytics) require Python 3.12. Python 3.14 is not supported.
 - **No network in tests:** All tests are designed to run without network access. Model weights and API calls are mocked.
 - **Windows CI only:** GitHub Actions currently runs on `windows-latest`.
+- **Single-deployment persistence, not multi-tenant:** `services/storage.py` is a local SQLite file appropriate for one deployment's own history — it is not a multi-user production database. See its module docstring for the intended replacement seam if that's ever needed.
+- **Access gate is a single shared password, not multi-user auth:** `utils/auth.py` blocks casual unauthenticated access; it has no per-user identity, password reset, or SSO. It is a no-op when `APP_ACCESS_PASSWORD` is unset (matching local development).
+- **Sites/Assets management and PDF report export are not implemented.** Building genuine versions would require backend persistence beyond what the current single-user SQLite history honestly supports; they were scoped out rather than built as fabricated placeholders.
 
 ## Health and Readiness
 
