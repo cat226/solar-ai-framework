@@ -7,3 +7,12 @@ enableXsrfProtection = true
 
 [browser]
 gatherUsageStats = false
+
+[theme]
+# Solar AI palette: warm amber (solar/energy) on a clean slate-neutral base —
+# an industrial-intelligence look rather than a generic "green energy" one.
+primaryColor = "#D97B29"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F3F4F6"
+textColor = "#111827"
+font = "sans serif"
