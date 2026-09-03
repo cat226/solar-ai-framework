@@ -133,6 +133,36 @@ validated real-world accuracy claim. A true generalization estimate would need e
 grouping metadata from the original sources or evaluation on a genuinely independent
 external dataset.
 
+## App-integration validation (2026-09-03)
+
+Run via `training/classification/validate_interim_checkpoint.py`, which does **not** wire
+the checkpoint into the app — it validates the checkpoint against the app's *actual*
+inference code, not a reimplementation of it:
+
+1. **Correct-label path**: built the model with the exact same construction pattern as
+   `ModelManager._load_classifier` (`torchvision.models.mobilenet_v2` +
+   `classifier[1]` replaced with `nn.Linear`), loaded via the same
+   `torch.load(..., weights_only=True)` call, preprocessed 45 real held-out test images
+   (15 per class) with the real `utils.image_utils.resize_for_mobilenet`, and ran them
+   through the real `models.classifier.SolarFaultClassifier.classify()` — with its label
+   list temporarily overridden to `['Clean', 'Dusty', 'Hotspot']` instead of the six
+   production labels. Result: **45/45 correct (100%)**, confidences 0.80–1.00.
+2. **Danger demonstration — why this checkpoint can never be swapped in as-is**: ran the
+   identical checkpoint through `SolarFaultClassifier.classify()` completely
+   *unmodified*, i.e. with the real six production labels from `configs/settings.yaml`.
+   A real Hotspot test image (`H122.jpeg`) was reported as **`Bird-Drop`, confidence
+   0.972** — because the checkpoint only emits 3 logits and `zip(_LABELS, probs)`
+   silently pairs them with the first 3 production labels (Clean, Dusty, Bird-Drop)
+   instead of this checkpoint's actual classes (Clean, Dusty, Hotspot). This is why the
+   interim checkpoint is saved outside `weights/mobilenet_solar.pth`, is gitignored, and
+   must never be treated as a drop-in production artifact — confirmed concretely, not just
+   asserted by convention.
+
+**Conclusion:** the checkpoint is fully compatible with the app's real model-construction
+and preprocessing code when used with its own (correct) class list, and is conclusively
+proven incompatible with the app's default six-label configuration. It remains a
+pipeline-validation artifact, not an integration target.
+
 ## Absolute rule compliance
 
 - No fabricated data, metrics, or provenance
