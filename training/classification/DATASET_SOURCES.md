@@ -40,6 +40,17 @@ the prior write-up:
   the Afroz set (Clean/Dusty/Bird-drop/Snow-Covered), suggesting re-hosted derivatives rather than
   independent collections. Direct verification of original provenance was blocked (403) on the
   project page checked. None were accepted absent that verification.
+- Mendeley "Thermal Imaging Dataset for Hotspot Detection on Solar Panels: Impact of Bird
+  Droppings on Efficiency" (TRSAI, Egypt, CC BY 4.0, 850 thermal images): genuinely licensed
+  and downloadable, but thermal-only (wrong modality vs. our RGB requirement) and does not
+  clearly separate a discrete "bird dropping visible on panel" class from generic hotspot
+  images — it studies bird droppings as a *cause* of thermal hotspots, not as a distinct
+  visual class.
+- "Plant_Campania" dataset (Di Tommaso et al., arXiv 2111.11709, 1500 RGB images, six defect
+  classes reportedly including bird dropping): the only candidate found with a plausible,
+  genuinely field-collected, discrete "bird dropping" RGB label — but no public download link,
+  repository, or license has ever been located for it, in the original paper or afterward; it
+  appears to be a private/internal dataset. Not accepted absent public access and a stated license.
 - **Conclusion: still BLOCKED.** No source found that provides genuinely-provenanced, discretely-labeled
   Bird-Drop images under a verifiable license.
 
