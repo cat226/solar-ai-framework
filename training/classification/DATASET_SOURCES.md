@@ -14,6 +14,45 @@ Six production classes are required:
 5. Physical-Damage
 6. Hotspot
 
+## PHASE 3 RE-VERIFICATION (2026-09-03, independent re-check)
+
+Both remaining blockers were independently re-verified today, from scratch, rather than trusting
+the prior write-up:
+
+**Bird-Drop — additional candidates checked and rejected, conclusion unchanged (BLOCKED):**
+- The "PV Panel Defect Dataset" Kaggle mirrors (`alicjalena/pv-panel-defect-dataset`,
+  `neurobotdata/photovoltaic-panel-defect-dataset`, 792 images, six classes incl.
+  `Bird-drop`/`Snow-Covered`) all trace to the same "Afroz (2023)" Kaggle source
+  (`pythonafroz/solar-panel-images`) already rejected in this document for "License: Unknown" —
+  independently confirmed by the SolarFCD paper's own literature review, which separately flags
+  this exact source as "permission uncertain." Re-uploading under a different Kaggle username
+  does not establish a valid license.
+- `gitenavnath/solar-augmented-dataset` (Kaggle, ~3,000 images, includes Bird-drop): described as
+  an *augmented* dataset (rotation/shift/shear/zoom applied) with no license stated for the
+  underlying images — almost certainly a derivative of the same Afroz base set inflated via
+  augmentation. Even setting the license question aside, pre-augmented data cannot be used as
+  raw source input without violating this project's split policy (augmented copies must stay
+  confined to the training split, which requires knowing which images are augmented copies of
+  which originals — not knowable from a pre-augmented download).
+- Multiple Roboflow "bird drop" object-detection projects show CC BY 4.0 license badges, but a
+  Roboflow uploader's self-applied license badge on their platform export does not establish that
+  they held the rights to relicense the underlying images — most use the same class taxonomy as
+  the Afroz set (Clean/Dusty/Bird-drop/Snow-Covered), suggesting re-hosted derivatives rather than
+  independent collections. Direct verification of original provenance was blocked (403) on the
+  project page checked. None were accepted absent that verification.
+- **Conclusion: still BLOCKED.** No source found that provides genuinely-provenanced, discretely-labeled
+  Bird-Drop images under a verifiable license.
+
+**Electrical-Damage / Physical-Damage — Zenodo record 18205662 re-confirmed live:**
+- Fresh API check today: `access_right: restricted`, files array still empty, license still
+  CC BY 4.0, owner/DOI unchanged (Hamdan Gani, Politeknik ATI Makassar,
+  10.5281/zenodo.18205662). The record's own metadata additionally reports ~23,499 images across
+  electroluminescence, thermal-infrared, and RGB modalities in the full (still-restricted) dataset.
+- `DATA_ACCESS_REQUEST.md` status is still PENDING — no submission or approval evidence exists.
+  Submitting it requires the repository owner's own Zenodo account/identity; it has not been
+  submitted as of this re-verification.
+- **Conclusion: still RESTRICTED.** No bypass attempted; no unauthorized access obtained.
+
 ## CORRECTION (2026-09-03)
 
 Bird-Drop was previously marked resolved based on a license-compatibility review, but that review
@@ -165,7 +204,7 @@ owner approval.
 
 ## Recommended Next Action
 
-**Electrical-Damage / Physical-Damage access request must be submitted and approved**
+**Two independent blockers must both clear: a new Bird-Drop source must be found, and the Zenodo access request for Electrical-Damage/Physical-Damage must be submitted and approved**
 
 Rationale:
 - Bird-Drop: BLOCKED (new reason as of 2026-09-03). The license question is moot — the only identified candidate dataset (SPSI/DeepSolarEye) was downloaded and inspected in full and contains no discrete class labels at all, only continuous power-loss/irradiance regression values. A genuinely new, labeled source must be found; none has been identified yet.
@@ -206,4 +245,4 @@ Training may begin only when ALL of the following conditions are satisfied:
 1. **Electrical-Damage / Physical-Damage**: Access-restricted on Zenodo. Data access request must be submitted to Hamdan Gani (Politeknik ATI Makassar). See DATA_ACCESS_REQUEST.md.
 2. **Bird-Drop**: BLOCKED (reopened 2026-09-03) — the only identified candidate dataset (SPSI/DeepSolarEye) was downloaded and inspected in full; it has no discrete class labels (regression-only). See LICENSE_COMPATIBILITY.md correction note. A new, genuinely labeled source is needed.
 
-**NO TRAINING PERFORMED — PROVENANCE/ACCESS GATE NOT YET SATISFIED (Zenodo access remains the sole blocker).**
+**NO TRAINING PERFORMED — PROVENANCE/ACCESS GATE NOT YET SATISFIED (two independent blockers: Bird-Drop has no labeled source, Electrical-Damage/Physical-Damage remain Zenodo-restricted).**
