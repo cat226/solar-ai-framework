@@ -128,7 +128,13 @@ class ModelManager:
                 "Update 'models.yolo.weights' in configs/settings.yaml if using custom paths.",
             )
 
-        self._detector = YOLO(str(_YOLO_WEIGHTS))
+        try:
+            self._detector = YOLO(str(_YOLO_WEIGHTS))
+        except Exception as exc:  # noqa: BLE001 - ultralytics can raise many real error types for a corrupt/incompatible checkpoint
+            raise ModelLoadError(
+                "YOLO",
+                f"Weights file exists but failed to load as a YOLO checkpoint: {type(exc).__name__}: {exc}",
+            ) from exc
         logger.info("YOLO model loaded from %s.", _YOLO_WEIGHTS)
 
     def get_detector(self) -> _YOLOModel:
@@ -299,7 +305,13 @@ class ModelManager:
                 "Update 'models.xgboost.weights' in configs/settings.yaml if using custom paths.",
             )
 
-        self._predictor = joblib.load(str(_XGB_WEIGHTS))
+        try:
+            self._predictor = joblib.load(str(_XGB_WEIGHTS))
+        except Exception as exc:  # noqa: BLE001 - joblib/pickle can raise many real error types for a corrupt/incompatible artifact
+            raise ModelLoadError(
+                "XGBoost",
+                f"Pipeline file exists but failed to load: {type(exc).__name__}: {exc}",
+            ) from exc
         logger.info("XGBoost pipeline loaded from %s.", _XGB_WEIGHTS)
 
     def get_predictor(self) -> _XGBPipeline:
@@ -406,6 +418,51 @@ class ModelManager:
             "production_labels": list(_MN_PRODUCTION_LABELS),
             "interim_labels": list(_MN_INTERIM_LABELS),
         }
+
+    def verify_all(self) -> dict[str, dict[str, object]]:
+        """Deep, on-demand verification: actually attempts to load every
+        model (via the same cached get_*() methods the real pipeline uses -
+        so if a model is already loaded this is free, not a second load),
+        distinguishing a genuinely missing artifact from one that exists but
+        fails to load (corrupt file, shape mismatch, incompatible torch
+        build, etc.) - a distinction the cheap filesystem-only
+        artifact_status/mobilenet_status properties cannot make.
+
+        Not called automatically by any page on every render - this is
+        deliberately opt-in (e.g. a "Run deep verification" button) so nothing
+        pays the cost of a real model load just to display a status page.
+
+        Returns one entry per model:
+            {"state": "ready"|"interim"|"missing"|"error", "detail": str|None}
+        "ready" means production-equivalent for YOLO/XGBoost, or the
+        production 6-class checkpoint for MobileNet; "interim" is
+        MobileNet-only.
+        """
+        report: dict[str, dict[str, object]] = {}
+
+        try:
+            self.get_detector()
+            report["YOLO"] = {"state": "ready", "detail": None}
+        except ModelLoadError as exc:
+            state = "missing" if not _YOLO_WEIGHTS.is_file() else "error"
+            report["YOLO"] = {"state": state, "detail": str(exc)}
+
+        try:
+            self.get_classifier()
+            report["MobileNet"] = {"state": self._classifier_source or "ready", "detail": None}
+        except ModelLoadError as exc:
+            mn = self.mobilenet_status
+            state = "missing" if mn["state"] == "missing" else "error"
+            report["MobileNet"] = {"state": state, "detail": str(exc)}
+
+        try:
+            self.get_predictor()
+            report["XGBoost"] = {"state": "ready", "detail": None}
+        except ModelLoadError as exc:
+            state = "missing" if not _XGB_WEIGHTS.is_file() else "error"
+            report["XGBoost"] = {"state": state, "detail": str(exc)}
+
+        return report
 
 
 # ---------------------------------------------------------------------------
