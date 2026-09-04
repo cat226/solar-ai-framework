@@ -22,19 +22,35 @@ docker run --rm -p 8501:8501 \
   solar-ai-framework:latest
 ```
 
-Required files for real inference:
+Required files for Solar AI v1 (solar-panel detection + Clean/Dusty/Hotspot
+classification):
 
 - `yolo_solar.pt`
-- `mobilenet_solar.pth`
-- `xgboost_solar.joblib`
+- `mobilenet_solar_v1.pth`
+
+Optional, not part of v1:
+
+- `mobilenet_solar.pth` — the future six-class classifier. Not yet trained;
+  not required for v1. If present, `ModelManager` prefers it automatically
+  over the v1 artifact, superseding v1's 3-class scope with no code change.
+- `xgboost_solar.joblib` — efficiency-loss prediction. Not yet trained (no
+  legitimate training dataset was found - see
+  `training/prediction/DATASET_SOURCES.md`); not required for v1. Detection
+  and classification run normally without it, and efficiency/output fields
+  are reported as genuinely unavailable rather than fabricated.
 
 Do not substitute generated, placeholder, or unverified model files.
 
 ## Model artifact verification
 
 Trusted deployment artifacts should be accompanied by a reviewed JSON
-manifest containing the SHA-256 digest of every artifact. Verify the mounted
-artifacts before starting an inference-capable deployment:
+manifest containing the SHA-256 digest of every artifact. The repository
+ships one such reviewed manifest for the real v1.0.0 artifacts at
+`weights/manifest.json` (see `docs/RELEASE_v1.0.0.md` for the full
+reproducibility record) - use it as-is if deploying the exact v1.0.0
+artifacts, or replace it with a manifest for your own reviewed bundle.
+Verify the mounted artifacts before starting an inference-capable
+deployment:
 
 ```bash
 python scripts/verify_model_artifacts.py --manifest /app/weights/manifest.json

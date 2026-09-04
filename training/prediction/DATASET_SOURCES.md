@@ -17,9 +17,10 @@ target:
 5. `wind_speed_ms`
 6. `cloud_cover_pct`
 7. `soiling_ratio`
-8. `fault_class_id` — the production/interim fault-class index, i.e. a real
-   sample must carry a real label from *this repository's own class order*
-   (`Clean, Dusty, Bird-Drop, Electrical-Damage, Physical-Damage, Hotspot`)
+8. `fault_class_id` — the real fault-class index from whichever classifier
+   actually produced it (v1's 3-class or the future six-class one), i.e. a
+   real sample must carry a real label from *this repository's own class
+   order* (`Clean, Dusty, Bird-Drop, Electrical-Damage, Physical-Damage, Hotspot`)
 9. `detection_confidence` — a real YOLO detection confidence, not a
    placeholder
 

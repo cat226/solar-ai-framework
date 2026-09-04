@@ -421,6 +421,22 @@ the uploaded image itself is never stored, only its SHA-256 hash) or by
 live inspection. With no inspections recorded/run yet, each page shows an
 explicit empty state rather than invented numbers.
 
+## Running with Docker
+
+```bash
+docker build -t solar-ai-framework:latest .
+docker run --rm -p 8501:8501 \
+  -e OPENWEATHER_API_KEY="$OPENWEATHER_API_KEY" \
+  -v "$(pwd)/weights:/app/weights:ro" \
+  solar-ai-framework:latest
+```
+
+Model artifacts are never baked into the image — mount `weights/` (containing
+at minimum `yolo_solar.pt` and `mobilenet_solar_v1.pth` for v1) at
+`/app/weights` as shown. See `deployment/README.md` for artifact
+verification (`scripts/verify_model_artifacts.py`), the liveness/readiness
+distinction, and production notes (non-root user, upload limits, XSRF).
+
 ---
 
 # Environment Variables
@@ -597,7 +613,7 @@ The CI workflow is defined in `.github/workflows/ci.yml`.
 The application distinguishes between **liveness** (process is running) and **readiness** (production inference dependencies are available):
 
 - **Liveness:** Docker healthcheck probes `/_stcore/health`. A healthy container means the Streamlit process is accepting requests.
-- **Readiness:** The sidebar displays model artifact readiness. When genuine weights are absent, the UI shows a warning. The CLI tool `scripts/check_runtime_readiness.py` reports `not_ready` with a non-zero exit code.
+- **Readiness:** The sidebar displays model artifact readiness. When genuine weights are absent, the UI shows a warning. The CLI tool `scripts/check_runtime_readiness.py` reports `not_ready` with a non-zero exit code whenever any of the three original model slots is missing — for a normal v1 deployment (YOLO + MobileNet v1 present, XGBoost genuinely absent by design) that correctly means `not_ready` with only `["XGBoost"]` listed, which is expected, not a defect. See `docs/RELEASE_v1.0.0.md`.
 
 ## Model Output Validation
 

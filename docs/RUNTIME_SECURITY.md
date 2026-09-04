@@ -13,6 +13,21 @@
 - City input is capped at 100 characters and control characters are removed before API calls and logging.
 - Pipeline/model failures are returned through typed results rather than exposing uncontrolled tracebacks in the UI.
 
+## Model artifact deserialization
+
+- YOLO (`ultralytics.YOLO(...)`) and MobileNet (`torch.load(..., weights_only=True)`)
+  loading is hardened against arbitrary-code-execution-on-load; `weights_only=True`
+  specifically restricts the MobileNet checkpoint to tensor data only.
+- The XGBoost predictor loads via `joblib.load(...)`, which is pickle-based and
+  therefore capable of executing arbitrary code if given an untrusted file. No
+  XGBoost artifact exists for the v1 release (this load path is never reached in
+  a v1 deployment), and the project's supply-chain policy already requires every
+  artifact to come from a controlled, reviewed process before deployment (see
+  `docs/ARTIFACT_SUPPLY_CHAIN.md`) — never a substitute for pickle safety, but the
+  existing mitigation for this specific gap. Sandboxing/format hardening this load
+  path is a real future improvement, out of scope for this release since XGBoost
+  itself is not shipped in v1.
+
 ## Container security
 
 - The production container uses Python 3.12 slim Bookworm.
