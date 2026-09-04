@@ -37,16 +37,16 @@ def display_results(result: PipelineResult, source_image: Image.Image | None = N
 def _display_capability_notice(result: PipelineResult) -> None:
     """Honest, up-front disclosure of what this specific run could and
     couldn't do - shown before any results, not buried at the bottom."""
-    if result.classifier_source == "interim":
+    if result.classifier_source == "v1":
         st.info(
-            "ℹ️ **Classifier coverage: Clean / Dusty / Hotspot only.** This inspection "
-            "used the interim MobileNet checkpoint - Bird-Drop, Electrical-Damage, and "
-            "Physical-Damage are not yet classifiable (see the **Limitations** page). "
-            "The final six-class production model is planned once those datasets are acquired."
+            "ℹ️ **Classifier coverage: Clean / Dusty / Hotspot (v1).** This is Solar AI "
+            "v1's frozen release scope - Bird-Drop, Electrical-Damage, and Physical-Damage "
+            "are a documented future expansion, not part of this release (see the "
+            "**Limitations** page)."
         )
     elif result.classifier_source == "missing":
         st.warning(
-            "⚠️ No MobileNet checkpoint (production or interim) is available - "
+            "⚠️ No MobileNet checkpoint (v1 or six-class) is available - "
             "classification results below are not real."
         )
     if not result.xgboost_available:

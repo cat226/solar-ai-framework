@@ -170,10 +170,12 @@ class PipelineResult:
             diagram refers to). Empty list on zero detections - never
             fabricated placeholder panels.
         site_summary: Aggregation of ``panels`` - see :class:`SiteSummary`.
-        classifier_source: ``"production"``, ``"interim"``, or ``"unknown"``
-            (set only when classification never ran, e.g. on early
-            validation failure) - which MobileNet artifact actually
-            produced ``classification_result``/every ``panels[i].classification``.
+        classifier_source: ``"v1"`` (the frozen release classifier - the
+            normal, expected value), ``"six_class"`` (the future full
+            artifact, once trained), or ``"unknown"`` (set only when
+            classification never ran, e.g. on early validation failure) -
+            which MobileNet artifact actually produced
+            ``classification_result``/every ``panels[i].classification``.
         xgboost_available: Whether the XGBoost artifact was present and
             loadable for this run. When ``False``, every prediction field
             above reports ``prediction_successful=False`` rather than the

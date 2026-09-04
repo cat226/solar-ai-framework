@@ -4,6 +4,17 @@
 Exit codes:
   0 - all expected artifacts are present
   2 - one or more expected artifacts are missing
+
+"MobileNet" is ready whenever either the v1 release artifact or the future
+six-class artifact is present - see ModelManager.artifact_status. "XGBoost"
+is checked against its one real path and, for the current Solar AI v1
+release, is *expected* to be reported missing: no legitimate training
+dataset exists yet (see training/prediction/DATASET_SOURCES.md), so a v1
+deployment with real YOLO + MobileNet artifacts correctly reports
+not_ready/exit 2 with only ["XGBoost"] missing. That is honest, accurate
+reporting of a real v1 capability boundary, not a defect - this script
+never treats a permanently-scoped-out artifact as "ready" just because a
+release doesn't need it.
 """
 
 from __future__ import annotations

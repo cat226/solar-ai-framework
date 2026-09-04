@@ -108,14 +108,14 @@ class SolarFaultClassifier:
                    :class:`~models.model_manager.ModelManager`, already in
                    eval mode and on the correct device.
             labels: The class label list matching *model*'s output layer, in
-                    index order. Defaults to the production
+                    index order. Defaults to the full six-class
                     ``classification.labels`` list from config when omitted,
                     preserving prior behavior exactly. Pass
                     :attr:`models.model_manager.ModelManager.classifier_labels`
-                    here so an interim (non-production) checkpoint reports
-                    its own real class names instead of being silently
-                    mismatched against the 6-label production list - see
-                    the "danger demonstration" in
+                    here so a smaller-class-set checkpoint (e.g. the v1
+                    release artifact) reports its own real class names
+                    instead of being silently mismatched against the
+                    6-label list - see the "danger demonstration" in
                     training/classification/INTERIM_MODEL_REPORT.md for what
                     happens if this isn't done.
 
@@ -179,7 +179,7 @@ class SolarFaultClassifier:
             # training/classification/INTERIM_MODEL_REPORT.md's "danger
             # demonstration": zip() silently truncates/mispairs when the
             # label list doesn't match the model's real output size (e.g. a
-            # 3-class checkpoint run against the 6-label production list).
+            # 3-class checkpoint run against the 6-label future full list).
             # Fail loudly instead of ever returning a mismatched label.
             raise PredictionError(
                 "MobileNet",

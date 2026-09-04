@@ -33,19 +33,25 @@ models:
     iou_threshold: 0.50
     image_size: 640
   mobilenet:
-    weights: "weights/mobilenet_solar.pth"
-    num_classes: 6
-    input_size: 224
-    # Interim, non-production checkpoint: trained on a subset of the six
-    # production classes while Bird-Drop/Electrical-Damage/Physical-Damage
-    # datasets remain blocked (see training/classification/DATASET_SOURCES.md).
-    # ModelManager only falls back to this when the production artifact above
-    # is absent - see models/model_manager.py's mobilenet_status property.
-    interim_weights: "weights/mobilenet_solar_interim_3class.pth"
-    interim_labels:
+    # v1 (frozen, current) classifier: the real, actively-loaded artifact for
+    # this release, covering the three classes with genuinely licensed data.
+    # This is not a placeholder or a fallback - it IS the v1 production
+    # classifier. See training/classification/DATASET_SOURCES.md for why
+    # Bird-Drop/Electrical-Damage/Physical-Damage remain a documented future
+    # expansion rather than part of this release.
+    v1_weights: "weights/mobilenet_solar_v1.pth"
+    v1_labels:
       - "Clean"
       - "Dusty"
       - "Hotspot"
+    # Future six-class artifact: not yet trained (no artifact exists at this
+    # path). ModelManager prefers this automatically the moment it exists -
+    # see models/model_manager.py's mobilenet_status property - so acquiring
+    # the three missing classes' data and training this later requires no
+    # application code changes.
+    weights: "weights/mobilenet_solar.pth"
+    num_classes: 6
+    input_size: 224
   xgboost:
     weights: "weights/xgboost_solar.joblib"
 
