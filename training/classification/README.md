@@ -58,31 +58,31 @@ python training/classification/evaluate_mobilenet.py --data-root training/data/c
 
 The scripts must fail closed on missing classes, malformed images, duplicate inputs, invalid splits, or incompatible checkpoints. They must never download or fabricate training data.
 
-## Interim (non-production) runs on a class subset
+## Class-subset runs (this is how Solar AI v1 was produced)
 
-When one or more production classes are legitimately blocked on data access/licensing (see
+When one or more of the six future classes are legitimately blocked on data access/licensing (see
 `DATASET_SOURCES.md` for current status), all three scripts accept an opt-in `--classes` flag
-naming a subset of the six production classes:
+naming a subset of the six classes:
 
 ```bash
-python training/classification/prepare_dataset.py --source /path/to/raw --output training/data/classification_interim --classes Clean Dusty Hotspot
-python training/classification/train_mobilenet.py --data-root training/data/classification_interim --output weights/mobilenet_solar_interim_3class.pth --classes Clean Dusty Hotspot
-python training/classification/evaluate_mobilenet.py --data-root training/data/classification_interim --checkpoint weights/mobilenet_solar_interim_3class.pth --classes Clean Dusty Hotspot
+python training/classification/prepare_dataset.py --source /path/to/raw --output training/data/classification_v1 --classes Clean Dusty Hotspot
+python training/classification/train_mobilenet.py --data-root training/data/classification_v1 --output weights/mobilenet_solar_v1.pth --classes Clean Dusty Hotspot
+python training/classification/evaluate_mobilenet.py --data-root training/data/classification_v1 --checkpoint weights/mobilenet_solar_v1.pth --classes Clean Dusty Hotspot
 ```
 
-Omitting `--classes` preserves the exact original behavior: all six production classes required,
+Omitting `--classes` preserves the exact original behavior: all six future classes required,
 fail-closed if any is missing. A checkpoint trained on a subset is **not** compatible with the
-production `ModelManager` and must never be saved to `weights/mobilenet_solar.pth` or otherwise
-presented as the production model. Manifests and evaluation output from a subset run record
-`is_production_class_set: false` so this is never ambiguous.
+future six-class `ModelManager` path and must never be saved to `weights/mobilenet_solar.pth` or
+otherwise presented as the full six-class model. Manifests and evaluation output from a subset run
+record `is_production_class_set: false` so this is never ambiguous.
 
-`weights/mobilenet_solar_interim_3class.pth` is the exact filename
-`models/model_manager.py` looks for as its automatic fallback
-(`models.mobilenet.interim_weights` in `configs/settings.yaml`) when the
-production artifact is absent — using this exact name means the running
-application actually picks up the interim checkpoint, with every UI
-surface (Model Status, Limitations, and a banner on the Inspect page
-itself) disclosing that it's interim, not production.
+**This is exactly how the real, frozen Solar AI v1 classifier was produced** - the
+Clean/Dusty/Hotspot run above. `weights/mobilenet_solar_v1.pth` is the exact filename
+`models/model_manager.py` looks for as the v1 artifact (`models.mobilenet.v1_weights` in
+`configs/settings.yaml`), loaded automatically whenever the future six-class artifact
+(`weights/mobilenet_solar.pth`) is absent — which is the normal, expected state for this release.
+Every UI surface (Model Status, Limitations, and a notice on the Inspect page itself) discloses
+that v1 covers three of six classes; see the main `README.md`'s v1 scope statement.
 
 ## Cloud (Kaggle) training
 

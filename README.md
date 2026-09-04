@@ -69,10 +69,12 @@ Maintenance Recommendation
 Streamlit Dashboard
 ```
 
-*Current deployment status: YOLOv8 detection uses a real trained
-production artifact; MobileNetV2 classification is running on an interim
-3-class checkpoint (Clean/Dusty/Hotspot); XGBoost has no trained artifact
-yet. See [Current Project Status](#current-project-status) below.*
+*Current deployment status (Solar AI v1, frozen release): YOLOv8 detection
+uses a real trained artifact; MobileNetV2 classification runs the real,
+frozen v1 3-class checkpoint (Clean/Dusty/Hotspot) - this is v1's
+intentional, complete scope, not a placeholder; XGBoost has no trained
+artifact and none is planned until a genuine dataset is found. See
+[Current Project Status](#current-project-status) below.*
 
 ---
 
@@ -85,14 +87,25 @@ yet. See [Current Project Status](#current-project-status) below.*
 - Image preprocessing
 - Confidence scoring
 
-Supported fault classes:
+**Solar AI v1 supports solar-panel detection and three fault classes: Clean, Dusty, and
+Hotspot.** This is v1's real, frozen classifier scope - not a placeholder pending
+completion.
+
+Supported now (v1):
 
 - Clean
-- Dust
-- Bird Droppings
-- Electrical Damage
-- Physical Damage
-- Snow Coverage
+- Dusty
+- Hotspot
+
+Documented future roadmap - not part of v1, not currently classifiable:
+
+- Bird-Drop
+- Electrical-Damage
+- Physical-Damage
+
+See [Current Project Status](#current-project-status) and
+[Known Limitations](#known-limitations) for exactly why, and
+`training/classification/DATASET_SOURCES.md` for per-class dataset provenance.
 
 ---
 
@@ -196,7 +209,7 @@ a completed inspection) — no page fabricates a value it doesn't have:
 | 02 | Panel Results | Per-panel table for the most recent live inspection |
 | 03 | Site Health | Site-level rollup (this inspection + aggregate history) |
 | 04 | Environment | Weather/physics inputs actually used, and their source |
-| 05 | Model Status | Per-model readiness, real artifact SHA-256, production/interim state |
+| 05 | Model Status | Per-model readiness, real artifact SHA-256, v1/six-class state |
 | 06 | Limitations | Honest, live-cross-checked capability disclosure |
 | 07 | History | Searchable full inspection history |
 | 08 | Analytics | Trend charts over real recorded history |
@@ -435,31 +448,33 @@ Do **not** commit this file.
 Place the trained models inside the `weights/` directory (all gitignored —
 never committed):
 
-- `weights/yolo_solar.pt` — production YOLOv8n panel detector. A real
-  checkpoint exists as of this writing, trained on the full audited
-  17,107-image BDAPPV IGN dataset via the Kaggle cloud pipeline (see
-  `training/cloud/`); test-split mAP50 ≈ 0.74. Record:
-  `training/experiments/registry.jsonl`, experiment `solar-yolo-full-v1`.
-- `weights/mobilenet_solar.pth` — production six-class fault classifier
+- `weights/yolo_solar.pt` — real YOLOv8n panel detector, and the
+  production artifact for v1. A real checkpoint exists as of this writing,
+  trained on the full audited 17,107-image BDAPPV IGN dataset via the
+  Kaggle cloud pipeline (see `training/cloud/`); test-split mAP50 ≈ 0.74.
+  Record: `training/experiments/registry.jsonl`, experiment
+  `solar-yolo-full-v1`.
+- `weights/mobilenet_solar_v1.pth` — **the real, frozen v1 fault
+  classifier** (Clean, Dusty, Hotspot). Not a placeholder or a fallback -
+  this is the production artifact for this release. `models/model_manager.py`
+  loads this automatically (`models.mobilenet.v1_weights` in
+  `configs/settings.yaml`).
+- `weights/mobilenet_solar.pth` — the future six-class fault classifier
   (Clean, Dusty, Bird-Drop, Electrical-Damage, Physical-Damage, Hotspot).
-  **Not yet available** — three of the six classes have no genuinely
-  licensed, accessible dataset yet (see `training/classification/DATASET_SOURCES.md`).
-- `weights/mobilenet_solar_interim_3class.pth` — **interim** classifier
-  covering only Clean/Dusty/Hotspot, the three classes with verified data.
-  `models/model_manager.py` automatically falls back to this when the
-  production artifact above is absent, and every UI surface discloses
-  which one is actually active (see the **Model Status** and
-  **Limitations** pages) — the app never silently pretends interim
-  coverage is the full six classes.
+  **Not yet available and not part of v1** — three of the six classes have
+  no genuinely licensed, accessible dataset yet (see
+  `training/classification/DATASET_SOURCES.md`). `models/model_manager.py`
+  prefers this automatically the moment it exists, superseding v1 without
+  any application code change.
 - `weights/xgboost_solar.joblib` — efficiency-loss regressor. **Not yet
-  trained** — investigated 2026-09-04 (see `training/prediction/DATASET_SOURCES.md`):
-  no dataset was found that legitimately pairs this project's own
-  `fault_class_id` taxonomy with real environmental telemetry *and* a
-  genuinely measured efficiency-loss target, so none was fabricated. When
-  absent, `services/pipeline.py` still runs detection and classification
-  and returns real results; every efficiency/output field is reported as
-  genuinely unavailable (`prediction_successful=False`), never a
-  fabricated `0.0`.
+  trained, and not part of v1** — investigated 2026-09-04 (see
+  `training/prediction/DATASET_SOURCES.md`): no dataset was found that
+  legitimately pairs this project's own `fault_class_id` taxonomy with
+  real environmental telemetry *and* a genuinely measured efficiency-loss
+  target, so none was fabricated. When absent, `services/pipeline.py`
+  still runs detection and classification and returns real results; every
+  efficiency/output field is reported as genuinely unavailable
+  (`prediction_successful=False`), never a fabricated `0.0`.
 
 None of these files are included in the repository. See
 `training/cloud/README.md` for how each was (or will be) produced.
@@ -474,10 +489,10 @@ None of these files are included in the repository. See
   (or the equivalent path on another machine — see `training/cloud/base/storage_paths.py`),
   re-run `training/classification/prepare_dataset.py`, then
   `training/classification/train_mobilenet.py` with **no** `--classes`
-  argument (its default is the full six) to produce a real production
+  argument (its default is the full six) to produce a real six-class
   checkpoint at `weights/mobilenet_solar.pth`. No application code needs
-  to change — `models/model_manager.py` already prefers the production
-  artifact automatically over the interim one the moment it exists.
+  to change — `models/model_manager.py` already prefers that artifact
+  automatically over the v1 one the moment it exists.
 - **The XGBoost predictor**: no training pipeline exists yet because no
   legitimate dataset has been found — see the "re-opening this
   investigation" section of `training/prediction/DATASET_SOURCES.md` for
@@ -573,7 +588,7 @@ The CI workflow is defined in `.github/workflows/ci.yml`.
 - **Single-deployment persistence, not multi-tenant:** `services/storage.py` is a local SQLite file appropriate for one deployment's own history — it is not a multi-user production database. See its module docstring for the intended replacement seam if that's ever needed.
 - **Access gate is a single shared password, not multi-user auth:** `utils/auth.py` blocks casual unauthenticated access; it has no per-user identity, password reset, or SSO. It is a no-op when `APP_ACCESS_PASSWORD` is unset (matching local development).
 - **Sites/Assets management and PDF report export are not implemented.** Building genuine versions would require backend persistence beyond what the current single-user SQLite history honestly supports; they were scoped out rather than built as fabricated placeholders.
-- **MobileNet classification is interim (3-class), not the full six-class production contract.** Bird-Drop, Electrical-Damage, and Physical-Damage cannot currently be classified — see `training/classification/DATASET_SOURCES.md` for exactly which datasets are blocked and why (some have no genuinely licensed public source at all; others are access-restricted pending the dataset owner's approval, which requires a human account holder, not something this codebase can obtain on its own). The class order contract itself (`Clean, Dusty, Bird-Drop, Electrical-Damage, Physical-Damage, Hotspot`) is unchanged and enforced by `training/classification/_dataset_remap.py` — adding the missing classes later only requires acquiring their data and training on the full set; no application code needs to change (`models/model_manager.py` already prefers the production artifact automatically whenever it exists).
+- **v1 supports three of six taxonomy classes by design** (Clean, Dusty, Hotspot) - this is v1's frozen, intentional release scope, not an incomplete rollout. Bird-Drop, Electrical-Damage, and Physical-Damage remain a documented future expansion and cannot currently be classified — see `training/classification/DATASET_SOURCES.md` for exactly which datasets are blocked and why (some have no genuinely licensed public source at all; others are access-restricted pending the dataset owner's approval, which requires a human account holder, not something this codebase can obtain on its own). The full future class order (`Clean, Dusty, Bird-Drop, Electrical-Damage, Physical-Damage, Hotspot`) is unchanged and enforced by `training/classification/_dataset_remap.py` — acquiring the missing classes' data and training on the full set is all that's required to supersede v1; no application code needs to change (`models/model_manager.py` already prefers that six-class artifact automatically whenever it exists).
 - **No XGBoost artifact exists yet, and none is planned until a genuine dataset is found.** Investigated 2026-09-04 — see `training/prediction/DATASET_SOURCES.md` for the full per-candidate-dataset rejection analysis. Efficiency-loss/output-power predictions are unavailable, not estimated as zero — every part of the UI that would show a prediction instead shows an explicit "unavailable" state (see `services/pipeline.py`'s `xgboost_available` flag), and aggregate KPIs (`services/storage.get_summary_stats`) report `None`, not `0.0`, when no stored inspection ever produced a real prediction.
 - **Large local training data lives outside the repository**, on the development machine's `E:\Solar AI Training Images\` drive — see `training/cloud/README.md`'s "Local storage policy" section. This has no effect on the deployed application, which only reads the small artifacts under `weights/`.
 
@@ -598,13 +613,19 @@ Invalid model outputs raise `PredictionError` and stop the pipeline with a contr
 
 # Current Project Status
 
+**Solar AI v1 is frozen and released.** v1 supports solar-panel detection and three fault
+classes: **Clean, Dusty, and Hotspot**. Bird-Drop, Electrical-Damage, and Physical-Damage
+remain a documented future roadmap item, not part of this release. XGBoost efficiency
+prediction is currently unavailable because no legitimate training dataset with the
+required telemetry and a genuinely measured efficiency-loss target was found.
+
 | Module | Status |
 |---------|--------|
 | Architecture | ✅ Complete |
 | Streamlit Dashboard (10 pages, see below) | ✅ Complete |
-| YOLO Detection | ✅ Genuine production artifact trained (Kaggle P100, full 17,107-image BDAPPV IGN dataset) |
-| MobileNet Classification | ⚠️ **Interim, 3-class only** (Clean/Dusty/Hotspot) — Bird-Drop/Electrical-Damage/Physical-Damage blocked on dataset acquisition, see [Known Limitations](#known-limitations) |
-| XGBoost Efficiency Prediction | ❌ No trained artifact — pipeline reports predictions as honestly unavailable rather than fabricating output, see `services/pipeline.py` |
+| YOLO Detection | ✅ Real trained artifact (Kaggle P100, full 17,107-image BDAPPV IGN dataset) |
+| MobileNet Classification | ✅ **v1 release, 3-class** (Clean/Dusty/Hotspot) — this is v1's frozen, intentional scope; Bird-Drop/Electrical-Damage/Physical-Damage are a documented future expansion, see [Known Limitations](#known-limitations) |
+| XGBoost Efficiency Prediction | ❌ No trained artifact, not part of v1 — pipeline reports predictions as honestly unavailable rather than fabricating output, see `services/pipeline.py` |
 | Weather Integration | ✅ Complete |
 | Feature Engineering | ✅ Complete |
 | Maintenance Recommendation | ✅ Complete (skipped, not fabricated, when no real prediction exists) |
