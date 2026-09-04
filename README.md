@@ -389,10 +389,15 @@ streamlit run app.py
 ```
 
 This is a native Streamlit multi-page app. `app.py` is the **Inspect** page:
-upload a solar panel image (JPG/PNG/WebP, max 10 MB) in the sidebar, and it
-runs the full pipeline — YOLO detection, whole-image and per-panel
-MobileNet classification, weather lookup, physics, and (when
-`weights/xgboost_solar.joblib` exists) efficiency/output prediction. The
+upload a solar panel image (JPG/PNG/WebP, max 10 MB) in the sidebar, adjust
+the panel inputs if needed, then click **Analyze** to run the full
+pipeline — YOLO detection, whole-image and per-panel MobileNet
+classification, weather lookup, physics, and (when
+`weights/xgboost_solar.joblib` exists) efficiency/output prediction.
+Analysis only runs on that explicit click, not on every sidebar rerun —
+Streamlit reruns the whole script on any widget interaction, and running
+real inference (and writing a new history row) on every unrelated slider
+nudge would both waste real compute and silently duplicate history. The
 sidebar navigation lists the other ten pages (see the `pages/` table
 above) — **Overview**, **Panel Results**, **Site Health**, **Environment**,
 **Model Status**, **Limitations**, **History**, **Analytics**, **Alerts**,
@@ -447,10 +452,14 @@ never committed):
   **Limitations** pages) — the app never silently pretends interim
   coverage is the full six classes.
 - `weights/xgboost_solar.joblib` — efficiency-loss regressor. **Not yet
-  trained.** When absent, `services/pipeline.py` still runs detection and
-  classification and returns real results; every efficiency/output field
-  is reported as genuinely unavailable (`prediction_successful=False`),
-  never a fabricated `0.0`.
+  trained** — investigated 2026-09-04 (see `training/prediction/DATASET_SOURCES.md`):
+  no dataset was found that legitimately pairs this project's own
+  `fault_class_id` taxonomy with real environmental telemetry *and* a
+  genuinely measured efficiency-loss target, so none was fabricated. When
+  absent, `services/pipeline.py` still runs detection and classification
+  and returns real results; every efficiency/output field is reported as
+  genuinely unavailable (`prediction_successful=False`), never a
+  fabricated `0.0`.
 
 None of these files are included in the repository. See
 `training/cloud/README.md` for how each was (or will be) produced.
@@ -469,6 +478,16 @@ None of these files are included in the repository. See
   checkpoint at `weights/mobilenet_solar.pth`. No application code needs
   to change — `models/model_manager.py` already prefers the production
   artifact automatically over the interim one the moment it exists.
+- **The XGBoost predictor**: no training pipeline exists yet because no
+  legitimate dataset has been found — see the "re-opening this
+  investigation" section of `training/prediction/DATASET_SOURCES.md` for
+  exactly what a candidate dataset must independently provide (this
+  project's own `fault_class_id` taxonomy, full weather telemetry, and a
+  genuinely measured `efficiency_loss_pct`) before it can be used. Once one
+  is identified, build `training/prediction/` following the same
+  provenance-first pattern as `training/classification/` and
+  `training/detection/` — never train on this repository's own
+  `services/physics.py` heuristic output restated as a label.
 - **A new model entirely**: follow the same three-layer pattern as the
   existing three models — a thin wrapper in `models/` that receives an
   already-loaded object via `set_model()`, a loader in
@@ -555,7 +574,7 @@ The CI workflow is defined in `.github/workflows/ci.yml`.
 - **Access gate is a single shared password, not multi-user auth:** `utils/auth.py` blocks casual unauthenticated access; it has no per-user identity, password reset, or SSO. It is a no-op when `APP_ACCESS_PASSWORD` is unset (matching local development).
 - **Sites/Assets management and PDF report export are not implemented.** Building genuine versions would require backend persistence beyond what the current single-user SQLite history honestly supports; they were scoped out rather than built as fabricated placeholders.
 - **MobileNet classification is interim (3-class), not the full six-class production contract.** Bird-Drop, Electrical-Damage, and Physical-Damage cannot currently be classified — see `training/classification/DATASET_SOURCES.md` for exactly which datasets are blocked and why (some have no genuinely licensed public source at all; others are access-restricted pending the dataset owner's approval, which requires a human account holder, not something this codebase can obtain on its own). The class order contract itself (`Clean, Dusty, Bird-Drop, Electrical-Damage, Physical-Damage, Hotspot`) is unchanged and enforced by `training/classification/_dataset_remap.py` — adding the missing classes later only requires acquiring their data and training on the full set; no application code needs to change (`models/model_manager.py` already prefers the production artifact automatically whenever it exists).
-- **No XGBoost artifact exists yet.** Efficiency-loss/output-power predictions are unavailable, not estimated as zero — every part of the UI that would show a prediction instead shows an explicit "unavailable" state (see `services/pipeline.py`'s `xgboost_available` flag).
+- **No XGBoost artifact exists yet, and none is planned until a genuine dataset is found.** Investigated 2026-09-04 — see `training/prediction/DATASET_SOURCES.md` for the full per-candidate-dataset rejection analysis. Efficiency-loss/output-power predictions are unavailable, not estimated as zero — every part of the UI that would show a prediction instead shows an explicit "unavailable" state (see `services/pipeline.py`'s `xgboost_available` flag), and aggregate KPIs (`services/storage.get_summary_stats`) report `None`, not `0.0`, when no stored inspection ever produced a real prediction.
 - **Large local training data lives outside the repository**, on the development machine's `E:\Solar AI Training Images\` drive — see `training/cloud/README.md`'s "Local storage policy" section. This has no effect on the deployed application, which only reads the small artifacts under `weights/`.
 
 ## Health and Readiness
