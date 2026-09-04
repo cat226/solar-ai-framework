@@ -61,14 +61,18 @@ def build(
         package_versions=env["package_versions"],
     )
 
-    # Kaggle mounts an attached dataset under /kaggle/input/<dataset-slug>/ -
-    # since the smoke dataset hasn't been uploaded to Kaggle yet (Step 4C, not
-    # this step), we record an explicit, honest placeholder rather than a
-    # guessed real path.
+    # Kaggle mounts an attached dataset under /kaggle/input/datasets/<owner>/<slug>/,
+    # NOT the flat /kaggle/input/<slug>/ that older Kaggle docs/examples show -
+    # confirmed empirically via a real read-only diagnostic kernel
+    # (solar-yolo-smoke-001-dataset-mount-diagnostic, 2026-09-04): the
+    # declared dataset edithstark/solar-ai-yolo-smoke-001 was present, but
+    # only under /kaggle/input/datasets/edithstark/solar-ai-yolo-smoke-001/,
+    # which is why the first two real launches failed the data_root.is_dir()
+    # check even though dataset_sources was correctly attached both times.
     kaggle_data_root = (
-        f"/kaggle/input/{kaggle_dataset_ref.split('/')[-1]}"
+        f"/kaggle/input/datasets/{kaggle_dataset_ref}"
         if kaggle_dataset_ref
-        else "__NOT_YET_UPLOADED__/kaggle/input/<dataset-slug-once-uploaded>"
+        else "__NOT_YET_UPLOADED__/kaggle/input/datasets/<owner>/<dataset-slug-once-uploaded>"
     )
 
     rendered_entrypoint = package_dir / "_rendered_yolo_detection.py"
