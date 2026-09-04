@@ -69,6 +69,11 @@ Maintenance Recommendation
 Streamlit Dashboard
 ```
 
+*Current deployment status: YOLOv8 detection uses a real trained
+production artifact; MobileNetV2 classification is running on an interim
+3-class checkpoint (Clean/Dusty/Hotspot); XGBoost has no trained artifact
+yet. See [Current Project Status](#current-project-status) below.*
+
 ---
 
 # Features
@@ -173,7 +178,30 @@ Responsibilities:
 - Input collection
 - Result visualization
 
-No AI logic exists inside the UI.
+No AI logic exists inside the UI. This is the app's main entry point and
+implements the **Inspect** workflow (upload → detect → classify → estimate).
+
+---
+
+## pages/
+
+The rest of the multi-page dashboard, each page reading only real data
+(`services/storage.py`'s recorded history, `models/model_manager.py`'s live
+artifact status, or `st.session_state["last_result"]` set by `app.py` after
+a completed inspection) — no page fabricates a value it doesn't have:
+
+| # | Page | Shows |
+|---|------|-------|
+| 01 | Overview | Top-level KPIs, real recorded history, live system status |
+| 02 | Panel Results | Per-panel table for the most recent live inspection |
+| 03 | Site Health | Site-level rollup (this inspection + aggregate history) |
+| 04 | Environment | Weather/physics inputs actually used, and their source |
+| 05 | Model Status | Per-model readiness, real artifact SHA-256, production/interim state |
+| 06 | Limitations | Honest, live-cross-checked capability disclosure |
+| 07 | History | Searchable full inspection history |
+| 08 | Analytics | Trend charts over real recorded history |
+| 09 | Alerts | Real CRITICAL/WARNING inspections + live system-availability alerts |
+| 10 | Settings | Access control, privacy, inference configuration |
 
 ---
 
@@ -291,26 +319,29 @@ The framework follows these principles:
 Image
    │
    ▼
-Detection
-   │
-   ▼
-Classification
-   │
-   ▼
-Weather Collection
-   │
-   ▼
-Physics Features
-   │
-   ▼
-Feature Engineering
-   │
-   ▼
-Regression Prediction
-   │
-   ▼
-Maintenance Recommendation
+YOLO Detection  ──────────────► Panel crops (one per detection box)
+   │                                   │
+   ▼                                   ▼
+Whole-image Classification      Per-panel Classification
+   │                                   │
+   ▼                                   ▼
+Weather Collection ──────► Physics Features (per panel, shared weather)
+   │                                   │
+   ▼                                   ▼
+Feature Engineering ─────► Feature Engineering (per panel)
+   │                                   │
+   ▼                                   ▼
+Regression Prediction*    Regression Prediction* (per panel)
+   │                                   │
+   ▼                                   ▼
+Maintenance Recommendation*    Site-level Summary (aggregated)
 ```
+
+\* Regression prediction requires the XGBoost artifact (`weights/xgboost_solar.joblib`).
+When it's absent, detection and classification results above are still
+real and returned — every prediction/recommendation field is reported as
+explicitly unavailable, never fabricated. See `services/pipeline.py`'s
+`PipelineResult.xgboost_available` / `PanelResult.prediction.prediction_successful`.
 
 ---
 
@@ -357,14 +388,20 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-This is a native Streamlit multi-page app. `app.py` is the **Inspect** page
-(upload an image, run the full pipeline); the sidebar navigation also lists
-**Dashboard**, **History**, **Analytics**, **Alerts**, and **Settings** —
-all driven by `services/storage.py`, a local SQLite log of every real,
-successfully-completed inspection (never fabricated data; the uploaded
-image itself is never stored, only its SHA-256 hash). With no inspections
-recorded yet, each of those pages shows an explicit empty state rather
-than invented numbers.
+This is a native Streamlit multi-page app. `app.py` is the **Inspect** page:
+upload a solar panel image (JPG/PNG/WebP, max 10 MB) in the sidebar, and it
+runs the full pipeline — YOLO detection, whole-image and per-panel
+MobileNet classification, weather lookup, physics, and (when
+`weights/xgboost_solar.joblib` exists) efficiency/output prediction. The
+sidebar navigation lists the other ten pages (see the `pages/` table
+above) — **Overview**, **Panel Results**, **Site Health**, **Environment**,
+**Model Status**, **Limitations**, **History**, **Analytics**, **Alerts**,
+and **Settings** — all driven by `services/storage.py` (a local SQLite log
+of every real, successfully-completed inspection — never fabricated data;
+the uploaded image itself is never stored, only its SHA-256 hash) or by
+`st.session_state["last_result"]` for the pages tied to the most recent
+live inspection. With no inspections recorded/run yet, each page shows an
+explicit empty state rather than invented numbers.
 
 ---
 
@@ -390,13 +427,62 @@ Do **not** commit this file.
 
 # Models Required
 
-Place the trained models inside the `weights/` directory:
+Place the trained models inside the `weights/` directory (all gitignored —
+never committed):
 
-- `weights/yolo_solar.pt`
-- `weights/mobilenet_solar.pth`
-- `weights/xgboost_solar.joblib`
+- `weights/yolo_solar.pt` — production YOLOv8n panel detector. A real
+  checkpoint exists as of this writing, trained on the full audited
+  17,107-image BDAPPV IGN dataset via the Kaggle cloud pipeline (see
+  `training/cloud/`); test-split mAP50 ≈ 0.74. Record:
+  `training/experiments/registry.jsonl`, experiment `solar-yolo-full-v1`.
+- `weights/mobilenet_solar.pth` — production six-class fault classifier
+  (Clean, Dusty, Bird-Drop, Electrical-Damage, Physical-Damage, Hotspot).
+  **Not yet available** — three of the six classes have no genuinely
+  licensed, accessible dataset yet (see `training/classification/DATASET_SOURCES.md`).
+- `weights/mobilenet_solar_interim_3class.pth` — **interim** classifier
+  covering only Clean/Dusty/Hotspot, the three classes with verified data.
+  `models/model_manager.py` automatically falls back to this when the
+  production artifact above is absent, and every UI surface discloses
+  which one is actually active (see the **Model Status** and
+  **Limitations** pages) — the app never silently pretends interim
+  coverage is the full six classes.
+- `weights/xgboost_solar.joblib` — efficiency-loss regressor. **Not yet
+  trained.** When absent, `services/pipeline.py` still runs detection and
+  classification and returns real results; every efficiency/output field
+  is reported as genuinely unavailable (`prediction_successful=False`),
+  never a fabricated `0.0`.
 
-These files are not included in the repository and must be supplied separately.
+None of these files are included in the repository. See
+`training/cloud/README.md` for how each was (or will be) produced.
+
+---
+
+# Adding a Future Dataset or Model
+
+- **A missing MobileNet class** (Bird-Drop, Electrical-Damage,
+  Physical-Damage): once a genuinely licensed, discretely-labeled dataset
+  is acquired, add it under `E:\Solar AI Training Images\source\<ClassName>\`
+  (or the equivalent path on another machine — see `training/cloud/base/storage_paths.py`),
+  re-run `training/classification/prepare_dataset.py`, then
+  `training/classification/train_mobilenet.py` with **no** `--classes`
+  argument (its default is the full six) to produce a real production
+  checkpoint at `weights/mobilenet_solar.pth`. No application code needs
+  to change — `models/model_manager.py` already prefers the production
+  artifact automatically over the interim one the moment it exists.
+- **A new model entirely**: follow the same three-layer pattern as the
+  existing three models — a thin wrapper in `models/` that receives an
+  already-loaded object via `set_model()`, a loader in
+  `models/model_manager.py`, and orchestration added to
+  `services/pipeline.py`. Never duplicate model-loading or inference logic
+  inside a UI page.
+- **Cloud (Kaggle) training for a new model**: reuse
+  `training/cloud/base/job_spec.py` / `registry.py` /
+  `artifact_validation.py` and follow the pattern in
+  `training/cloud/kaggle/build_mobilenet_package.py` (or
+  `build_yolo_full_training_package.py`) — a thin entrypoint that clones
+  the repo at an exact pinned commit and invokes the real, unmodified
+  training script as a subprocess; never duplicate training logic inside
+  the Kaggle wrapper. See `training/cloud/README.md`.
 
 ---
 
@@ -436,9 +522,11 @@ Coverage is configured in `pytest.ini` and reports term-missing output for `serv
 
 Current validated results:
 
-- 676 tests collected
-- ~94% statement coverage
-- Core business-logic modules at 100% statement coverage
+- 1071 tests collected
+- ~91% statement coverage (varies by run; `utils/ui_helpers.py` and the
+  `pages/` files are exercised via Streamlit's `AppTest` framework in
+  `tests/test_pages_smoke.py`, not line-by-line unit tests)
+- Core business-logic modules at or near 100% statement coverage
 
 ---
 
@@ -466,6 +554,9 @@ The CI workflow is defined in `.github/workflows/ci.yml`.
 - **Single-deployment persistence, not multi-tenant:** `services/storage.py` is a local SQLite file appropriate for one deployment's own history — it is not a multi-user production database. See its module docstring for the intended replacement seam if that's ever needed.
 - **Access gate is a single shared password, not multi-user auth:** `utils/auth.py` blocks casual unauthenticated access; it has no per-user identity, password reset, or SSO. It is a no-op when `APP_ACCESS_PASSWORD` is unset (matching local development).
 - **Sites/Assets management and PDF report export are not implemented.** Building genuine versions would require backend persistence beyond what the current single-user SQLite history honestly supports; they were scoped out rather than built as fabricated placeholders.
+- **MobileNet classification is interim (3-class), not the full six-class production contract.** Bird-Drop, Electrical-Damage, and Physical-Damage cannot currently be classified — see `training/classification/DATASET_SOURCES.md` for exactly which datasets are blocked and why (some have no genuinely licensed public source at all; others are access-restricted pending the dataset owner's approval, which requires a human account holder, not something this codebase can obtain on its own). The class order contract itself (`Clean, Dusty, Bird-Drop, Electrical-Damage, Physical-Damage, Hotspot`) is unchanged and enforced by `training/classification/_dataset_remap.py` — adding the missing classes later only requires acquiring their data and training on the full set; no application code needs to change (`models/model_manager.py` already prefers the production artifact automatically whenever it exists).
+- **No XGBoost artifact exists yet.** Efficiency-loss/output-power predictions are unavailable, not estimated as zero — every part of the UI that would show a prediction instead shows an explicit "unavailable" state (see `services/pipeline.py`'s `xgboost_available` flag).
+- **Large local training data lives outside the repository**, on the development machine's `E:\Solar AI Training Images\` drive — see `training/cloud/README.md`'s "Local storage policy" section. This has no effect on the deployed application, which only reads the small artifacts under `weights/`.
 
 ## Health and Readiness
 
@@ -491,13 +582,15 @@ Invalid model outputs raise `PredictionError` and stop the pipeline with a contr
 | Module | Status |
 |---------|--------|
 | Architecture | ✅ Complete |
-| Streamlit Dashboard | ✅ Complete |
-| YOLO Detection | ✅ Complete |
-| MobileNet Classification | ✅ Complete |
+| Streamlit Dashboard (10 pages, see below) | ✅ Complete |
+| YOLO Detection | ✅ Genuine production artifact trained (Kaggle P100, full 17,107-image BDAPPV IGN dataset) |
+| MobileNet Classification | ⚠️ **Interim, 3-class only** (Clean/Dusty/Hotspot) — Bird-Drop/Electrical-Damage/Physical-Damage blocked on dataset acquisition, see [Known Limitations](#known-limitations) |
+| XGBoost Efficiency Prediction | ❌ No trained artifact — pipeline reports predictions as honestly unavailable rather than fabricating output, see `services/pipeline.py` |
 | Weather Integration | ✅ Complete |
 | Feature Engineering | ✅ Complete |
-| Regression Prediction | ✅ Complete |
-| Maintenance Recommendation | ✅ Complete |
+| Maintenance Recommendation | ✅ Complete (skipped, not fabricated, when no real prediction exists) |
+
+This table is deliberately not all-green — see the **Model Status** and **Limitations** pages in the running app for the live, per-deployment version of this same information.
 
 ---
 
