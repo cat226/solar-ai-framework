@@ -56,8 +56,30 @@ class TestTemplateIsValidPython:
         """Belt-and-braces check that this stays a thin wrapper - it must
         never grow YOLO/model-construction logic of its own."""
         text = _TEMPLATE_PATH.read_text(encoding="utf-8")
-        for forbidden in ("YOLO(", "model.train(", "import torch", "import ultralytics"):
+        for forbidden in ("YOLO(", "model.train("):
             assert forbidden not in text, f"entrypoint template contains training logic: {forbidden!r}"
+
+    def test_template_never_imports_torch_or_ultralytics_in_its_own_process(self):
+        """The entrypoint's own Python process must never import torch or
+        ultralytics directly - it only ever invokes train_yolo.py as a
+        subprocess. This is an AST check (real import statements only), not
+        a substring search, because the template legitimately references the
+        string "import torch" inside a `python -c` one-liner it hands to a
+        *separate* subprocess (torch-cuda-check) to verify the installed
+        build/GPU before training - that string never executes here."""
+        tree = ast.parse(_TEMPLATE_PATH.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    top_level = alias.name.split(".")[0]
+                    assert top_level not in ("torch", "ultralytics"), (
+                        f"entrypoint template directly imports {alias.name!r} in its own process"
+                    )
+            elif isinstance(node, ast.ImportFrom):
+                top_level = (node.module or "").split(".")[0]
+                assert top_level not in ("torch", "ultralytics"), (
+                    f"entrypoint template directly imports from {node.module!r} in its own process"
+                )
 
 
 class TestRenderEntrypoint:
@@ -141,12 +163,12 @@ class TestRenderedEntrypointExecutionFlow:
             rc = rendered_module.main()
 
         assert rc == 0
-        step_names = [c[0] for c in calls if c[0] in ("git", "python", sys.executable)]
         assert calls[0][:2] == ["git", "clone"]
         assert calls[1][:2] == ["git", "checkout"]
         assert calls[2][:2] == ["git", "rev-parse"]
         assert "pip" in calls[3] or "install" in calls[3]
-        assert str(rendered_module.REPO_DIR / "training" / "detection" / "train_yolo.py") in calls[4]
+        assert "-c" in calls[4]  # torch-cuda-check: python -c "..."
+        assert str(rendered_module.REPO_DIR / "training" / "detection" / "train_yolo.py") in calls[5]
 
     def test_git_clone_failure_is_surfaced_clearly(self, rendered_module):
         def fake_run(cmd, **kwargs):
@@ -214,3 +236,99 @@ class TestRenderedEntrypointExecutionFlow:
              patch.object(Path, "is_dir", return_value=True):
             with pytest.raises(SystemExit, match="train_yolo"):
                 rendered_module.main()
+
+    def test_torch_cuda_check_failure_is_surfaced_clearly(self, rendered_module):
+        """If the pinned torch build still can't see/use the GPU (e.g. a
+        future incompatible re-pin, or a Kaggle GPU generation change), this
+        must fail loudly with a specific, findable step name - not silently
+        proceed into train_yolo.py and produce a confusing deep CUDA
+        traceback from inside Ultralytics."""
+        def fake_run(cmd, **kwargs):
+            if cmd[:2] == ["git", "rev-parse"]:
+                return MagicMock(returncode=0, stdout=_FAKE_VALUES["git_sha"] + "\n", stderr="")
+            if "-c" in cmd and any("torch" in part for part in cmd):
+                return MagicMock(returncode=1, stdout="", stderr="AssertionError: torch.cuda.is_available() is False")
+            return MagicMock(returncode=0, stdout="", stderr="")
+
+        with patch.object(rendered_module.subprocess, "run", side_effect=fake_run), \
+             patch.object(Path, "is_dir", return_value=True):
+            with pytest.raises(SystemExit, match="torch-cuda-check"):
+                rendered_module.main()
+
+
+class TestPinnedDependencies:
+    """Regression coverage for the P100/sm_60 CUDA-compatibility fix
+    (2026-09-04): torch and torchvision must be pinned to exact,
+    verified-compatible versions, never left to an unconstrained
+    `pip install ultralytics` that can silently pick up whatever (possibly
+    incompatible) torch build Kaggle's base image or PyPI's latest happens
+    to resolve to."""
+
+    def test_torch_is_pinned_to_an_exact_version(self):
+        module = _load_rendered_module(_TEMPLATE_PATH)
+        torch_specs = [d for d in module.PINNED_DEPENDENCIES if d.split("==")[0].split(">=")[0] == "torch"]
+        assert len(torch_specs) == 1
+        assert "==" in torch_specs[0], f"torch must be pinned with '==', not left unconstrained: {torch_specs[0]!r}"
+
+    def test_torchvision_is_pinned_to_an_exact_version(self):
+        module = _load_rendered_module(_TEMPLATE_PATH)
+        tv_specs = [d for d in module.PINNED_DEPENDENCIES if d.split("==")[0].split(">=")[0] == "torchvision"]
+        assert len(tv_specs) == 1
+        assert "==" in tv_specs[0], f"torchvision must be pinned with '==', not left unconstrained: {tv_specs[0]!r}"
+
+    def test_torch_version_is_not_the_known_incompatible_2_10_line(self):
+        """2.10.0+cu128 is the exact build that failed against the P100 on
+        solar-yolo-smoke-001-retry2 - this must never silently come back."""
+        module = _load_rendered_module(_TEMPLATE_PATH)
+        torch_spec = next(d for d in module.PINNED_DEPENDENCIES if d.startswith("torch=="))
+        pinned_version = torch_spec.split("==", 1)[1]
+        assert not pinned_version.startswith("2.10"), "must not re-pin the version already proven incompatible with sm_60"
+        assert not pinned_version.startswith("2.8"), "2.8.0+ is documented to have dropped sm_60 for cu12.8/12.9 builds"
+        assert not pinned_version.startswith("2.9"), "2.9.x postdates the sm_60 drop"
+
+    def test_no_torchaudio_pinned(self):
+        """train_yolo.py/Ultralytics have no audio dependency - pinning
+        torchaudio too would be an unnecessary package."""
+        module = _load_rendered_module(_TEMPLATE_PATH)
+        assert not any(d.split("==")[0].split(">=")[0] == "torchaudio" for d in module.PINNED_DEPENDENCIES)
+
+    def test_ultralytics_still_pinned_and_present(self):
+        module = _load_rendered_module(_TEMPLATE_PATH)
+        assert any(d.split("==")[0].split(">=")[0] == "ultralytics" for d in module.PINNED_DEPENDENCIES)
+
+    def test_pyyaml_dependency_preserved(self):
+        """The pre-existing PyYAML>=6.0.1 requirement (train_yolo.py writes
+        data.yaml via yaml.safe_dump) must survive this change untouched."""
+        module = _load_rendered_module(_TEMPLATE_PATH)
+        assert any(d.startswith("PyYAML") for d in module.PINNED_DEPENDENCIES)
+
+    def test_pip_install_step_uses_pinned_dependencies_list(self, tmp_path):
+        out = tmp_path / "rendered.py"
+        render_entrypoint(_TEMPLATE_PATH, _FAKE_VALUES, out)
+        module = _load_rendered_module(out)
+
+        calls = []
+
+        def fake_run(cmd, **kwargs):
+            calls.append(cmd)
+            if cmd[:2] == ["git", "rev-parse"]:
+                return MagicMock(returncode=0, stdout=_FAKE_VALUES["git_sha"] + "\n", stderr="")
+            return MagicMock(returncode=0, stdout="", stderr="")
+
+        with patch.object(module.subprocess, "run", side_effect=fake_run), \
+             patch.object(Path, "is_dir", return_value=True):
+            module.main()
+
+        pip_call = next(c for c in calls if "pip" in c and "install" in c)
+        for dep in module.PINNED_DEPENDENCIES:
+            assert dep in pip_call, f"pinned dependency {dep!r} missing from the actual pip install command"
+
+    def test_does_not_modify_train_yolo_py(self):
+        """The fix must live entirely in the Kaggle packaging/entrypoint
+        layer - training/detection/train_yolo.py is the single source of
+        truth for training logic and must never be duplicated or edited to
+        route around an infrastructure problem."""
+        repo_root = Path(__file__).resolve().parent.parent
+        train_yolo_text = (repo_root / "training" / "detection" / "train_yolo.py").read_text(encoding="utf-8")
+        assert "torch==" not in train_yolo_text
+        assert "PINNED_DEPENDENCIES" not in train_yolo_text

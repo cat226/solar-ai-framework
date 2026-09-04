@@ -180,6 +180,7 @@ class TestBuildDatasetMountDiagnosticPackage:
             experiment_id="solar-yolo-smoke-001-dataset-mount-diagnostic",
             package_dir=package_dir,
             kaggle_dataset_ref="edithstark/solar-ai-yolo-smoke-001",
+            registry_path=tmp_path / "registry.jsonl",
         )
         metadata = json.loads((package_dir / "kernel-metadata.json").read_text(encoding="utf-8"))
         assert metadata["enable_gpu"] is False
@@ -194,6 +195,7 @@ class TestBuildDatasetMountDiagnosticPackage:
             experiment_id="solar-yolo-smoke-001-dataset-mount-diagnostic",
             package_dir=package_dir,
             kaggle_dataset_ref="edithstark/solar-ai-yolo-smoke-001",
+            registry_path=tmp_path / "registry.jsonl",
         )
         module = _load_rendered_module(package_dir / "diagnostic.py")
         module._require_rendered(module.CONFIG)  # must not raise

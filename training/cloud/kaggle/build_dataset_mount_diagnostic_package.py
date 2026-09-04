@@ -15,7 +15,7 @@ import json
 from pathlib import Path
 
 from training.cloud.base.job_spec import capture_environment
-from training.cloud.base.registry import record_experiment
+from training.cloud.base.registry import DEFAULT_REGISTRY_PATH, record_experiment
 from training.cloud.kaggle.adapter import KaggleKernelConfig, dry_run, prepare
 from training.cloud.kaggle.entrypoints.render import render_entrypoint
 
@@ -29,6 +29,7 @@ def build(
     package_dir: Path,
     kaggle_dataset_ref: str,
     owner: str = "edithstark",
+    registry_path: Path = DEFAULT_REGISTRY_PATH,
 ) -> Path:
     """Returns package_dir. Local only - never pushes anything."""
     env = capture_environment([], cwd=str(_REPO_ROOT))
@@ -76,7 +77,7 @@ def build(
         "metrics": {},
         "checkpoint": "",
         "artifact_hash": "",
-    })
+    }, registry_path=registry_path)
 
     return package_dir
 

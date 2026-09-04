@@ -36,6 +36,7 @@ class TestKaggleDataRootConstruction:
             experiment_id="test-exp",
             smoke_dataset_root=smoke_dataset_root,
             package_dir=package_dir,
+            registry_path=tmp_path / "registry.jsonl",
             kaggle_dataset_ref="edithstark/solar-ai-yolo-smoke-001",
         )
         rendered = (package_dir / "train.py").read_text(encoding="utf-8")
@@ -49,6 +50,7 @@ class TestKaggleDataRootConstruction:
             experiment_id="test-exp",
             smoke_dataset_root=smoke_dataset_root,
             package_dir=package_dir,
+            registry_path=tmp_path / "registry.jsonl",
             kaggle_dataset_ref=None,
         )
         rendered = (package_dir / "train.py").read_text(encoding="utf-8")
@@ -60,6 +62,7 @@ class TestKaggleDataRootConstruction:
             experiment_id="test-exp",
             smoke_dataset_root=smoke_dataset_root,
             package_dir=package_dir,
+            registry_path=tmp_path / "registry.jsonl",
             kaggle_dataset_ref="edithstark/solar-ai-yolo-smoke-001",
         )
         metadata = json.loads((package_dir / "kernel-metadata.json").read_text(encoding="utf-8"))
@@ -73,6 +76,7 @@ class TestKaggleDataRootConstruction:
             experiment_id="test-exp",
             smoke_dataset_root=smoke_dataset_root,
             package_dir=package_dir,
+            registry_path=tmp_path / "registry.jsonl",
             kaggle_dataset_ref="edithstark/solar-ai-yolo-smoke-001",
         )
         config_data = json.loads((package_dir / "kernel-metadata.json").read_text(encoding="utf-8"))

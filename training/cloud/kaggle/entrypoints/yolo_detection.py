@@ -43,6 +43,55 @@ REPO_URL = "https://github.com/cat226/solar-ai-framework.git"
 REPO_DIR = Path("/kaggle/working/solar-ai-framework")
 
 # =============================================================================
+# PINNED TRAINING DEPENDENCIES - deterministic, GPU-generation-aware.
+#
+# Kaggle's free-tier GPU pool can hand out Pascal-generation hardware (Tesla
+# P100, CUDA compute capability 6.0 / sm_60) - confirmed for real on
+# solar-yolo-smoke-001-retry2 (2026-09-04). Kaggle's own preinstalled torch in
+# that run was 2.10.0+cu128, which failed at model.to(device) with
+# "CUDA error: no kernel image is available for execution on the device".
+#
+# Root cause, per PyTorch's own release notes (pytorch/pytorch GitHub
+# releases, 2.8.0 notes): "Removed support for Maxwell and Pascal
+# architectures with CUDA 12.8 and 12.9 builds... If you need support for
+# these architectures, please utilize CUDA 12.6 instead." PyTorch 2.7.x is
+# the last stable minor line documented to retain sm_50-sm_60 support.
+#
+# torch==2.7.1's default Linux/cp3xx PyPI wheel is itself CUDA-12.6-based
+# (its own metadata pins nvidia-cuda-nvrtc-cu12==12.6.77, nvidia-cublas-
+# cu12==12.6.4.1, etc. - verified via https://pypi.org/pypi/torch/2.7.1/json)
+# - so no special --index-url is needed, plain PyPI already serves the
+# correct build for this pin.
+#
+# torchvision==0.22.1 is the exact companion release: its own PyPI metadata
+# requires "torch==2.7.1" precisely (verified via
+# https://pypi.org/pypi/torchvision/0.22.1/json) - not a guessed pairing.
+#
+# torchaudio is intentionally NOT installed - train_yolo.py/Ultralytics have
+# no audio dependency, and installing it would be an unnecessary package.
+#
+# ultralytics is pinned to the exact version that was already proven, on
+# solar-yolo-smoke-001-retry2, to build the YOLOv8n architecture and
+# transfer pretrained weights correctly (only the CUDA-kernel step failed) -
+# keeping it fixed rather than letting a future run silently pick up a
+# newer, untested release. Its own metadata (torch>=1.8.0, torchvision>=
+# 0.9.0 - verified via https://pypi.org/pypi/ultralytics/8.4.138/json) is
+# satisfied by the torch/torchvision pins above.
+#
+# These pins force pip to genuinely reinstall over whatever Kaggle's base
+# image ships (an unpinned "pip install ultralytics" saw the preinstalled
+# 2.10.0+cu128 already satisfied ultralytics's loose torch>=1.8.0 constraint
+# and skipped reinstalling it entirely - which is how the incompatible
+# version got used in the first place).
+# =============================================================================
+PINNED_DEPENDENCIES = [
+    "torch==2.7.1",
+    "torchvision==0.22.1",
+    "ultralytics==8.4.138",
+    "PyYAML>=6.0.1",
+]
+
+# =============================================================================
 # CONFIGURATION - every "__SOLAR_AI_*__" token must be substituted by
 # render_entrypoint() before this file is packaged. See module docstring.
 # =============================================================================
@@ -114,9 +163,28 @@ def main() -> int:
     # --- 4. Install the minimal runtime dependencies train_yolo.py actually needs. ---
     # (scipy/pyarrow are prepare_dataset.py's dependencies, for converting raw
     # parquet - not needed here, since the dataset arrives already converted.)
+    # See PINNED_DEPENDENCIES above for why torch/torchvision are pinned to
+    # exact, GPU-generation-compatible versions rather than left unconstrained.
     _run_step(
         "pip-install",
-        [sys.executable, "-m", "pip", "install", "--quiet", "ultralytics>=8.2.0", "PyYAML>=6.0.1"],
+        [sys.executable, "-m", "pip", "install", "--quiet", *PINNED_DEPENDENCIES],
+    )
+
+    # --- 4b. Verify the installed torch build can actually see and use the ---
+    # assigned GPU with its real compute capability, before spending any more
+    # time - fail fast and clearly rather than let train_yolo.py hit an
+    # opaque CUDA error deep inside Ultralytics.
+    _run_step(
+        "torch-cuda-check",
+        [
+            sys.executable, "-c",
+            "import torch; "
+            "print('torch.__version__ =', torch.__version__); "
+            "print('torch.version.cuda =', torch.version.cuda); "
+            "assert torch.cuda.is_available(), 'torch.cuda.is_available() is False'; "
+            "print('device name =', torch.cuda.get_device_name(0)); "
+            "print('device capability =', torch.cuda.get_device_capability(0))",
+        ],
     )
 
     # --- 5. Invoke the real, unmodified training script. ---

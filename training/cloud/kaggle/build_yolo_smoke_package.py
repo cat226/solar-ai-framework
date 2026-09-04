@@ -14,7 +14,7 @@ import json
 from pathlib import Path
 
 from training.cloud.base.job_spec import TrainingJobSpec, capture_environment
-from training.cloud.base.registry import record_experiment
+from training.cloud.base.registry import DEFAULT_REGISTRY_PATH, record_experiment
 from training.cloud.kaggle.adapter import KaggleKernelConfig, dry_run, prepare
 from training.cloud.kaggle.entrypoints.render import render_entrypoint
 
@@ -34,6 +34,7 @@ def build(
     imgsz: int = 640,
     seed: int = 42,
     base_model: str = "yolov8n.pt",
+    registry_path: Path = DEFAULT_REGISTRY_PATH,
 ) -> tuple[TrainingJobSpec, Path]:
     """Returns (job_spec, package_dir). Local only - never pushes anything."""
     smoke_manifest_path = smoke_dataset_root / "manifest.json"
@@ -129,7 +130,7 @@ def build(
         "metrics": {},
         "checkpoint": "",
         "artifact_hash": "",
-    })
+    }, registry_path=registry_path)
 
     return job_spec, package_dir
 
