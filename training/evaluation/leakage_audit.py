@@ -2,7 +2,7 @@
 """training/evaluation/leakage_audit.py — Exact-duplicate and near-duplicate
 audit across a prepared dataset's train/val/test splits.
 
-Three checks, each clearly labeled and never conflated:
+Four things, each clearly labeled and never conflated:
 
 1. Exact duplicates: SHA-256 collisions across splits (byte-identical files
    presented under different filenames/paths). Expected: 0.
@@ -16,6 +16,18 @@ Three checks, each clearly labeled and never conflated:
    dataset's own manifest records no formal grouping metadata (group=None
    for every record - see training/classification/INTERIM_MODEL_REPORT.md's
    and the mobilenet training-registry entry's own honest caveat about this).
+4. Classification + clean-subset construction: every near-duplicate
+   candidate pair is placed into one of four categories (exact_duplicate /
+   highly_likely_near_duplicate / probable_false_positive / uncertain)
+   using corroborating signals (matching capture-timestamp filename
+   prefix), not the hash distance alone - Phase 6A manually verified both
+   a genuine same-photo duplicate (hamming=0, matching timestamp) and a
+   hash false positive (hamming=0, no matching timestamp, visually
+   confirmed to be two different photos) on this exact dataset, so hash
+   distance alone is not treated as proof. A "clean" test-split subset
+   (test images with no highly_likely_near_duplicate elsewhere) is derived
+   and written out as a separate, explicitly-labeled evaluation artifact -
+   the original test split is never modified.
 
 Read-only: never deletes, moves, or relabels anything.
 """
@@ -73,6 +85,28 @@ def _exact_duplicate_audit(images_by_split: dict[str, list[Path]]) -> dict:
     }
 
 
+def _base_id(name: str) -> str:
+    """Strip common suffixes seen in this dataset (e.g. "_2_11zon", "(0)")
+    to compare base capture identity across splits. Real photo filenames
+    from a phone/camera often share a common timestamp prefix for images
+    taken moments apart of the same scene, or re-exported through a resize
+    tool - this normalizes away the resize-tool suffix chain so the
+    underlying capture identity can be compared.
+
+    Only strips suffix chunks that are actually part of an "_N_11zon"
+    resize-tool marker (one or more repetitions), never a bare trailing
+    "_<digits>" on its own - this dataset's real filenames are
+    "YYYYMMDD_HHMMSS.jpg", and a naive "(_\\d+)?" branch previously matched
+    and stripped that trailing "_HHMMSS" segment too, incorrectly treating
+    every photo from the same *day* (regardless of time-of-day) as sharing
+    one base id. Fixed after a unit test caught it - see
+    tests/test_leakage_audit.py."""
+    stem = Path(name).stem
+    stem = re.sub(r"\(\d+\)$", "", stem)
+    stem = re.sub(r"(_\d+_11zon)+$", "", stem)
+    return stem
+
+
 def _near_duplicate_audit(images_by_split: dict[str, list[Path]], threshold: int, max_pairs_per_boundary: int) -> dict:
     hashes: dict[str, list[tuple[Path, int]]] = {}
     for split, paths in images_by_split.items():
@@ -80,18 +114,78 @@ def _near_duplicate_audit(images_by_split: dict[str, list[Path]], threshold: int
 
     boundaries = list(itertools.combinations(images_by_split.keys(), 2))
     results: dict[str, list[dict]] = {}
+    all_pairs: list[dict] = []
     for a, b in boundaries:
         pairs = []
         for pa, ha in hashes[a]:
             for pb, hb in hashes[b]:
                 d = hamming_distance(ha, hb)
                 if d <= threshold:
-                    pairs.append({"a": f"{a}/{pa.parent.name}/{pa.name}", "b": f"{b}/{pb.parent.name}/{pb.name}", "hamming_distance": d})
+                    pair = {
+                        "a": f"{a}/{pa.parent.name}/{pa.name}", "b": f"{b}/{pb.parent.name}/{pb.name}",
+                        "a_path": str(pa), "b_path": str(pb), "hamming_distance": d,
+                    }
+                    pairs.append(pair)
         pairs.sort(key=lambda r: r["hamming_distance"])
-        results[f"{a}<->{b}"] = pairs[:max_pairs_per_boundary]
+        all_pairs.extend(pairs)
+        results[f"{a}<->{b}"] = [{k: v for k, v in p.items() if k not in ("a_path", "b_path")} for p in pairs[:max_pairs_per_boundary]]
         results[f"{a}<->{b}_total_found"] = len(pairs)  # type: ignore[assignment]
 
-    return {"threshold": threshold, "boundaries": results}
+    return {"threshold": threshold, "boundaries": results, "_all_pairs": all_pairs}
+
+
+def _classify_pairs(all_pairs: list[dict]) -> dict:
+    """Classify every near-duplicate candidate pair using a corroborating
+    signal (matching capture-timestamp filename base) rather than hash
+    distance alone - see module docstring for the manually-verified
+    evidence behind this rule.
+
+    - highly_likely_near_duplicate: hamming_distance == 0 AND the two
+      filenames share a normalized base id (matching capture timestamp).
+    - probable_false_positive: hamming_distance == 0 but the filenames do
+      NOT share a base id - matches the manually-verified hash-collision
+      case in docs/ML_EVALUATION_v1.0.0.md.
+    - uncertain: hamming_distance > 0 (some similarity, not exact hash
+      match) - not asserted either way without visual inspection.
+    """
+    classified = {"highly_likely_near_duplicate": [], "probable_false_positive": [], "uncertain": []}
+    for pair in all_pairs:
+        a_name = pair["a"].rsplit("/", 1)[-1]
+        b_name = pair["b"].rsplit("/", 1)[-1]
+        same_base = _base_id(a_name) == _base_id(b_name)
+        record = {"a": pair["a"], "b": pair["b"], "hamming_distance": pair["hamming_distance"], "same_filename_base": same_base}
+        if pair["hamming_distance"] == 0 and same_base:
+            classified["highly_likely_near_duplicate"].append(record)
+        elif pair["hamming_distance"] == 0 and not same_base:
+            classified["probable_false_positive"].append(record)
+        else:
+            classified["uncertain"].append(record)
+    return {
+        "counts": {k: len(v) for k, v in classified.items()},
+        "highly_likely_near_duplicate": classified["highly_likely_near_duplicate"],
+        "probable_false_positive": classified["probable_false_positive"][:25],
+        "uncertain": classified["uncertain"][:25],
+    }
+
+
+def _build_clean_test_subset(images_by_split: dict[str, list[Path]], classified: dict) -> dict:
+    """Test-split images with no highly_likely_near_duplicate elsewhere in
+    the dataset (train or val). The original test split/dataset files are
+    never modified - this is a derived list only."""
+    contaminated_test_locations = {
+        rec["b"] if rec["b"].startswith("test/") else rec["a"]
+        for rec in classified["highly_likely_near_duplicate"]
+        if rec["a"].startswith("test/") or rec["b"].startswith("test/")
+    }
+    all_test = [f"test/{p.parent.name}/{p.name}" for p in images_by_split.get("test", [])]
+    clean = [loc for loc in all_test if loc not in contaminated_test_locations]
+    return {
+        "original_test_count": len(all_test),
+        "contaminated_test_count": len(contaminated_test_locations),
+        "clean_test_count": len(clean),
+        "clean_test_images": clean,
+        "excluded_images": sorted(contaminated_test_locations),
+    }
 
 
 def _source_signal_audit(images_by_split: dict[str, list[Path]]) -> dict:
@@ -100,14 +194,7 @@ def _source_signal_audit(images_by_split: dict[str, list[Path]]) -> dict:
     This is a *signal* to inspect manually, never proof of leakage on its
     own - two images can share a prefix pattern coincidentally, and this
     dataset's manifest already records no formal grouping metadata."""
-    # Strip common suffixes seen in this dataset (e.g. "_2_11zon", "(0)")
-    # to compare base capture identity across splits.
-    def base_id(name: str) -> str:
-        stem = Path(name).stem
-        stem = re.sub(r"\(\d+\)$", "", stem)
-        stem = re.sub(r"(_\d+)?(_\d+_11zon)*(_11zon)*$", "", stem)
-        return stem
-
+    base_id = _base_id
     base_to_locations: dict[str, list[str]] = defaultdict(list)
     for split, paths in images_by_split.items():
         for p in paths:
@@ -150,9 +237,16 @@ def main() -> int:
         if boundary.endswith("_total_found"):
             print(f"  {boundary}: {pairs}")
 
-    print("\n[3/3] Filename-base source-signal audit...")
+    print("\n[3/4] Filename-base source-signal audit...")
     source_signal = _source_signal_audit(images_by_split)
     print(f"  cross-split shared filename-base groups: {source_signal['cross_split_shared_filename_base_count']}")
+
+    print("\n[4/4] Classifying near-duplicate pairs + building clean test subset...")
+    classified = _classify_pairs(near.pop("_all_pairs"))
+    print(f"  classification counts: {classified['counts']}")
+    clean_subset = _build_clean_test_subset(images_by_split, classified)
+    print(f"  clean test subset: {clean_subset['clean_test_count']} of {clean_subset['original_test_count']} "
+          f"images (excluded {clean_subset['contaminated_test_count']} with a highly-likely near duplicate elsewhere)")
 
     report = {
         "data_root": str(args.data_root),
@@ -160,6 +254,8 @@ def main() -> int:
         "exact_duplicates": exact,
         "near_duplicates": near,
         "source_signal": source_signal,
+        "classification": classified,
+        "clean_test_subset": clean_subset,
     }
     out_path = output_dir / "leakage_audit.json"
     out_path.write_text(json.dumps(report, indent=2, default=str))

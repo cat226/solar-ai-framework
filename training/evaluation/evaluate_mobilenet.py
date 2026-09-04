@@ -49,7 +49,32 @@ def main() -> int:
     parser.add_argument("--split", type=str, default="test")
     parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--limit-per-class", type=int, default=None, help="Smoke-test only.")
+    parser.add_argument(
+        "--include-only", type=Path, default=None,
+        help="Path to a JSON file with a top-level list of 'split/Class/filename' strings "
+             "(the format leakage_audit.json's clean_test_subset.clean_test_images uses) - "
+             "restricts evaluation to exactly those images. Use this to evaluate a "
+             "leakage-filtered 'cleaner independent subset' separately from the full "
+             "'original split', per docs/ML_HARDENING_PHASE6B.md - never silently merge the two.",
+    )
+    parser.add_argument(
+        "--subset-label", type=str, default="original_split",
+        help="Label recorded in the output (e.g. 'original_split' or 'cleaner_independent_subset') "
+             "- never call a --include-only-filtered run 'original_split'.",
+    )
     args = parser.parse_args()
+
+    include_only: set[str] | None = None
+    if args.include_only is not None:
+        loaded = json.loads(args.include_only.read_text())
+        # Accept either a bare top-level list, or a full leakage_audit.json
+        # (reads its clean_test_subset.clean_test_images field directly, so
+        # the audit's own output can be passed straight through).
+        if isinstance(loaded, list):
+            include_only = set(loaded)
+        else:
+            include_only = set(loaded["clean_test_subset"]["clean_test_images"])
+        print(f"Restricting to {len(include_only)} images from {args.include_only} (subset_label={args.subset_label!r})")
 
     output_dir = args.output_dir or default_output_root()
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -75,6 +100,8 @@ def main() -> int:
             print(f"  WARNING: no directory for class {true_label!r} at {class_dir}")
             continue
         image_paths = sorted(p for p in class_dir.iterdir() if p.is_file())
+        if include_only is not None:
+            image_paths = [p for p in image_paths if f"{args.split}/{true_label}/{p.name}" in include_only]
         if args.limit_per_class is not None:
             image_paths = image_paths[: args.limit_per_class]
         for img_path in image_paths:
@@ -121,6 +148,7 @@ def main() -> int:
         "classifier_source": source,
         "labels": labels,
         "dataset_split": args.split,
+        "subset_label": args.subset_label,
         "total_samples": len(records),
         "per_class_support": {label: per_class[label]["support"] for label in labels},
         "accuracy": acc,
@@ -139,10 +167,10 @@ def main() -> int:
         "wall_seconds": elapsed,
     }
 
-    summary_path = output_dir / f"mobilenet_{args.split}_summary.json"
+    summary_path = output_dir / f"mobilenet_{args.split}_{args.subset_label}_summary.json"
     summary_path.write_text(json.dumps(summary, indent=2, default=str))
 
-    per_image_csv = output_dir / f"mobilenet_{args.split}_per_image.csv"
+    per_image_csv = output_dir / f"mobilenet_{args.split}_{args.subset_label}_per_image.csv"
     with per_image_csv.open("w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=["filename", "true_label", "predicted_label", "confidence", "correct"])
         writer.writeheader()
