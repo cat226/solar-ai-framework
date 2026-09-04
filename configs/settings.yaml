@@ -36,6 +36,16 @@ models:
     weights: "weights/mobilenet_solar.pth"
     num_classes: 6
     input_size: 224
+    # Interim, non-production checkpoint: trained on a subset of the six
+    # production classes while Bird-Drop/Electrical-Damage/Physical-Damage
+    # datasets remain blocked (see training/classification/DATASET_SOURCES.md).
+    # ModelManager only falls back to this when the production artifact above
+    # is absent - see models/model_manager.py's mobilenet_status property.
+    interim_weights: "weights/mobilenet_solar_interim_3class.pth"
+    interim_labels:
+      - "Clean"
+      - "Dusty"
+      - "Hotspot"
   xgboost:
     weights: "weights/xgboost_solar.joblib"
 

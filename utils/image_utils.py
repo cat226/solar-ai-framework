@@ -155,6 +155,34 @@ def unletterbox_box(
     )
 
 
+def crop_panel(image: Image.Image, box: tuple[float, float, float, float]) -> Image.Image:
+    """Crop a single detected panel out of the original (unresized) image.
+
+    `box` is expected in YOLO's letterboxed 640x640 coordinate space (as
+    stored on `DetectionResult.boxes`) - this maps it back to the original
+    image's pixel coordinates first (via :func:`unletterbox_box`) before
+    cropping, so the returned crop is a real region of the actual uploaded
+    photo, not a distorted region of the letterboxed canvas.
+
+    Args:
+        image: The original, full-resolution PIL image (RGB).
+        box: (x1, y1, x2, y2) in the letterboxed 640x640 canvas.
+
+    Returns:
+        A cropped PIL image. Degenerate/zero-area boxes (e.g. from a
+        corrupted detection) are widened by one pixel rather than
+        producing an empty crop, since MobileNet's own preprocessing
+        cannot handle a zero-size image.
+    """
+    x1, y1, x2, y2 = unletterbox_box(tuple(box), image.size)
+    x1i, y1i, x2i, y2i = int(round(x1)), int(round(y1)), int(round(x2)), int(round(y2))
+    x1i = max(0, min(x1i, image.width - 1))
+    y1i = max(0, min(y1i, image.height - 1))
+    x2i = max(x1i + 1, min(x2i, image.width))
+    y2i = max(y1i + 1, min(y2i, image.height))
+    return image.crop((x1i, y1i, x2i, y2i))
+
+
 def resize_for_mobilenet(img: Image.Image) -> Image.Image:
     """Resize and centre-crop a PIL image to MobileNet's expected input size.
 

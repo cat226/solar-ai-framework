@@ -47,6 +47,16 @@ _YOLO_WEIGHTS: Path = Path(CFG["models"]["yolo"]["weights"])
 _MN_WEIGHTS: Path = Path(CFG["models"]["mobilenet"]["weights"])
 _XGB_WEIGHTS: Path = Path(CFG["models"]["xgboost"]["weights"])
 
+# Interim (non-production) MobileNet fallback - see configs/settings.yaml's
+# comment on models.mobilenet.interim_weights. .get() with a default keeps
+# this optional so a config predating this key still loads.
+_MN_INTERIM_WEIGHTS: Optional[Path] = (
+    Path(CFG["models"]["mobilenet"]["interim_weights"])
+    if CFG["models"]["mobilenet"].get("interim_weights") else None
+)
+_MN_INTERIM_LABELS: list[str] = list(CFG["models"]["mobilenet"].get("interim_labels") or [])
+_MN_PRODUCTION_LABELS: list[str] = list(CFG["classification"]["labels"])
+
 
 # ---------------------------------------------------------------------------
 # Type aliases (avoid importing heavy libraries at module level)
@@ -74,6 +84,8 @@ class ModelManager:
         self._classifier: Optional[_MobileNetModel] = None
         self._predictor: Optional[_XGBPipeline] = None
         self._device: Optional[object] = None  # torch.device, resolved on first use
+        self._classifier_source: Optional[str] = None  # "production" | "interim", set on load
+        self._classifier_labels: Optional[list[str]] = None
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -137,7 +149,18 @@ class ModelManager:
     # ------------------------------------------------------------------
 
     def _load_classifier(self) -> None:
-        """Load fine-tuned MobileNetV2 into ``self._classifier``."""
+        """Load MobileNetV2 into ``self._classifier``.
+
+        Prefers the production artifact (6-class, ``weights/mobilenet_solar.pth``).
+        When that's absent but a genuinely interim artifact exists (e.g.
+        ``weights/mobilenet_solar_interim_3class.pth``, trained on a subset
+        of the production classes while some datasets remain blocked - see
+        training/classification/DATASET_SOURCES.md), falls back to it rather
+        than reporting the whole system as broken. Either way,
+        ``self._classifier_source`` and ``self._classifier_labels`` are set
+        so callers (SolarFaultClassifier.set_model(), the UI) know exactly
+        which class set is actually active - never silently assumed to be
+        the production six."""
         try:
             import torch  # type: ignore
             from torchvision import models  # type: ignore
@@ -148,37 +171,74 @@ class ModelManager:
                 "Run: pip install torch torchvision",
             ) from exc
 
-        if not _MN_WEIGHTS.exists():
+        if _MN_WEIGHTS.exists():
+            weights_path = _MN_WEIGHTS
+            labels = _MN_PRODUCTION_LABELS
+            source = "production"
+        elif _MN_INTERIM_WEIGHTS is not None and _MN_INTERIM_WEIGHTS.exists():
+            if not _MN_INTERIM_LABELS:
+                # Configured-path label only, never the resolved Path object -
+                # its str() could be an absolute filesystem path (see the
+                # "no absolute path in error messages" security test this
+                # mirrors below).
+                raise ModelLoadError(
+                    "MobileNet",
+                    "Interim weights exist but 'models.mobilenet.interim_labels' is empty "
+                    "in configs/settings.yaml - refusing to guess the class set.",
+                )
+            weights_path = _MN_INTERIM_WEIGHTS
+            labels = _MN_INTERIM_LABELS
+            source = "interim"
+        else:
+            # Static, configured-path strings only - never interpolate the
+            # resolved _MN_WEIGHTS/_MN_INTERIM_WEIGHTS Path objects, which
+            # may resolve to an absolute local filesystem path.
             raise ModelLoadError(
                 "MobileNet",
-                "Model weights not found at configured path.\n"
-                "Expected artifact: weights/mobilenet_solar.pth\n"
+                "Model weights not found at either configured path.\n"
+                "Expected production artifact: weights/mobilenet_solar.pth\n"
+                "Expected interim artifact: weights/mobilenet_solar_interim_3class.pth\n"
                 "Ensure model artifacts are installed. "
-                "Update 'models.mobilenet.weights' in configs/settings.yaml if using custom paths.",
+                "Update 'models.mobilenet.weights'/'interim_weights' in configs/settings.yaml if using custom paths.",
             )
 
         device = self._resolve_device()
-        num_classes: int = int(CFG["models"]["mobilenet"]["num_classes"])
+        num_classes = len(labels)
 
         model = models.mobilenet_v2(weights=None)
         in_features = model.classifier[1].in_features
         model.classifier[1] = torch.nn.Linear(in_features, num_classes)
 
-        state_dict = torch.load(
-            str(_MN_WEIGHTS),
-            map_location=device,
-            weights_only=True,
-        )
-        model.load_state_dict(state_dict)
+        try:
+            state_dict = torch.load(
+                str(weights_path),
+                map_location=device,
+                weights_only=True,
+            )
+            model.load_state_dict(state_dict)
+        except Exception as exc:
+            configured_label = "weights/mobilenet_solar.pth" if source == "production" else "weights/mobilenet_solar_interim_3class.pth"
+            raise ModelLoadError(
+                "MobileNet",
+                f"Failed to load the {source} checkpoint ({configured_label}) as a "
+                f"{num_classes}-class MobileNetV2: {type(exc).__name__}: {exc}",
+            ) from exc
         model.to(device)
         model.eval()
 
         self._classifier = model
+        self._classifier_source = source
+        self._classifier_labels = list(labels)
         logger.info(
-            "MobileNetV2 classifier loaded from %s (device=%s).",
-            _MN_WEIGHTS,
-            device,
+            "MobileNetV2 classifier loaded from %s (source=%s, classes=%s, device=%s).",
+            weights_path, source, labels, device,
         )
+        if source == "interim":
+            logger.warning(
+                "MobileNet running on an INTERIM checkpoint (%s) - only %s are classifiable. "
+                "The production six-class artifact (weights/mobilenet_solar.pth) is not present.",
+                weights_path, labels,
+            )
 
     def get_classifier(self) -> _MobileNetModel:
         """Return the cached MobileNetV2 model, loading it on first call.
@@ -192,6 +252,29 @@ class ModelManager:
         if self._classifier is None:
             self._load_classifier()
         return self._classifier  # type: ignore[return-value]
+
+    @property
+    def classifier_labels(self) -> list[str]:
+        """The class label list matching the currently-loaded classifier's
+        output layer, in index order - loads the classifier first if not
+        already loaded. Always pass this to
+        ``SolarFaultClassifier.set_model(model, labels=...)`` rather than
+        assuming the production label list; see ``_load_classifier()``.
+
+        Raises:
+            ModelLoadError: If no classifier artifact (production or
+                interim) is available.
+        """
+        self.get_classifier()
+        assert self._classifier_labels is not None  # set by _load_classifier on success
+        return self._classifier_labels
+
+    @property
+    def classifier_source(self) -> Optional[str]:
+        """``"production"``, ``"interim"``, or ``None`` if the classifier
+        has not been loaded yet. Does not trigger a load - check
+        ``mobilenet_status`` for a load-free view."""
+        return self._classifier_source
 
     # ------------------------------------------------------------------
     # XGBoost
@@ -279,6 +362,49 @@ class ModelManager:
         return {
             name: {"path": str(path), "exists": path.is_file()}
             for name, path in artifacts.items()
+        }
+
+    @property
+    def mobilenet_status(self) -> dict[str, object]:
+        """Nuanced MobileNet capability report - never loads the model.
+
+        Distinguishes "the production artifact is missing" from "an
+        interim/limited artifact is genuinely active and usable" rather
+        than collapsing both into a single ready/not_ready flag. Additive
+        to, and does not replace, ``artifact_status`` (whose "MobileNet"
+        entry keeps its original strict meaning: does the *production*
+        artifact exist - see scripts/check_runtime_readiness.py, whose
+        JSON contract this must never change).
+
+        Returns:
+            ``state``: ``"production"`` (the real 6-class artifact exists),
+            ``"interim"`` (only the interim subset artifact exists), or
+            ``"missing"`` (neither exists).
+            ``active_labels``: the class list that would actually be used
+            for inference right now, given ``state``.
+            ``is_production_class_set``: whether ``active_labels`` equals
+            the full 6-class production contract.
+            Plus the raw path/existence of both the production and interim
+            artifacts, for a status page to display in full.
+        """
+        production_exists = _MN_WEIGHTS.is_file()
+        interim_exists = _MN_INTERIM_WEIGHTS is not None and _MN_INTERIM_WEIGHTS.is_file()
+        if production_exists:
+            state, active_labels = "production", _MN_PRODUCTION_LABELS
+        elif interim_exists:
+            state, active_labels = "interim", _MN_INTERIM_LABELS
+        else:
+            state, active_labels = "missing", []
+        return {
+            "state": state,
+            "active_labels": list(active_labels),
+            "is_production_class_set": active_labels == _MN_PRODUCTION_LABELS,
+            "production_path": str(_MN_WEIGHTS),
+            "production_exists": production_exists,
+            "interim_path": str(_MN_INTERIM_WEIGHTS) if _MN_INTERIM_WEIGHTS else None,
+            "interim_exists": interim_exists,
+            "production_labels": list(_MN_PRODUCTION_LABELS),
+            "interim_labels": list(_MN_INTERIM_LABELS),
         }
 
 

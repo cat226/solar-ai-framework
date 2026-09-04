@@ -31,6 +31,7 @@ from PIL import Image
 from utils.image_utils import (
     _MN_SIZE,
     _YOLO_SIZE,
+    crop_panel,
     get_image_dimensions,
     load_pil_image,
     pil_to_numpy,
@@ -248,6 +249,62 @@ class TestUnletterboxBox:
         cy = (mapped_back[1] + mapped_back[3]) / 2
         assert cx == pytest.approx(orig_w / 2, abs=1.0)
         assert cy == pytest.approx(orig_h / 2, abs=1.0)
+
+
+class TestCropPanel:
+    """crop_panel() - unletterbox a detection box then crop the *original*
+    image, the real "Panel crops" step in the YOLO -> MobileNet pipeline."""
+
+    def test_crop_has_expected_content_at_known_position(self):
+        # A distinct color block in the top-left quadrant of the original
+        # image, the rest black - the crop must contain (at least mostly)
+        # that color, proving it cropped the real original image region,
+        # not some arbitrary letterboxed-canvas slice.
+        orig_w, orig_h = 640, 640  # square, so no letterbox padding at all
+        img = Image.new("RGB", (orig_w, orig_h), (0, 0, 0))
+        for x in range(0, 100):
+            for y in range(0, 100):
+                img.putpixel((x, y), (255, 0, 0))
+
+        crop = crop_panel(img, (0.0, 0.0, 100.0, 100.0))
+        assert crop.size == (100, 100)
+        assert crop.getpixel((50, 50)) == (255, 0, 0)
+
+    def test_crop_size_matches_box_dimensions(self):
+        img = Image.new("RGB", (640, 640))
+        crop = crop_panel(img, (100.0, 100.0, 300.0, 250.0))
+        assert crop.size == (200, 150)
+
+    def test_degenerate_zero_area_box_still_produces_nonempty_crop(self):
+        img = Image.new("RGB", (640, 640))
+        crop = crop_panel(img, (100.0, 100.0, 100.0, 100.0))
+        assert crop.width >= 1
+        assert crop.height >= 1
+
+    def test_box_outside_image_bounds_is_clamped(self):
+        img = Image.new("RGB", (640, 640))
+        crop = crop_panel(img, (-50.0, -50.0, 5000.0, 5000.0))
+        assert crop.width <= 640
+        assert crop.height <= 640
+        assert crop.width >= 1
+        assert crop.height >= 1
+
+    def test_crop_on_non_square_original_image_uses_unletterbox_mapping(self):
+        """A box near the letterboxed canvas's centre on a wide original
+        image must crop from that image's own centre, not naively (which
+        would be off because of the aspect-ratio padding)."""
+        orig_w, orig_h = 800, 400
+        img = Image.new("RGB", (orig_w, orig_h), (0, 0, 0))
+        cx, cy = orig_w // 2, orig_h // 2
+        for x in range(cx - 20, cx + 20):
+            for y in range(cy - 20, cy + 20):
+                img.putpixel((x, y), (0, 255, 0))
+
+        # Canvas-centre box (640x640 canvas centre = (320, 320))
+        crop = crop_panel(img, (310.0, 310.0, 330.0, 330.0))
+        # The crop should be roughly centred on the green block.
+        w, h = crop.size
+        assert crop.getpixel((w // 2, h // 2)) == (0, 255, 0)
 
 
 # ---------------------------------------------------------------------------

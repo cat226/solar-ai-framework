@@ -299,6 +299,9 @@ class TestMissingWeightFileErrors:
         assert "configured path" in str(exc_info.value)
 
     def test_classifier_missing_weights(self, monkeypatch):
+        """Neither production nor interim weights exist -> ModelLoadError.
+        (If only production is missing but interim exists, ModelManager
+        falls back to interim instead - see TestInterimClassifierFallback.)"""
         fake_torch = _make_fake_torch()
         fake_models = MagicMock()
         fake_models.mobilenet_v2 = MagicMock(return_value=MagicMock())
@@ -308,6 +311,7 @@ class TestMissingWeightFileErrors:
 
         mm = ModelManager()
         monkeypatch.setattr("models.model_manager._MN_WEIGHTS", MagicMock(exists=MagicMock(return_value=False)))
+        monkeypatch.setattr("models.model_manager._MN_INTERIM_WEIGHTS", MagicMock(exists=MagicMock(return_value=False)))
 
         with pytest.raises(ModelLoadError, match="MobileNet"):
             mm.get_classifier()
@@ -324,11 +328,92 @@ class TestMissingWeightFileErrors:
         fake_path = MagicMock(exists=MagicMock(return_value=False))
         fake_path.__str__ = MagicMock(return_value="C:\\Users\\secret\\weights\\mobilenet_solar.pth")
         monkeypatch.setattr("models.model_manager._MN_WEIGHTS", fake_path)
+        fake_interim_path = MagicMock(exists=MagicMock(return_value=False))
+        fake_interim_path.__str__ = MagicMock(return_value="C:\\Users\\secret\\weights\\mobilenet_solar_interim_3class.pth")
+        monkeypatch.setattr("models.model_manager._MN_INTERIM_WEIGHTS", fake_interim_path)
 
         with pytest.raises(ModelLoadError, match="MobileNet") as exc_info:
             mm.get_classifier()
         assert "C:\\Users\\secret" not in str(exc_info.value)
         assert "configured path" in str(exc_info.value)
+
+
+class TestInterimClassifierFallback:
+    """When the production MobileNet artifact is absent but an interim one
+    is genuinely present, ModelManager falls back to it rather than
+    reporting the whole system as broken - see the storage policy pivot
+    that introduced Clean/Dusty/Hotspot-only interim training."""
+
+    def _fake_torch_and_torchvision(self, monkeypatch):
+        fake_torch = _make_fake_torch()
+        fake_torch.nn.Linear = MagicMock(return_value=MagicMock())
+        fake_model = MagicMock()
+        fake_model.classifier = {1: MagicMock(in_features=1280)}
+        fake_models = MagicMock()
+        fake_models.mobilenet_v2 = MagicMock(return_value=fake_model)
+        fake_torch.models = fake_models
+        fake_torch.load = MagicMock(return_value={})
+        monkeypatch.setitem(sys.modules, "torch", fake_torch)
+        monkeypatch.setitem(sys.modules, "torchvision", MagicMock(models=fake_models))
+        return fake_torch, fake_model
+
+    def test_falls_back_to_interim_when_production_absent(self, monkeypatch):
+        self._fake_torch_and_torchvision(monkeypatch)
+        mm = ModelManager()
+        monkeypatch.setattr("models.model_manager._MN_WEIGHTS", MagicMock(exists=MagicMock(return_value=False)))
+        monkeypatch.setattr("models.model_manager._MN_INTERIM_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
+        monkeypatch.setattr("models.model_manager._MN_INTERIM_LABELS", ["Clean", "Dusty", "Hotspot"])
+
+        model = mm.get_classifier()
+        assert model is not None
+        assert mm.classifier_source == "interim"
+        assert mm.classifier_labels == ["Clean", "Dusty", "Hotspot"]
+
+    def test_prefers_production_when_both_present(self, monkeypatch):
+        self._fake_torch_and_torchvision(monkeypatch)
+        mm = ModelManager()
+        monkeypatch.setattr("models.model_manager._MN_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
+        monkeypatch.setattr("models.model_manager._MN_INTERIM_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
+        monkeypatch.setattr("models.model_manager._MN_PRODUCTION_LABELS",
+                             ["Clean", "Dusty", "Bird-Drop", "Electrical-Damage", "Physical-Damage", "Hotspot"])
+
+        mm.get_classifier()
+        assert mm.classifier_source == "production"
+        assert mm.classifier_labels == ["Clean", "Dusty", "Bird-Drop", "Electrical-Damage", "Physical-Damage", "Hotspot"]
+
+    def test_interim_weights_present_but_no_labels_configured_raises(self, monkeypatch):
+        self._fake_torch_and_torchvision(monkeypatch)
+        mm = ModelManager()
+        monkeypatch.setattr("models.model_manager._MN_WEIGHTS", MagicMock(exists=MagicMock(return_value=False)))
+        monkeypatch.setattr("models.model_manager._MN_INTERIM_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
+        monkeypatch.setattr("models.model_manager._MN_INTERIM_LABELS", [])
+
+        with pytest.raises(ModelLoadError, match="interim_labels"):
+            mm.get_classifier()
+
+    def test_mobilenet_status_reports_missing_state(self, monkeypatch):
+        mm = ModelManager()
+        monkeypatch.setattr("models.model_manager._MN_WEIGHTS", MagicMock(is_file=MagicMock(return_value=False), __str__=lambda self: "weights/mobilenet_solar.pth"))
+        monkeypatch.setattr("models.model_manager._MN_INTERIM_WEIGHTS", MagicMock(is_file=MagicMock(return_value=False), __str__=lambda self: "weights/mobilenet_solar_interim_3class.pth"))
+        status = mm.mobilenet_status
+        assert status["state"] == "missing"
+        assert status["active_labels"] == []
+        assert status["production_exists"] is False
+        assert status["interim_exists"] is False
+
+    def test_mobilenet_status_reports_interim_state_without_loading(self, monkeypatch):
+        """mobilenet_status must never trigger an actual model load - pure
+        filesystem/config inspection only."""
+        mm = ModelManager()
+        monkeypatch.setattr("models.model_manager._MN_WEIGHTS", MagicMock(is_file=MagicMock(return_value=False)))
+        monkeypatch.setattr("models.model_manager._MN_INTERIM_WEIGHTS", MagicMock(is_file=MagicMock(return_value=True), __str__=lambda self: "weights/mobilenet_solar_interim_3class.pth"))
+        monkeypatch.setattr("models.model_manager._MN_INTERIM_LABELS", ["Clean", "Dusty", "Hotspot"])
+
+        status = mm.mobilenet_status
+        assert status["state"] == "interim"
+        assert status["active_labels"] == ["Clean", "Dusty", "Hotspot"]
+        assert status["is_production_class_set"] is False
+        assert mm._classifier is None  # never loaded
 
     def test_predictor_missing_weights(self, monkeypatch):
         fake_joblib = _make_fake_joblib()
