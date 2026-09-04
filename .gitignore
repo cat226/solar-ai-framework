@@ -9,6 +9,11 @@ weights/*.pkl
 # Prepared/raw training data (never commit datasets)
 training/data/
 
+# Ultralytics YOLO training runs and pretrained-checkpoint downloads
+runs/
+training/detection/runs/
+*.pt
+
 # Local runtime app data (SQLite inspection history — per-deployment, not project content)
 data/
 

@@ -41,8 +41,8 @@ def main() -> int:
     if args.epochs < 1 or args.batch < 1:
         raise SystemExit("epochs and batch must be positive")
 
-    data_yaml = _write_data_yaml(args.data_root, args.project / "data.yaml")
     args.project.mkdir(parents=True, exist_ok=True)
+    data_yaml = _write_data_yaml(args.data_root, args.project / "data.yaml")
 
     model = YOLO(args.base_model)
     results = model.train(
