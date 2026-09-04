@@ -32,6 +32,18 @@ project's E: drive storage location:
 > leakage audit into a corroborated, classified clean-subset evaluation.
 > **See `docs/ML_HARDENING_PHASE6B.md` for the full, current findings —
 > read both documents together; this one is not superseded, only extended.**
+>
+> **2026-09-05 update (Phase 6C — YOLO Domain Remediation):** investigated
+> whether legitimate, appropriately licensed close-up/ground-level training
+> data exists to remediate the domain-shift limitation above. **No
+> ACCEPT-tier candidate dataset was found** after real web research and a
+> documented licensing/provenance gate (several candidates traced to an
+> already-rejected unknown-license source; aerial/satellite candidates
+> don't address the gap; one candidate, OpenStat Madagascar, remains an
+> open CONDITIONAL lead pending direct verification). **No retraining was
+> performed; `weights/yolo_solar.pt` and `configs/settings.yaml` are
+> unchanged from Phase 6B.** See `docs/ML_HARDENING_PHASE6C.md` for the
+> full candidate table and what would be required to close this gap.
 
 ---
 
