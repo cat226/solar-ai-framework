@@ -34,6 +34,8 @@ def success_result(detection_single_panel, classification_clean, default_weather
         processing_time=1.23,
         status="SUCCESS",
         city="Testville",
+        classifier_source="production",
+        xgboost_available=True,  # this fixture represents a full run with a real prediction
     )
 
 
@@ -84,3 +86,82 @@ class TestReadHelpers:
         # classification_clean + prediction_normal should be OK/INFO severity, not an alert.
         storage.record_inspection(success_result, city="Testville")
         assert storage.get_alerts() == []
+
+
+class TestInterimAndXgboostTracking:
+    """classifier_source / xgboost_available columns, added alongside the
+    interim-classifier and graceful-XGBoost-degradation pipeline work."""
+
+    def test_classifier_source_and_xgboost_available_persisted(self, success_result):
+        row_id = storage.record_inspection(success_result, city="Testville")
+        row = storage.get_inspection(row_id)
+        assert row["classifier_source"] == "production"
+        assert row["xgboost_available"] == 1
+
+    def test_interim_and_unavailable_prediction_recorded_honestly(self, success_result):
+        from dataclasses import replace
+        from models.predictor import PredictionResult
+
+        interim_result = replace(
+            success_result,
+            classifier_source="interim",
+            xgboost_available=False,
+            efficiency_prediction=PredictionResult(prediction_successful=False),
+        )
+        row_id = storage.record_inspection(interim_result, city="Testville")
+        row = storage.get_inspection(row_id)
+        assert row["classifier_source"] == "interim"
+        assert row["xgboost_available"] == 0
+
+    def test_summary_stats_counts_xgboost_unavailable(self, success_result):
+        from dataclasses import replace
+
+        storage.record_inspection(success_result, city="A")  # xgboost_available=True
+        storage.record_inspection(replace(success_result, xgboost_available=False), city="B")
+        stats = storage.get_summary_stats()
+        assert stats["xgboost_unavailable_count"] == 1
+
+    def test_avg_efficiency_loss_excludes_unavailable_predictions(self, success_result):
+        """A row with no real prediction (efficiency_loss_pct defaults to
+        0.0) must not drag down the average - it was never measured, not
+        genuinely zero."""
+        from dataclasses import replace
+        from models.predictor import PredictionResult
+
+        storage.record_inspection(success_result, city="A")  # real prediction, xgboost_available=True
+        storage.record_inspection(
+            replace(success_result, xgboost_available=False, efficiency_prediction=PredictionResult(prediction_successful=False)),
+            city="B",
+        )
+        stats = storage.get_summary_stats()
+        # Only the one real prediction should count toward the average.
+        assert stats["avg_efficiency_loss_pct"] == success_result.efficiency_prediction.efficiency_loss_pct
+
+    def test_summary_stats_class_counts_from_fault_distribution(self, success_result):
+        storage.record_inspection(success_result, city="Testville")  # classification_clean -> "Clean"
+        stats = storage.get_summary_stats()
+        assert stats["clean_count"] == 1
+        assert stats["dusty_count"] == 0
+        assert stats["hotspot_count"] == 0
+
+    def test_total_panels_analyzed_sums_panel_count(self, success_result):
+        storage.record_inspection(success_result, city="A")
+        storage.record_inspection(success_result, city="B")
+        stats = storage.get_summary_stats()
+        assert stats["total_panels_analyzed"] == 2 * success_result.detection_result.panel_count
+
+    def test_panels_and_site_summary_stored_in_result_json(self, success_result):
+        import json
+        from dataclasses import replace
+        from services.pipeline import PanelResult, SiteSummary
+
+        result_with_panels = replace(
+            success_result,
+            panels=[PanelResult(panel_index=1, classification=success_result.classification_result)],
+            site_summary=SiteSummary(total_panels=1, class_counts={"Clean": 1}),
+        )
+        row_id = storage.record_inspection(result_with_panels, city="Testville")
+        row = storage.get_inspection(row_id)
+        stored = json.loads(row["result_json"])
+        assert len(stored["panels"]) == 1
+        assert stored["site_summary"]["total_panels"] == 1

@@ -178,6 +178,14 @@ def main() -> None:
         storage.record_inspection(result, city=city, image_bytes=raw_bytes)
     except Exception:  # noqa: BLE001 — history recording must never break the live result
         logger.exception("Failed to record inspection to local history")
+
+    # Shared with pages/ (Panel Results, Site Health, Environment) via
+    # Streamlit session state - the only mechanism for one script to hand a
+    # result to another page in a multi-page app. Holds only the most recent
+    # live result; never persisted beyond this browser session.
+    st.session_state["last_result"] = result
+    st.session_state["last_source_image"] = pil_image
+
     display_results(result, source_image=pil_image)
 
 

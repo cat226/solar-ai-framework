@@ -58,6 +58,31 @@ CREATE INDEX IF NOT EXISTS idx_inspections_created_at ON inspections (created_at
 CREATE INDEX IF NOT EXISTS idx_inspections_severity ON inspections (severity);
 """
 
+# Columns added after the original schema above. Added via idempotent
+# ALTER TABLE rather than a migration framework - appropriate for this
+# module's own stated scope (a single-user local SQLite file, not a
+# multi-tenant production database). Existing rows predate the interim-
+# classifier/optional-XGBoost work and are backfilled with honest values:
+# every historical row was only ever written by a SUCCESS pipeline run
+# under the code that existed when it ran, and prior to this change
+# run_pipeline could not reach status=SUCCESS at all unless XGBoost had
+# genuinely run - so xgboost_available=1 is a true fact about those rows,
+# not a guess. classifier_source is genuinely unknown for rows written
+# before this column existed (the pipeline didn't track it yet).
+_SCHEMA_MIGRATIONS: list[str] = [
+    "ALTER TABLE inspections ADD COLUMN classifier_source TEXT NOT NULL DEFAULT 'unknown'",
+    "ALTER TABLE inspections ADD COLUMN xgboost_available INTEGER NOT NULL DEFAULT 1",
+]
+
+
+def _apply_migrations(conn: sqlite3.Connection) -> None:
+    for statement in _SCHEMA_MIGRATIONS:
+        try:
+            conn.execute(statement)
+        except sqlite3.OperationalError as exc:
+            if "duplicate column name" not in str(exc).lower():
+                raise
+
 
 def image_sha256(raw_bytes: bytes) -> str:
     """Compute a SHA-256 hex digest for uploaded image bytes.
@@ -75,6 +100,7 @@ def _connect() -> Iterator[sqlite3.Connection]:
     conn.row_factory = sqlite3.Row
     try:
         conn.executescript(_SCHEMA)
+        _apply_migrations(conn)
         yield conn
         conn.commit()
     finally:
@@ -112,6 +138,10 @@ def record_inspection(result, *, city: str, image_bytes: Optional[bytes] = None)
         "weather": asdict(result.weather_data),
         "physics": asdict(result.physics_data),
         "prediction": asdict(pred),
+        "panels": [asdict(p) for p in getattr(result, "panels", [])],
+        "site_summary": asdict(getattr(result, "site_summary", None)) if getattr(result, "site_summary", None) is not None else {},
+        "classifier_source": getattr(result, "classifier_source", "unknown"),
+        "xgboost_available": getattr(result, "xgboost_available", True),
         "recommendations": rec.to_dict(),
         "processing_time": result.processing_time,
         "city": city,
@@ -130,8 +160,8 @@ def record_inspection(result, *, city: str, image_bytes: Optional[bytes] = None)
             INSERT INTO inspections (
                 created_at, city, image_sha256, panel_count, detection_confidence,
                 fault_label, fault_confidence, efficiency_loss_pct, estimated_output_w,
-                severity, processing_time_s, result_json
-            ) VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                severity, processing_time_s, result_json, classifier_source, xgboost_available
+            ) VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 city,
@@ -145,6 +175,8 @@ def record_inspection(result, *, city: str, image_bytes: Optional[bytes] = None)
                 rec.overall_severity.value,
                 result.processing_time,
                 json.dumps(result_dict, default=_json_default),
+                getattr(result, "classifier_source", "unknown"),
+                1 if getattr(result, "xgboost_available", True) else 0,
             ),
         )
         row_id = int(cur.lastrowid)
@@ -199,15 +231,26 @@ def get_summary_stats() -> dict:
                 "total_inspections": 0,
                 "avg_efficiency_loss_pct": 0.0,
                 "avg_panel_count": 0.0,
+                "total_panels_analyzed": 0,
                 "critical_count": 0,
                 "warning_count": 0,
                 "fault_distribution": {},
+                "clean_count": 0,
+                "dusty_count": 0,
+                "hotspot_count": 0,
+                "xgboost_unavailable_count": 0,
             }
+        # Efficiency loss is only meaningful over inspections that actually
+        # got a real prediction - averaging in the honest 0.0 placeholder
+        # from an unavailable-XGBoost row would understate real losses.
         avg_eff = conn.execute(
-            "SELECT AVG(efficiency_loss_pct) AS v FROM inspections"
+            "SELECT AVG(efficiency_loss_pct) AS v FROM inspections WHERE xgboost_available = 1"
         ).fetchone()["v"]
         avg_panels = conn.execute(
             "SELECT AVG(panel_count) AS v FROM inspections"
+        ).fetchone()["v"]
+        total_panels = conn.execute(
+            "SELECT SUM(panel_count) AS v FROM inspections"
         ).fetchone()["v"]
         critical = conn.execute(
             "SELECT COUNT(*) AS n FROM inspections WHERE severity = 'CRITICAL'"
@@ -218,12 +261,21 @@ def get_summary_stats() -> dict:
         fault_rows = conn.execute(
             "SELECT fault_label, COUNT(*) AS n FROM inspections GROUP BY fault_label"
         ).fetchall()
+        xgb_unavailable = conn.execute(
+            "SELECT COUNT(*) AS n FROM inspections WHERE xgboost_available = 0"
+        ).fetchone()["n"]
 
+    fault_distribution = {r["fault_label"]: r["n"] for r in fault_rows}
     return {
         "total_inspections": total,
         "avg_efficiency_loss_pct": float(avg_eff or 0.0),
         "avg_panel_count": float(avg_panels or 0.0),
+        "total_panels_analyzed": int(total_panels or 0),
         "critical_count": critical,
         "warning_count": warning,
-        "fault_distribution": {r["fault_label"]: r["n"] for r in fault_rows},
+        "fault_distribution": fault_distribution,
+        "clean_count": fault_distribution.get("Clean", 0),
+        "dusty_count": fault_distribution.get("Dusty", 0),
+        "hotspot_count": fault_distribution.get("Hotspot", 0),
+        "xgboost_unavailable_count": xgb_unavailable,
     }

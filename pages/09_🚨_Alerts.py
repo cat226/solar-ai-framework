@@ -1,4 +1,4 @@
-"""pages/4_🚨_Alerts.py — Real alerts derived from recorded inspection history,
+"""pages/09_🚨_Alerts.py — Real alerts derived from recorded inspection history,
 plus live system-availability alerts derived from actual model readiness.
 
 No alert on this page is synthetic — each is either a stored inspection
@@ -24,15 +24,25 @@ st.title("🚨 Alerts")
 # ---------------------------------------------------------------------------
 st.subheader("System availability")
 status = model_manager.artifact_status
-missing = [name for name, entry in status.items() if not entry["exists"]]
+mn_status = model_manager.mobilenet_status
+missing = [name for name in ("YOLO", "XGBoost") if not status[name]["exists"]]
+if mn_status["state"] == "missing":
+    missing.append("MobileNet")
+
 if missing:
     st.error(
         f"**Model unavailable**: {', '.join(missing)} artifact(s) are not present. "
         "Analysis requiring these models cannot run until genuine trained weights "
         "are supplied in `weights/`."
     )
+elif mn_status["state"] == "interim":
+    st.warning(
+        "**MobileNet running on the interim checkpoint** — Bird-Drop, "
+        "Electrical-Damage, and Physical-Damage are not currently classifiable. "
+        "See the **Limitations** page."
+    )
 else:
-    st.success("All model artifacts are present and inference is ready.")
+    st.success("All model artifacts are present and inference is fully ready.")
 
 st.divider()
 
