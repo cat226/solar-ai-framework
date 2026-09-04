@@ -69,7 +69,10 @@ class TestRealConfigurationValidates:
     def test_section_and_value_pins(self, project_config):
         assert project_config["weather"]["timeout_seconds"] == 10
         assert project_config["weather"]["base_url"].startswith("https://")
-        assert project_config["models"]["yolo"]["confidence_threshold"] == 0.45
+        # Recalibrated 2026-09-05 (Phase 6B) from 0.45 to 0.30 via a
+        # validation-split-only confidence-threshold sweep - see
+        # docs/ML_HARDENING_PHASE6B.md for the full methodology and evidence.
+        assert project_config["models"]["yolo"]["confidence_threshold"] == 0.30
         assert project_config["models"]["yolo"]["iou_threshold"] == 0.50
         assert project_config["models"]["yolo"]["image_size"] == 640
         assert project_config["models"]["mobilenet"]["num_classes"] == 6

@@ -29,7 +29,21 @@ weather:
 models:
   yolo:
     weights: "weights/yolo_solar.pt"
-    confidence_threshold: 0.45
+    # Recalibrated 2026-09-05 (Phase 6B) from 0.45, using a confidence-
+    # threshold sweep (0.05-0.90) on the VALIDATION split only (never the
+    # test split - see docs/ML_HARDENING_PHASE6B.md for the full grid,
+    # methodology, and its disclosed limitations). 0.45 measured
+    # precision=0.493/recall=0.179/F1=0.263 on real validation data; 0.30
+    # was the best-F1 grid point at precision=0.334/recall=0.304/F1=0.318
+    # (F1 is fairly flat across roughly 0.25-0.40 - this is a representative
+    # point in that range, not a sharp, uniquely-optimal value). This
+    # materially improves recall (catches more real panels) at a real
+    # precision cost, and was NOT selected by optimizing against the test
+    # split. It does not make detection "good" in an absolute sense -
+    # F1~0.32 remains modest - see the v1.0.0 ML evaluation docs for the
+    # full, honest picture (including a domain-shift limitation this
+    # threshold change cannot fix).
+    confidence_threshold: 0.30
     iou_threshold: 0.50
     image_size: 640
   mobilenet:
