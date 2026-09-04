@@ -12,6 +12,7 @@ This file must remain under 120-150 lines.
 
 from __future__ import annotations
 
+import hashlib
 import io
 import re
 
@@ -145,48 +146,69 @@ def main() -> None:
 
     st.image(pil_image, caption="Uploaded Image", use_container_width=True)
 
-    with st.spinner("Running analysis pipeline…"):
-        try:
-            result: PipelineResult = run_pipeline(
-                image=pil_image,
-                city=city,
-                panel_age=panel_age,
-                maintenance_count=maintenance_count,
-                voltage=voltage,
-                current=current,
-                installation_type=installation_type,
-            )
-        except Exception as exc:  # noqa: BLE001
-            logger.exception("Unhandled pipeline exception in UI layer")
-            st.error(
-                "An unexpected error occurred while analysing the image. "
-                "Please try again; if the problem persists, check the logs."
-            )
-            return
-        logger.info(
-            "Pipeline returned status=%s for city='%s'.",
-            result.status,
-            sanitize_for_log(city),
-        )
+    # Streamlit reruns this whole script on every widget interaction, not
+    # just an explicit submit - without this gate, nudging any sidebar
+    # slider while an image is uploaded would re-run detection +
+    # classification + prediction and insert another history row for the
+    # *same* photo on every rerun. Gating on a real button click keeps
+    # inference and history writes tied to a deliberate user action.
+    image_hash = hashlib.sha256(raw_bytes).hexdigest() if raw_bytes else None
+    if st.session_state.get("last_image_hash") != image_hash:
+        # A different (or newly re-uploaded) image is on screen - any
+        # previously displayed result belongs to a different photo and must
+        # not keep showing as if it were this one's analysis.
+        st.session_state.pop("last_result", None)
+        st.session_state.pop("last_source_image", None)
 
-    if result.status == "ERROR":
-        st.error(f"Pipeline error [{result.error_type}]: {result.error_message}")
+    if st.button("🔍 Analyze", type="primary"):
+        with st.spinner("Running analysis pipeline…"):
+            try:
+                result: PipelineResult = run_pipeline(
+                    image=pil_image,
+                    city=city,
+                    panel_age=panel_age,
+                    maintenance_count=maintenance_count,
+                    voltage=voltage,
+                    current=current,
+                    installation_type=installation_type,
+                )
+            except Exception as exc:  # noqa: BLE001
+                logger.exception("Unhandled pipeline exception in UI layer")
+                st.error(
+                    "An unexpected error occurred while analysing the image. "
+                    "Please try again; if the problem persists, check the logs."
+                )
+                return
+            logger.info(
+                "Pipeline returned status=%s for city='%s'.",
+                result.status,
+                sanitize_for_log(city),
+            )
+
+        if result.status == "ERROR":
+            st.error(f"Pipeline error [{result.error_type}]: {result.error_message}")
+            return
+
+        st.success(f"Pipeline completed in {result.processing_time:.2f}s")
+        try:
+            storage.record_inspection(result, city=city, image_bytes=raw_bytes)
+        except Exception:  # noqa: BLE001 — history recording must never break the live result
+            logger.exception("Failed to record inspection to local history")
+
+        # Shared with pages/ (Panel Results, Site Health, Environment) via
+        # Streamlit session state - the only mechanism for one script to hand
+        # a result to another page in a multi-page app. Holds only the most
+        # recent live result; never persisted beyond this browser session.
+        st.session_state["last_result"] = result
+        st.session_state["last_source_image"] = pil_image
+        st.session_state["last_image_hash"] = image_hash
+
+    result = st.session_state.get("last_result")
+    if result is None:
+        st.info("Click **Analyze** to run detection, classification, and prediction on this image.")
         return
 
-    st.success(f"Pipeline completed in {result.processing_time:.2f}s")
-    try:
-        storage.record_inspection(result, city=city, image_bytes=raw_bytes)
-    except Exception:  # noqa: BLE001 — history recording must never break the live result
-        logger.exception("Failed to record inspection to local history")
-
-    # Shared with pages/ (Panel Results, Site Health, Environment) via
-    # Streamlit session state - the only mechanism for one script to hand a
-    # result to another page in a multi-page app. Holds only the most recent
-    # live result; never persisted beyond this browser session.
-    st.session_state["last_result"] = result
-    st.session_state["last_source_image"] = pil_image
-
-    display_results(result, source_image=pil_image)
+    display_results(result, source_image=st.session_state.get("last_source_image", pil_image))
 
 
 if __name__ == "__main__":
