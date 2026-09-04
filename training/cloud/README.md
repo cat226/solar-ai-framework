@@ -109,6 +109,51 @@ checked recursively) — this is a static-analysis-style guard on field
 *names*, not a content scanner, so it won't catch a secret value stored
 under an innocuous key; don't rely on it as the only safeguard.
 
+## Local storage policy (2026-09-04)
+
+The machine this project has mostly been developed on has C:/D: drives
+running low on space, so `base/storage_paths.py` centralizes where large,
+locally-generated Solar AI data goes: the E: drive
+(`E:\Solar AI Training Images\`), not the repository's own drive. This
+applies to downloaded/prepared datasets, Kaggle dataset staging, kernel
+packages, outputs retrieved from Kaggle (checkpoints, result plots, logs),
+local training run directories, and anything else of meaningful size — not
+to small git-tracked metadata like `training/experiments/registry.jsonl` or
+`kernel-metadata.json`, which stay in the repository as before.
+
+- `SOLAR_AI_DATA_ROOT` — the root; overridable via the same-named
+  environment variable, otherwise defaults to the E: path **only on
+  Windows** (`sys.platform == "win32"`) and is `None` everywhere else —
+  deliberately never guesses an `E:`-shaped path on a platform (e.g. the
+  Linux container a Kaggle kernel runs in) where that would just create a
+  literal `E:` subdirectory.
+- `KAGGLE_RUNS_DIR` / `LOCAL_TRAINING_RUNS_DIR` — the two subdirectories
+  currently in use (Kaggle kernel packages + retrieved outputs; local
+  training run outputs). Both `None` when `SOLAR_AI_DATA_ROOT` is `None`.
+- `default_kaggle_package_dir(experiment_id)` — what
+  `build_yolo_smoke_package.py` / `build_yolo_full_training_package.py` /
+  `build_dataset_mount_diagnostic_package.py` use for `--package-dir` when
+  it isn't passed explicitly; falls back to the original
+  `training/cloud/runs/<experiment_id>` when `KAGGLE_RUNS_DIR` is `None`.
+- `ensure_free_space(path, required_bytes, label=...)` — raises
+  `InsufficientSpaceError` rather than letting an operation silently fall
+  back to a different (low-space) drive; callers that stage/download
+  something large should check this first and report the requirement
+  rather than proceeding.
+
+`training/detection/train_yolo.py`'s `--project` default follows the same
+convention but does **not** import this module — see the comment at the
+top of that file: it runs on Kaggle as a bare `python /path/to/
+train_yolo.py` subprocess with no `cwd` set to the repo root, so a
+`training.cloud.*` package import would fail there with
+`ModuleNotFoundError`. Its default is a small, self-contained,
+independently-tested copy of the same env-var/platform logic instead.
+
+Existing audited datasets already on E: (`_raw_downloads/`, `source/`,
+`prepared/`, `yolo_source/`, `yolo_prepared/`, `yolo_smoke_dataset/`) keep
+their existing names/locations — this policy only adds new subdirectories
+for data that didn't have an established home yet.
+
 ## Artifact validation
 
 `base/artifact_validation.py` provides reusable checks used both after a

@@ -23,6 +23,7 @@ from pathlib import Path
 from training.cloud.base.artifact_validation import sha256_file
 from training.cloud.base.job_spec import TrainingJobSpec, capture_environment
 from training.cloud.base.registry import DEFAULT_REGISTRY_PATH, record_experiment
+from training.cloud.base.storage_paths import default_kaggle_package_dir
 from training.cloud.kaggle.adapter import KaggleKernelConfig, dry_run, prepare
 from training.cloud.kaggle.entrypoints.render import render_entrypoint
 
@@ -133,16 +134,21 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--experiment-id", required=True)
     parser.add_argument("--dataset-manifest-path", type=Path, required=True)
-    parser.add_argument("--package-dir", type=Path, required=True)
+    parser.add_argument(
+        "--package-dir", type=Path, default=None,
+        help="Defaults to the E: Solar AI data drive (see training/cloud/base/storage_paths.py) "
+             "under kaggle_runs/<experiment-id> when available.",
+    )
     parser.add_argument("--kaggle-dataset-ref", required=True, help="owner/slug of the uploaded full-dataset Kaggle dataset")
     parser.add_argument("--epochs", type=int, default=3)
     parser.add_argument("--batch", type=int, default=16)
     args = parser.parse_args()
+    package_dir = args.package_dir or default_kaggle_package_dir(args.experiment_id)
 
     job_spec, package_dir = build(
         experiment_id=args.experiment_id,
         dataset_manifest_path=args.dataset_manifest_path,
-        package_dir=args.package_dir,
+        package_dir=package_dir,
         kaggle_dataset_ref=args.kaggle_dataset_ref,
         epochs=args.epochs,
         batch=args.batch,
