@@ -90,7 +90,15 @@ def build(
     config = KaggleKernelConfig(
         owner=owner,
         slug=experiment_id,
-        title=f"Solar AI YOLO smoke test ({experiment_id})",
+        # Kaggle derives the kernel's actual URL slug from the title, not
+        # from the "id" field in kernel-metadata.json, and silently renames
+        # the kernel (with only a warning on stdout) if the two don't match
+        # - discovered for real when solar-yolo-smoke-001's first launch
+        # came back as edithstark/solar-ai-yolo-smoke-test-solar-yolo-smoke-001
+        # instead of the requested slug. Since experiment_id is already a
+        # lowercase alnum+hyphen string, using it verbatim as the title
+        # makes Kaggle's title-derived slug equal the requested slug.
+        title=experiment_id,
         code_file="train.py",
         enable_gpu=True,
         enable_internet=True,  # required: git clone + pip install + base-model download
