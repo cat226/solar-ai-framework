@@ -19,6 +19,20 @@ Full per-image CSVs and JSON summaries (large; not committed) are on the
 project's E: drive storage location:
 `E:\Solar AI Training Images\evaluation_runs\`.
 
+> **2026-09-05 update (Phase 6B — ML Hardening & Re-Evaluation):** this
+> document's findings below were produced against the then-deployed
+> `confidence_threshold: 0.45` and remain an accurate historical record of
+> what that configuration measured. Phase 6B independently swept the
+> confidence threshold on the **validation** split (never the test split)
+> and, based on that evidence, recalibrated
+> `configs/settings.yaml`'s `models.yolo.confidence_threshold` to **0.30**.
+> This measurably improves recall (confirmed on the test split: 0.152→0.271)
+> without fixing the separate, more severe domain-shift limitation this
+> report already identifies. It also extends the MobileNet near-duplicate
+> leakage audit into a corroborated, classified clean-subset evaluation.
+> **See `docs/ML_HARDENING_PHASE6B.md` for the full, current findings —
+> read both documents together; this one is not superseded, only extended.**
+
 ---
 
 ## Executive summary
@@ -28,7 +42,7 @@ project's E: drive storage location:
 | Does MobileNet really achieve ~100% test accuracy? | **No.** Independently reproduced accuracy via the real production classifier is **99.36%** (155/156), not 100%. The one error traces to a genuine preprocessing discrepancy between the original training-time evaluation script and the production inference path (see below) — a real, previously-unknown bug worth fixing in a future phase. |
 | Is the 99.36%/100% MobileNet number trustworthy as "real-world accuracy"? | **Only partially.** A real, visually-confirmed leakage audit found genuine near-duplicate images (the same photograph, reprocessed by an image-resizing tool) crossing the train↔test and val↔test boundaries. The test set is very small (156 images) and one class (Hotspot) has only 20 test samples. The reported accuracy is real given this data, but the data itself is not a clean, fully-independent test set. |
 | Does YOLO really achieve mAP50≈0.74? | **Yes, reproduced.** Independently re-run via `ultralytics.YOLO.val()`: mAP50=0.7401, mAP50-95=0.4753, closely matching the training-run's recorded 0.7392/0.4759. |
-| Does the *deployed* YOLO configuration (conf=0.45) actually deliver that performance? | **No — this is the single most important finding in this report.** At the real production confidence threshold (0.45), independently measured recall is **0.152** (misses ~85% of real panels) and precision is **0.497** — both far below the 0.71 precision / 0.82 recall the model achieves at its own natural operating point. `configs/settings.yaml`'s `confidence_threshold: 0.45` appears **miscalibrated** for this checkpoint. |
+| Did the *deployed* YOLO configuration (conf=0.45, as of this report) actually deliver that performance? | **No — this was the single most important finding in this report.** At the then-production confidence threshold (0.45), independently measured recall was **0.152** (missed ~85% of real panels) and precision **0.497** — both far below the 0.71 precision / 0.82 recall the model achieves at its own natural operating point. `configs/settings.yaml`'s `confidence_threshold` appeared **miscalibrated** for this checkpoint. **Phase 6B recalibrated it to 0.30 based on validation-split evidence — see `docs/ML_HARDENING_PHASE6B.md` for the full threshold sweep and the current, confirmed test-split numbers (recall 0.271).** |
 | Does the full detect→crop→classify pipeline work end-to-end? | **Classification: yes (99.36%). Detection-gated end-to-end: effectively no (0.64%)** on the only dataset with real fault-class ground truth — because that dataset is close-up single-panel photos, a different visual domain than YOLO's own aerial training data, so YOLO detects a panel almost never. This is an honest, important, disclosed limitation of both the evaluation and the real underlying domain gap — not a classification failure. |
 | Is XGBoost evaluated? | **No — correctly not evaluated.** No legitimate trained artifact exists. See dedicated section below. |
 
@@ -440,9 +454,12 @@ error rate (0% or otherwise) is reported for a model that does not exist.
   recall numbers above — the end-to-end section's near-zero detection
   rate on close-up photos is the closest evidence this audit has of
   out-of-domain behavior, and it is poor.
-- **Production confidence threshold appears miscalibrated** for the real
-  YOLO checkpoint (see YOLO section) — a genuine, actionable finding for
-  future configuration work, not addressed in this audit-only phase.
+- **Production confidence threshold appeared miscalibrated** for the real
+  YOLO checkpoint (see YOLO section) — **addressed in Phase 6B**
+  (`docs/ML_HARDENING_PHASE6B.md`): recalibrated from 0.45 to 0.30 using a
+  validation-split threshold sweep. This measurably improves recall but
+  does not resolve the domain-shift or object-size-ceiling limitations
+  below, which remain real, current limitations.
 - **XGBoost is not evaluated and not part of v1** — no legitimate dataset
   exists (see dedicated section above).
 - **The three missing classes** (Bird-Drop, Electrical-Damage,
