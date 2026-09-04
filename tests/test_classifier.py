@@ -287,15 +287,16 @@ class TestLabelAndConfidenceHandling:
 
 
 # ---------------------------------------------------------------------------
-# E2. Custom (interim) label override
+# E2. Custom (smaller-class-set) label override
 # ---------------------------------------------------------------------------
 
 class TestCustomLabelsOverride:
-    """set_model(model, labels=...) - the mechanism that lets an interim,
-    non-production checkpoint report its own real class names instead of
-    being silently mismatched against the 6-label production list."""
+    """set_model(model, labels=...) - the mechanism that lets a
+    smaller-class-set checkpoint (e.g. the v1 release artifact) report its
+    own real class names instead of being silently mismatched against the
+    6-label future full list."""
 
-    def test_set_model_without_labels_defaults_to_production_config(self, project_config):
+    def test_set_model_without_labels_defaults_to_six_class_config(self, project_config):
         model = _make_mock_model()
         clf = SolarFaultClassifier()
         clf.set_model(model)
@@ -323,12 +324,12 @@ class TestCustomLabelsOverride:
 
     def test_classify_raises_on_label_count_mismatch_instead_of_silently_mispairing(self):
         """The exact danger this guards against: a 3-output model paired
-        with the full 6-label production list must never silently zip-
+        with the full 6-label future list must never silently zip-
         truncate/mispair a label onto the wrong probability."""
         model = _make_mock_model()
         clf = SolarFaultClassifier()
-        # 6 production labels injected against a model that will only ever
-        # produce 3 probabilities below.
+        # 6 future six-class labels injected against a model that will only
+        # ever produce 3 probabilities below.
         clf.set_model(model, labels=CFG["classification"]["labels"])
         assert len(clf._labels) == 6
 

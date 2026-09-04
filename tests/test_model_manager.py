@@ -138,7 +138,7 @@ class TestLazyLoadingAndCaching:
         monkeypatch.setitem(sys.modules, "torchvision", MagicMock(models=fake_models))
 
         mm = ModelManager()
-        monkeypatch.setattr("models.model_manager._MN_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
+        monkeypatch.setattr("models.model_manager._MN_SIX_CLASS_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
 
         first = mm.get_classifier()
         second = mm.get_classifier()
@@ -196,7 +196,7 @@ class TestMissingDependencyErrors:
         _simulate_missing_torch(monkeypatch)
 
         mm = ModelManager()
-        monkeypatch.setattr("models.model_manager._MN_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
+        monkeypatch.setattr("models.model_manager._MN_SIX_CLASS_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
 
         with pytest.raises(ModelLoadError, match="MobileNet"):
             mm.get_classifier()
@@ -299,9 +299,10 @@ class TestMissingWeightFileErrors:
         assert "configured path" in str(exc_info.value)
 
     def test_classifier_missing_weights(self, monkeypatch):
-        """Neither production nor interim weights exist -> ModelLoadError.
-        (If only production is missing but interim exists, ModelManager
-        falls back to interim instead - see TestInterimClassifierFallback.)"""
+        """Neither the future six-class nor the v1 weights exist ->
+        ModelLoadError. (If only the six-class artifact is missing but v1
+        exists, ModelManager falls back to v1 instead - see
+        TestV1ClassifierFallback.)"""
         fake_torch = _make_fake_torch()
         fake_models = MagicMock()
         fake_models.mobilenet_v2 = MagicMock(return_value=MagicMock())
@@ -310,8 +311,8 @@ class TestMissingWeightFileErrors:
         monkeypatch.setitem(sys.modules, "torchvision", MagicMock(models=fake_models))
 
         mm = ModelManager()
-        monkeypatch.setattr("models.model_manager._MN_WEIGHTS", MagicMock(exists=MagicMock(return_value=False)))
-        monkeypatch.setattr("models.model_manager._MN_INTERIM_WEIGHTS", MagicMock(exists=MagicMock(return_value=False)))
+        monkeypatch.setattr("models.model_manager._MN_SIX_CLASS_WEIGHTS", MagicMock(exists=MagicMock(return_value=False)))
+        monkeypatch.setattr("models.model_manager._MN_V1_WEIGHTS", MagicMock(exists=MagicMock(return_value=False)))
 
         with pytest.raises(ModelLoadError, match="MobileNet"):
             mm.get_classifier()
@@ -327,10 +328,10 @@ class TestMissingWeightFileErrors:
         mm = ModelManager()
         fake_path = MagicMock(exists=MagicMock(return_value=False))
         fake_path.__str__ = MagicMock(return_value="C:\\Users\\secret\\weights\\mobilenet_solar.pth")
-        monkeypatch.setattr("models.model_manager._MN_WEIGHTS", fake_path)
-        fake_interim_path = MagicMock(exists=MagicMock(return_value=False))
-        fake_interim_path.__str__ = MagicMock(return_value="C:\\Users\\secret\\weights\\mobilenet_solar_interim_3class.pth")
-        monkeypatch.setattr("models.model_manager._MN_INTERIM_WEIGHTS", fake_interim_path)
+        monkeypatch.setattr("models.model_manager._MN_SIX_CLASS_WEIGHTS", fake_path)
+        fake_v1_path = MagicMock(exists=MagicMock(return_value=False))
+        fake_v1_path.__str__ = MagicMock(return_value="C:\\Users\\secret\\weights\\mobilenet_solar_v1.pth")
+        monkeypatch.setattr("models.model_manager._MN_V1_WEIGHTS", fake_v1_path)
 
         with pytest.raises(ModelLoadError, match="MobileNet") as exc_info:
             mm.get_classifier()
@@ -338,11 +339,12 @@ class TestMissingWeightFileErrors:
         assert "configured path" in str(exc_info.value)
 
 
-class TestInterimClassifierFallback:
-    """When the production MobileNet artifact is absent but an interim one
-    is genuinely present, ModelManager falls back to it rather than
-    reporting the whole system as broken - see the storage policy pivot
-    that introduced Clean/Dusty/Hotspot-only interim training."""
+class TestV1ClassifierFallback:
+    """When the future six-class MobileNet artifact is absent but the v1
+    release artifact is genuinely present - the normal, expected state for
+    this release - ModelManager falls back to it rather than reporting the
+    whole system as broken. See the storage policy pivot that introduced
+    Clean/Dusty/Hotspot-only v1 training."""
 
     def _fake_torch_and_torchvision(self, monkeypatch):
         fake_torch = _make_fake_torch()
@@ -357,62 +359,62 @@ class TestInterimClassifierFallback:
         monkeypatch.setitem(sys.modules, "torchvision", MagicMock(models=fake_models))
         return fake_torch, fake_model
 
-    def test_falls_back_to_interim_when_production_absent(self, monkeypatch):
+    def test_falls_back_to_v1_when_six_class_absent(self, monkeypatch):
         self._fake_torch_and_torchvision(monkeypatch)
         mm = ModelManager()
-        monkeypatch.setattr("models.model_manager._MN_WEIGHTS", MagicMock(exists=MagicMock(return_value=False)))
-        monkeypatch.setattr("models.model_manager._MN_INTERIM_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
-        monkeypatch.setattr("models.model_manager._MN_INTERIM_LABELS", ["Clean", "Dusty", "Hotspot"])
+        monkeypatch.setattr("models.model_manager._MN_SIX_CLASS_WEIGHTS", MagicMock(exists=MagicMock(return_value=False)))
+        monkeypatch.setattr("models.model_manager._MN_V1_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
+        monkeypatch.setattr("models.model_manager._MN_V1_LABELS", ["Clean", "Dusty", "Hotspot"])
 
         model = mm.get_classifier()
         assert model is not None
-        assert mm.classifier_source == "interim"
+        assert mm.classifier_source == "v1"
         assert mm.classifier_labels == ["Clean", "Dusty", "Hotspot"]
 
-    def test_prefers_production_when_both_present(self, monkeypatch):
+    def test_prefers_six_class_when_both_present(self, monkeypatch):
         self._fake_torch_and_torchvision(monkeypatch)
         mm = ModelManager()
-        monkeypatch.setattr("models.model_manager._MN_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
-        monkeypatch.setattr("models.model_manager._MN_INTERIM_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
-        monkeypatch.setattr("models.model_manager._MN_PRODUCTION_LABELS",
+        monkeypatch.setattr("models.model_manager._MN_SIX_CLASS_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
+        monkeypatch.setattr("models.model_manager._MN_V1_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
+        monkeypatch.setattr("models.model_manager._MN_SIX_CLASS_LABELS",
                              ["Clean", "Dusty", "Bird-Drop", "Electrical-Damage", "Physical-Damage", "Hotspot"])
 
         mm.get_classifier()
-        assert mm.classifier_source == "production"
+        assert mm.classifier_source == "six_class"
         assert mm.classifier_labels == ["Clean", "Dusty", "Bird-Drop", "Electrical-Damage", "Physical-Damage", "Hotspot"]
 
-    def test_interim_weights_present_but_no_labels_configured_raises(self, monkeypatch):
+    def test_v1_weights_present_but_no_labels_configured_raises(self, monkeypatch):
         self._fake_torch_and_torchvision(monkeypatch)
         mm = ModelManager()
-        monkeypatch.setattr("models.model_manager._MN_WEIGHTS", MagicMock(exists=MagicMock(return_value=False)))
-        monkeypatch.setattr("models.model_manager._MN_INTERIM_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
-        monkeypatch.setattr("models.model_manager._MN_INTERIM_LABELS", [])
+        monkeypatch.setattr("models.model_manager._MN_SIX_CLASS_WEIGHTS", MagicMock(exists=MagicMock(return_value=False)))
+        monkeypatch.setattr("models.model_manager._MN_V1_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
+        monkeypatch.setattr("models.model_manager._MN_V1_LABELS", [])
 
-        with pytest.raises(ModelLoadError, match="interim_labels"):
+        with pytest.raises(ModelLoadError, match="v1_labels"):
             mm.get_classifier()
 
     def test_mobilenet_status_reports_missing_state(self, monkeypatch):
         mm = ModelManager()
-        monkeypatch.setattr("models.model_manager._MN_WEIGHTS", MagicMock(is_file=MagicMock(return_value=False), __str__=lambda self: "weights/mobilenet_solar.pth"))
-        monkeypatch.setattr("models.model_manager._MN_INTERIM_WEIGHTS", MagicMock(is_file=MagicMock(return_value=False), __str__=lambda self: "weights/mobilenet_solar_interim_3class.pth"))
+        monkeypatch.setattr("models.model_manager._MN_SIX_CLASS_WEIGHTS", MagicMock(is_file=MagicMock(return_value=False), __str__=lambda self: "weights/mobilenet_solar.pth"))
+        monkeypatch.setattr("models.model_manager._MN_V1_WEIGHTS", MagicMock(is_file=MagicMock(return_value=False), __str__=lambda self: "weights/mobilenet_solar_v1.pth"))
         status = mm.mobilenet_status
         assert status["state"] == "missing"
         assert status["active_labels"] == []
-        assert status["production_exists"] is False
-        assert status["interim_exists"] is False
+        assert status["six_class_exists"] is False
+        assert status["v1_exists"] is False
 
-    def test_mobilenet_status_reports_interim_state_without_loading(self, monkeypatch):
+    def test_mobilenet_status_reports_v1_state_without_loading(self, monkeypatch):
         """mobilenet_status must never trigger an actual model load - pure
         filesystem/config inspection only."""
         mm = ModelManager()
-        monkeypatch.setattr("models.model_manager._MN_WEIGHTS", MagicMock(is_file=MagicMock(return_value=False)))
-        monkeypatch.setattr("models.model_manager._MN_INTERIM_WEIGHTS", MagicMock(is_file=MagicMock(return_value=True), __str__=lambda self: "weights/mobilenet_solar_interim_3class.pth"))
-        monkeypatch.setattr("models.model_manager._MN_INTERIM_LABELS", ["Clean", "Dusty", "Hotspot"])
+        monkeypatch.setattr("models.model_manager._MN_SIX_CLASS_WEIGHTS", MagicMock(is_file=MagicMock(return_value=False)))
+        monkeypatch.setattr("models.model_manager._MN_V1_WEIGHTS", MagicMock(is_file=MagicMock(return_value=True), __str__=lambda self: "weights/mobilenet_solar_v1.pth"))
+        monkeypatch.setattr("models.model_manager._MN_V1_LABELS", ["Clean", "Dusty", "Hotspot"])
 
         status = mm.mobilenet_status
-        assert status["state"] == "interim"
+        assert status["state"] == "v1"
         assert status["active_labels"] == ["Clean", "Dusty", "Hotspot"]
-        assert status["is_production_class_set"] is False
+        assert status["is_six_class_active"] is False
         assert mm._classifier is None  # never loaded
 
     def test_predictor_missing_weights(self, monkeypatch):
@@ -462,7 +464,7 @@ class TestPreloadAll:
 
         mm = ModelManager()
         monkeypatch.setattr("models.model_manager._YOLO_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
-        monkeypatch.setattr("models.model_manager._MN_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
+        monkeypatch.setattr("models.model_manager._MN_SIX_CLASS_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
         monkeypatch.setattr("models.model_manager._XGB_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
 
         mm.preload_all()
@@ -528,7 +530,7 @@ class TestLoadedModelsProperty:
 
         mm = ModelManager()
         monkeypatch.setattr("models.model_manager._YOLO_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
-        monkeypatch.setattr("models.model_manager._MN_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
+        monkeypatch.setattr("models.model_manager._MN_SIX_CLASS_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
         monkeypatch.setattr("models.model_manager._XGB_WEIGHTS", MagicMock(exists=MagicMock(return_value=True)))
 
         mm.get_detector()
@@ -581,8 +583,8 @@ class TestVerifyAll:
     def test_all_missing(self, monkeypatch):
         mm = ModelManager()
         monkeypatch.setattr("models.model_manager._YOLO_WEIGHTS", MagicMock(exists=MagicMock(return_value=False), is_file=MagicMock(return_value=False)))
-        monkeypatch.setattr("models.model_manager._MN_WEIGHTS", MagicMock(exists=MagicMock(return_value=False), is_file=MagicMock(return_value=False)))
-        monkeypatch.setattr("models.model_manager._MN_INTERIM_WEIGHTS", MagicMock(exists=MagicMock(return_value=False), is_file=MagicMock(return_value=False)))
+        monkeypatch.setattr("models.model_manager._MN_SIX_CLASS_WEIGHTS", MagicMock(exists=MagicMock(return_value=False), is_file=MagicMock(return_value=False)))
+        monkeypatch.setattr("models.model_manager._MN_V1_WEIGHTS", MagicMock(exists=MagicMock(return_value=False), is_file=MagicMock(return_value=False)))
         monkeypatch.setattr("models.model_manager._XGB_WEIGHTS", MagicMock(exists=MagicMock(return_value=False), is_file=MagicMock(return_value=False)))
 
         report = mm.verify_all()
@@ -599,24 +601,24 @@ class TestVerifyAll:
 
         mm = ModelManager()
         monkeypatch.setattr("models.model_manager._YOLO_WEIGHTS", MagicMock(exists=MagicMock(return_value=True), is_file=MagicMock(return_value=True)))
-        monkeypatch.setattr("models.model_manager._MN_WEIGHTS", MagicMock(exists=MagicMock(return_value=True), is_file=MagicMock(return_value=True)))
+        monkeypatch.setattr("models.model_manager._MN_SIX_CLASS_WEIGHTS", MagicMock(exists=MagicMock(return_value=True), is_file=MagicMock(return_value=True)))
         monkeypatch.setattr("models.model_manager._XGB_WEIGHTS", MagicMock(exists=MagicMock(return_value=True), is_file=MagicMock(return_value=True)))
 
         report = mm.verify_all()
         assert report["YOLO"]["state"] == "ready"
-        assert report["MobileNet"]["state"] == "production"
+        assert report["MobileNet"]["state"] == "six_class"
         assert report["XGBoost"]["state"] == "ready"
         assert all(v["detail"] is None for v in report.values())
 
-    def test_interim_mobilenet_reported_as_interim(self, monkeypatch):
+    def test_v1_mobilenet_reported_as_v1(self, monkeypatch):
         self._fake_torch_and_torchvision(monkeypatch)
         mm = ModelManager()
-        monkeypatch.setattr("models.model_manager._MN_WEIGHTS", MagicMock(exists=MagicMock(return_value=False), is_file=MagicMock(return_value=False)))
-        monkeypatch.setattr("models.model_manager._MN_INTERIM_WEIGHTS", MagicMock(exists=MagicMock(return_value=True), is_file=MagicMock(return_value=True)))
-        monkeypatch.setattr("models.model_manager._MN_INTERIM_LABELS", ["Clean", "Dusty", "Hotspot"])
+        monkeypatch.setattr("models.model_manager._MN_SIX_CLASS_WEIGHTS", MagicMock(exists=MagicMock(return_value=False), is_file=MagicMock(return_value=False)))
+        monkeypatch.setattr("models.model_manager._MN_V1_WEIGHTS", MagicMock(exists=MagicMock(return_value=True), is_file=MagicMock(return_value=True)))
+        monkeypatch.setattr("models.model_manager._MN_V1_LABELS", ["Clean", "Dusty", "Hotspot"])
 
         report = mm.verify_all()
-        assert report["MobileNet"]["state"] == "interim"
+        assert report["MobileNet"]["state"] == "v1"
 
     def test_present_but_corrupt_reported_as_error_not_missing(self, monkeypatch):
         """A file that exists but fails to load must be distinguished from
@@ -640,8 +642,8 @@ class TestVerifyAll:
 
         mm = ModelManager()
         monkeypatch.setattr("models.model_manager._YOLO_WEIGHTS", MagicMock(exists=MagicMock(return_value=True), is_file=MagicMock(return_value=True)))
-        monkeypatch.setattr("models.model_manager._MN_WEIGHTS", MagicMock(exists=MagicMock(return_value=False), is_file=MagicMock(return_value=False)))
-        monkeypatch.setattr("models.model_manager._MN_INTERIM_WEIGHTS", MagicMock(exists=MagicMock(return_value=False), is_file=MagicMock(return_value=False)))
+        monkeypatch.setattr("models.model_manager._MN_SIX_CLASS_WEIGHTS", MagicMock(exists=MagicMock(return_value=False), is_file=MagicMock(return_value=False)))
+        monkeypatch.setattr("models.model_manager._MN_V1_WEIGHTS", MagicMock(exists=MagicMock(return_value=False), is_file=MagicMock(return_value=False)))
         monkeypatch.setattr("models.model_manager._XGB_WEIGHTS", MagicMock(exists=MagicMock(return_value=False), is_file=MagicMock(return_value=False)))
 
         mm.get_detector()

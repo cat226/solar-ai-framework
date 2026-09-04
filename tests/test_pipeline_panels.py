@@ -31,7 +31,7 @@ def _make_mock_model_manager():
     mm.get_classifier.return_value = MagicMock()
     mm.get_predictor.return_value = MagicMock()
     mm.classifier_labels = ["Clean", "Dusty", "Hotspot"]
-    mm.classifier_source = "interim"
+    mm.classifier_source = "v1"
     return mm
 
 
@@ -181,7 +181,7 @@ class TestPerPanelOrchestration:
         img = Image.new("RGB", (640, 480))
         detection = MagicMock(panel_count=0, best_confidence=0.0, boxes=[], confidences=[])
         mm = _make_mock_model_manager()
-        mm.classifier_source = "interim"
+        mm.classifier_source = "v1"
         detector = _make_detector()
         detector.detect.return_value = detection
         clf = _make_classifier()
@@ -195,7 +195,7 @@ class TestPerPanelOrchestration:
         )
 
         result = run_pipeline(image=img, city="Chennai")
-        assert result.classifier_source == "interim"
+        assert result.classifier_source == "v1"
 
 
 class TestXGBoostGracefulDegradation:
@@ -267,13 +267,13 @@ class TestXGBoostGracefulDegradation:
         assert result.error_type == "ModelLoadError"
 
     def test_missing_mobilenet_also_aborts(self, monkeypatch):
-        """Same contract as a missing YOLO checkpoint: no production or
-        interim MobileNet checkpoint at all means there is nothing real to
+        """Same contract as a missing YOLO checkpoint: no v1 or six-class
+        MobileNet checkpoint at all means there is nothing real to
         classify with, so the pipeline must not proceed on a fabricated or
         default label."""
         img = Image.new("RGB", (640, 480))
         mm = _make_mock_model_manager()
-        mm.get_classifier.side_effect = ModelLoadError("MobileNet", "No production or interim checkpoint present.")
+        mm.get_classifier.side_effect = ModelLoadError("MobileNet", "No v1 or six-class checkpoint present.")
 
         monkeypatch.setattr("services.pipeline.model_manager", mm)
 

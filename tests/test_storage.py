@@ -34,7 +34,7 @@ def success_result(detection_single_panel, classification_clean, default_weather
         processing_time=1.23,
         status="SUCCESS",
         city="Testville",
-        classifier_source="production",
+        classifier_source="v1",
         xgboost_available=True,  # this fixture represents a full run with a real prediction
     )
 
@@ -88,29 +88,29 @@ class TestReadHelpers:
         assert storage.get_alerts() == []
 
 
-class TestInterimAndXgboostTracking:
+class TestClassifierSourceAndXgboostTracking:
     """classifier_source / xgboost_available columns, added alongside the
-    interim-classifier and graceful-XGBoost-degradation pipeline work."""
+    v1-classifier-freeze and graceful-XGBoost-degradation pipeline work."""
 
     def test_classifier_source_and_xgboost_available_persisted(self, success_result):
         row_id = storage.record_inspection(success_result, city="Testville")
         row = storage.get_inspection(row_id)
-        assert row["classifier_source"] == "production"
+        assert row["classifier_source"] == "v1"
         assert row["xgboost_available"] == 1
 
-    def test_interim_and_unavailable_prediction_recorded_honestly(self, success_result):
+    def test_six_class_and_unavailable_prediction_recorded_honestly(self, success_result):
         from dataclasses import replace
         from models.predictor import PredictionResult
 
-        interim_result = replace(
+        six_class_result = replace(
             success_result,
-            classifier_source="interim",
+            classifier_source="six_class",
             xgboost_available=False,
             efficiency_prediction=PredictionResult(prediction_successful=False),
         )
-        row_id = storage.record_inspection(interim_result, city="Testville")
+        row_id = storage.record_inspection(six_class_result, city="Testville")
         row = storage.get_inspection(row_id)
-        assert row["classifier_source"] == "interim"
+        assert row["classifier_source"] == "six_class"
         assert row["xgboost_available"] == 0
 
     def test_summary_stats_counts_xgboost_unavailable(self, success_result):

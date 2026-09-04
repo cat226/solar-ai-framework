@@ -111,7 +111,7 @@ class TestEntryPointValidation:
         Explicitly mocks model_manager to fail deterministically, so this
         assertion holds regardless of whether real model artifacts happen
         to be present on the machine running the suite (they now genuinely
-        are, for YOLO and the interim MobileNet checkpoint - see
+        are, for YOLO and the v1 MobileNet checkpoint - see
         test_validation_stops_before_models for the same pattern)."""
         img = Image.new("RGB", (10, 10))
         from unittest.mock import MagicMock
