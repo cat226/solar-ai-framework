@@ -73,8 +73,16 @@ else:
     c5.metric("Hotspot detections", stats.get("hotspot_count", 0))
     c6.metric("Predictions unavailable", stats.get("xgboost_unavailable_count", 0),
               help="Inspections where the XGBoost artifact was missing, so no efficiency/output estimate exists for them.")
-    c7.metric("Avg. estimated efficiency loss", f"{stats['avg_efficiency_loss_pct']:.1f}%",
-              help="Model estimate, averaged only over inspections where a prediction was actually computed.")
+    avg_eff = stats["avg_efficiency_loss_pct"]
+    c7.metric(
+        "Avg. estimated efficiency loss",
+        f"{avg_eff:.1f}%" if avg_eff is not None else "N/A",
+        help=(
+            "Model estimate, averaged only over inspections where a prediction was actually "
+            "computed. N/A means no stored inspection has one yet — never shown as 0%, which "
+            "would look like a measured zero loss."
+        ),
+    )
     c8.metric("Critical / Warning", f"{stats['critical_count']} / {stats['warning_count']}")
 
     st.divider()

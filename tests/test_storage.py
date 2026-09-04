@@ -137,6 +137,26 @@ class TestInterimAndXgboostTracking:
         # Only the one real prediction should count toward the average.
         assert stats["avg_efficiency_loss_pct"] == success_result.efficiency_prediction.efficiency_loss_pct
 
+    def test_avg_efficiency_loss_is_none_when_no_row_ever_had_a_prediction(self, success_result):
+        """When every stored inspection has xgboost_available=False, SQL AVG()
+        over an empty set returns NULL. That must surface as None, never a
+        fabricated 0.0 - a UI rendering 0.0 directly would be indistinguishable
+        from a genuinely measured zero-loss average."""
+        from dataclasses import replace
+        from models.predictor import PredictionResult
+
+        storage.record_inspection(
+            replace(success_result, xgboost_available=False, efficiency_prediction=PredictionResult(prediction_successful=False)),
+            city="A",
+        )
+        stats = storage.get_summary_stats()
+        assert stats["avg_efficiency_loss_pct"] is None
+
+    def test_avg_efficiency_loss_is_none_with_no_history_at_all(self):
+        stats = storage.get_summary_stats()
+        assert stats["total_inspections"] == 0
+        assert stats["avg_efficiency_loss_pct"] is None
+
     def test_summary_stats_class_counts_from_fault_distribution(self, success_result):
         storage.record_inspection(success_result, city="Testville")  # classification_clean -> "Clean"
         stats = storage.get_summary_stats()

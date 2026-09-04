@@ -229,7 +229,7 @@ def get_summary_stats() -> dict:
         if total == 0:
             return {
                 "total_inspections": 0,
-                "avg_efficiency_loss_pct": 0.0,
+                "avg_efficiency_loss_pct": None,
                 "avg_panel_count": 0.0,
                 "total_panels_analyzed": 0,
                 "critical_count": 0,
@@ -268,7 +268,11 @@ def get_summary_stats() -> dict:
     fault_distribution = {r["fault_label"]: r["n"] for r in fault_rows}
     return {
         "total_inspections": total,
-        "avg_efficiency_loss_pct": float(avg_eff or 0.0),
+        # None (not 0.0) when no stored inspection ever produced a real
+        # prediction (e.g. every row has xgboost_available=0) - a computed
+        # 0.0 here would be indistinguishable from a genuine zero-loss
+        # measurement. Callers must render this as "unavailable", not "0%".
+        "avg_efficiency_loss_pct": float(avg_eff) if avg_eff is not None else None,
         "avg_panel_count": float(avg_panels or 0.0),
         "total_panels_analyzed": int(total_panels or 0),
         "critical_count": critical,
