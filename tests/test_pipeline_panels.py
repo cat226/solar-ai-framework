@@ -265,3 +265,18 @@ class TestXGBoostGracefulDegradation:
         result = run_pipeline(image=img, city="Chennai")
         assert result.status == "ERROR"
         assert result.error_type == "ModelLoadError"
+
+    def test_missing_mobilenet_also_aborts(self, monkeypatch):
+        """Same contract as a missing YOLO checkpoint: no production or
+        interim MobileNet checkpoint at all means there is nothing real to
+        classify with, so the pipeline must not proceed on a fabricated or
+        default label."""
+        img = Image.new("RGB", (640, 480))
+        mm = _make_mock_model_manager()
+        mm.get_classifier.side_effect = ModelLoadError("MobileNet", "No production or interim checkpoint present.")
+
+        monkeypatch.setattr("services.pipeline.model_manager", mm)
+
+        result = run_pipeline(image=img, city="Chennai")
+        assert result.status == "ERROR"
+        assert result.error_type == "ModelLoadError"
