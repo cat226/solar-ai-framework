@@ -20,25 +20,26 @@ st.caption("What this deployment can and cannot do right now — kept visible, n
 
 mn_status = model_manager.mobilenet_status
 active = set(mn_status["active_labels"])
-production = mn_status["production_labels"]
-unavailable = [c for c in production if c not in active]
+six_class_taxonomy = mn_status["six_class_labels"]
+future_only = [c for c in six_class_taxonomy if c not in active]
 
 st.subheader("Classifier coverage")
-if mn_status["state"] == "production":
-    st.success("✅ Full six-class production classifier is active. No classes are unavailable.")
-elif mn_status["state"] == "interim":
-    st.warning(
-        f"⚠️ **Currently classifiable:** {', '.join(active)}.\n\n"
-        f"❌ **Not currently available:** {', '.join(unavailable)}."
+if mn_status["state"] == "six_class":
+    st.success("✅ Full six-class classifier is active. No classes are unavailable.")
+elif mn_status["state"] == "v1":
+    st.success(
+        f"**Supported now (v1):** solar-panel detection, {', '.join(sorted(active))}.\n\n"
+        f"**Not supported in v1:** {', '.join(future_only)}."
     )
-    for cls in unavailable:
-        st.markdown(f"- **{cls}** — unavailable")
+    for cls in future_only:
+        st.markdown(f"- **{cls}** — not supported in v1")
     st.markdown(
-        "The final six-class production model (`weights/mobilenet_solar.pth`) remains "
-        "**planned**, not abandoned — see `training/classification/DATASET_SOURCES.md` "
-        "for the exact provenance status of every class, including why the classes "
-        "above are currently blocked (missing licensed/accessible datasets, or access "
-        "pending owner approval)."
+        "This is v1's intentionally frozen scope, not an incomplete or broken system. "
+        "The full six-class classifier (`weights/mobilenet_solar.pth`) remains a "
+        "**documented future roadmap item** — see `training/classification/DATASET_SOURCES.md` "
+        "for the exact provenance status of every class, including why the three classes "
+        "above are not part of this release (no licensed/accessible dataset yet, or "
+        "access pending the dataset owner's approval)."
     )
 else:
     st.error("❌ No classifier is active at all — classification cannot run.")

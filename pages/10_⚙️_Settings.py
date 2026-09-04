@@ -33,10 +33,10 @@ with c1:
 with c2:
     st.markdown("**MobileNet classifier**")
     st.code(
-        f"num_classes (production) = {CFG['models']['mobilenet']['num_classes']}\n"
-        f"input_size                = {CFG['models']['mobilenet']['input_size']}\n"
-        f"production classes        = {', '.join(CFG['classification']['labels'])}\n"
-        f"interim classes           = {', '.join(CFG['models']['mobilenet'].get('interim_labels') or [])}",
+        f"num_classes (future six-class) = {CFG['models']['mobilenet']['num_classes']}\n"
+        f"input_size                      = {CFG['models']['mobilenet']['input_size']}\n"
+        f"v1 classes (active)             = {', '.join(CFG['models']['mobilenet'].get('v1_labels') or [])}\n"
+        f"future six-class taxonomy       = {', '.join(CFG['classification']['labels'])}",
         language="text",
     )
 

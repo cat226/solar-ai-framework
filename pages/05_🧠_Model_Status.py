@@ -53,29 +53,29 @@ st.divider()
 # MobileNet
 # ---------------------------------------------------------------------------
 st.subheader("🏷️ MobileNet — fault classification")
-if mn_status["state"] == "production":
-    st.success(f"Ready — **production, {len(mn_status['active_labels'])}-class**")
-elif mn_status["state"] == "interim":
-    st.warning(f"Ready — **interim, {len(mn_status['active_labels'])}-class only**")
+if mn_status["state"] == "six_class":
+    st.success(f"Ready — **future six-class artifact, {len(mn_status['active_labels'])}-class**")
+elif mn_status["state"] == "v1":
+    st.success(f"Ready — **v1, {len(mn_status['active_labels'])}-class**")
     st.markdown(
-        "⚠️ **The final six-class production model is pending.** This deployment is "
-        "running on an interim checkpoint trained only on the classes with genuinely "
-        "licensed, accessible data. See the **Limitations** page for exactly which "
-        "classes are missing and why."
+        "This is the real, frozen v1 release classifier — not a placeholder. It covers "
+        "the three classes with genuinely licensed, accessible data. Bird-Drop, "
+        "Electrical-Damage, and Physical-Damage remain a documented future expansion; "
+        "see the **Limitations** page."
     )
 else:
-    st.error("Missing — no production or interim checkpoint present")
+    st.error("Missing — no v1 or future six-class checkpoint present")
 
 c1, c2 = st.columns(2)
 with c1:
-    st.markdown("**Currently active classes**")
+    st.markdown("**Currently active classes (v1)**")
     st.write(mn_status["active_labels"] or "—")
 with c2:
-    st.markdown("**Full production class order (target)**")
-    st.write(mn_status["production_labels"])
+    st.markdown("**Full future six-class order (roadmap)**")
+    st.write(mn_status["six_class_labels"])
 
-if mn_status["interim_exists"] or mn_status["production_exists"]:
-    active_path = Path(mn_status["production_path"]) if mn_status["state"] == "production" else Path(mn_status["interim_path"])
+if mn_status["v1_exists"] or mn_status["six_class_exists"]:
+    active_path = Path(mn_status["six_class_path"]) if mn_status["state"] == "six_class" else Path(mn_status["v1_path"])
     with st.spinner("Computing checkpoint hash…"):
         st.code(f"path   = {active_path}\nsha256 = {_sha256(active_path)}", language="text")
 
@@ -125,7 +125,7 @@ if st.button("Run deep verification"):
     with st.spinner("Loading each model…"):
         report = model_manager.verify_all()
     state_display = {
-        "ready": ("✅", "ready"), "interim": ("⚠️", "interim"),
+        "ready": ("✅", "ready"), "v1": ("✅", "v1"), "six_class": ("✅", "six_class"),
         "missing": ("❌", "missing"), "error": ("🚫", "present but failed to load"),
     }
     for name, entry in report.items():
@@ -137,11 +137,12 @@ if st.button("Run deep verification"):
 st.divider()
 st.subheader("Overall")
 if yolo["exists"] and mn_status["state"] != "missing" and xgb["exists"]:
-    st.success("✅ Fully operational — all three models ready, full pipeline available.")
+    st.success("✅ Fully operational — detection, classification, and efficiency prediction all ready.")
 elif yolo["exists"] and mn_status["state"] != "missing":
-    st.warning(
-        "⚠️ **Solar AI is operational with limited classification coverage.** "
-        "Detection and classification work; efficiency/output prediction is unavailable."
+    st.success(
+        "✅ **Solar AI v1 is fully operational.** Detection and classification (Clean, "
+        "Dusty, Hotspot) work; efficiency/output prediction is unavailable — a documented "
+        "v1 boundary, not a fault (see **Limitations**)."
     )
 else:
     st.error("❌ Not ready — a required artifact (YOLO or MobileNet) is missing.")

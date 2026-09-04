@@ -31,10 +31,10 @@ cols = st.columns(4)
 with cols[0]:
     st.success("**YOLO**\n\nready") if status["YOLO"]["exists"] else st.error("**YOLO**\n\nmissing")
 with cols[1]:
-    if mn_status["state"] == "production":
-        st.success("**MobileNet**\n\nproduction (6-class)")
-    elif mn_status["state"] == "interim":
-        st.warning("**MobileNet**\n\ninterim (3-class)")
+    if mn_status["state"] == "six_class":
+        st.success("**MobileNet**\n\nready (6-class)")
+    elif mn_status["state"] == "v1":
+        st.success("**MobileNet**\n\nready (v1, 3-class)")
     else:
         st.error("**MobileNet**\n\nmissing")
 with cols[2]:
@@ -44,7 +44,7 @@ with cols[3]:
     if core_ready and status["XGBoost"]["exists"]:
         st.success("**Inference**\n\nfully ready")
     elif core_ready:
-        st.warning("**Inference**\n\noperational, limited")
+        st.success("**Inference**\n\nv1 ready (no efficiency prediction)")
     else:
         st.error("**Inference**\n\nnot ready")
 st.caption("Full breakdown: see the **Model Status** page.")

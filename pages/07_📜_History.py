@@ -31,6 +31,19 @@ if not all_rows:
 
 df = pd.DataFrame(all_rows)
 
+# Rows recorded before the v1 naming freeze stored the old "production"/
+# "interim" labels - map them to today's terms for display only. The
+# underlying stored value is never rewritten; this is real recorded
+# history, not something to silently alter.
+_CLASSIFIER_SOURCE_DISPLAY = {
+    "production": "six_class (legacy label)",
+    "interim": "v1 (legacy label)",
+}
+if "classifier_source" in df.columns:
+    df["classifier_source"] = df["classifier_source"].map(
+        lambda v: _CLASSIFIER_SOURCE_DISPLAY.get(v, v)
+    )
+
 # ---------------------------------------------------------------------------
 # Filters
 # ---------------------------------------------------------------------------
