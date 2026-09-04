@@ -61,5 +61,10 @@ st.markdown(
     "inspections beyond what the History page's timestamps show.\n"
     "- **Efficiency-loss prediction requires the XGBoost artifact.** When it's "
     "absent (see **Model Status**), detection and classification still run, but "
-    "efficiency/output figures are reported as unavailable, never estimated as zero."
+    "efficiency/output figures are reported as unavailable, never estimated as zero.\n"
+    "- **No XGBoost artifact currently exists, and none is planned until a genuine "
+    "dataset is found.** Investigated on 2026-09-04: no dataset was found that pairs "
+    "a real fault classification with paired environmental telemetry and a genuinely "
+    "measured efficiency-loss value — see `training/prediction/DATASET_SOURCES.md`. "
+    "This is a real, current limitation, not a placeholder pending routine training."
 )

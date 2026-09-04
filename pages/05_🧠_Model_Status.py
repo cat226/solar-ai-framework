@@ -97,6 +97,42 @@ else:
         "still run detection and classification; efficiency/output estimates are "
         "reported as unavailable rather than fabricated."
     )
+    with st.expander("Why is there no XGBoost artifact?"):
+        st.markdown(
+            "Investigated on 2026-09-04: no dataset was found that legitimately pairs a "
+            "real `fault_class_id` (this project's own six-class taxonomy) with real "
+            "environmental telemetry *and* a genuinely measured efficiency-loss target. "
+            "Rather than train on invented labels, or on this app's own physics heuristic "
+            "restated as if it were ground truth, the artifact is left unavailable. "
+            "See `training/prediction/DATASET_SOURCES.md` for the full investigation and "
+            "what would need to exist to revisit this."
+        )
+
+st.divider()
+
+# ---------------------------------------------------------------------------
+# Deep verification (opt-in — actually attempts to load every model)
+# ---------------------------------------------------------------------------
+st.subheader("Deep verification")
+st.caption(
+    "The status above only checks whether artifact *files* exist. This actually attempts "
+    "to load each one, catching a present-but-corrupt or incompatible checkpoint that file "
+    "existence alone can't detect. Opt-in (not run automatically) since it can trigger a "
+    "real model load - free if the model is already loaded this session, otherwise pays "
+    "the real load cost once."
+)
+if st.button("Run deep verification"):
+    with st.spinner("Loading each model…"):
+        report = model_manager.verify_all()
+    state_display = {
+        "ready": ("✅", "ready"), "interim": ("⚠️", "interim"),
+        "missing": ("❌", "missing"), "error": ("🚫", "present but failed to load"),
+    }
+    for name, entry in report.items():
+        icon, label = state_display.get(entry["state"], ("❓", entry["state"]))
+        st.markdown(f"{icon} **{name}**: {label}")
+        if entry["detail"]:
+            st.caption(entry["detail"])
 
 st.divider()
 st.subheader("Overall")
