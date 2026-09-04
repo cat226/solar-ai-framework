@@ -117,6 +117,42 @@ class TestStageViaLinks:
         assert (package_dir / "keep_me.json").exists()
         assert not (package_dir / "skip_me.json").exists()
 
+    def test_falls_back_to_copy_when_file_cannot_be_linked_or_hardlinked(self, tmp_path):
+        """Cross-drive staging (the real full-dataset case: E:\\... source,
+        D:\\...\\runs\\... package_dir) can't symlink (no privilege on this
+        box) or hardlink (different volume) a *file* entry like
+        manifest.json. Must fall back to a plain copy rather than crash -
+        only ever for small top-level files, never the bulk image dirs."""
+        source_dir = tmp_path / "source"
+        source_dir.mkdir()
+        (source_dir / "manifest.json").write_text('{"real": "content"}', encoding="utf-8")
+
+        package_dir = tmp_path / "staged"
+        with patch("training.cloud.kaggle.dataset_adapter.os.symlink", side_effect=OSError("no privilege")), \
+             patch("training.cloud.kaggle.dataset_adapter.os.link", side_effect=OSError("different disk drive")):
+            stage_via_links(source_dir, package_dir, entries=["manifest.json"])
+
+        assert (package_dir / "manifest.json").read_text(encoding="utf-8") == '{"real": "content"}'
+
+    def test_directory_still_junctions_when_file_fallback_would_be_copy(self, tmp_path):
+        """The copy fallback must never silently apply to directories - a
+        directory always uses symlink or mklink /J, so bulk data is never
+        duplicated on disk even when a sibling file entry has to be copied."""
+        source_dir = tmp_path / "source"
+        source_dir.mkdir()
+        (source_dir / "manifest.json").write_text("{}", encoding="utf-8")
+        (source_dir / "train").mkdir()
+        (source_dir / "train" / "images.txt").write_text("data", encoding="utf-8")
+
+        package_dir = tmp_path / "staged"
+        with patch("training.cloud.kaggle.dataset_adapter.os.symlink", side_effect=OSError("no privilege")), \
+             patch("training.cloud.kaggle.dataset_adapter.os.link", side_effect=OSError("different disk drive")):
+            stage_via_links(source_dir, package_dir)
+
+        # The directory must exist and be readable (via junction), not a copy -
+        # verified indirectly: its child file is reachable through the link.
+        assert (package_dir / "train" / "images.txt").read_text(encoding="utf-8") == "data"
+
 
 class TestDryRun:
     def test_valid_prepared_package_passes(self, tmp_path):

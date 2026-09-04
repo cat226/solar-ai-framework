@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -90,7 +91,14 @@ def stage_via_links(source_dir: Path, package_dir: Path, *, entries: Optional[li
 
     Uses os.symlink; falls back to a Windows directory junction (via
     mklink /J, which does not require admin/developer-mode privileges,
-    unlike symlinks) when symlink creation is not permitted.
+    unlike symlinks, and works across drives) for directories when symlink
+    creation is not permitted. For a *file* entry, falls back to a hardlink
+    (still no copy) when that's possible (same drive), and only as a last
+    resort - when the source and package_dir are on different drives, so
+    neither a symlink nor a hardlink can be created - copies the file. This
+    only ever applies to small top-level files (e.g. manifest.json); the
+    bulk data (train/val/test image directories) is always linked/junctioned,
+    never copied.
     """
     package_dir.mkdir(parents=True, exist_ok=True)
     names = entries if entries is not None else sorted(p.name for p in source_dir.iterdir())
@@ -111,8 +119,13 @@ def stage_via_links(source_dir: Path, package_dir: Path, *, entries: Optional[li
                     capture_output=True, text=True, check=True,
                 )
             else:
-                # Files can't be junctioned; hardlink instead (still no copy).
-                os.link(src, dst)
+                try:
+                    os.link(src, dst)
+                except OSError:
+                    # Cross-drive: neither symlink nor hardlink is possible
+                    # for a file. Last resort only - never used for the bulk
+                    # image directories above, which always junction.
+                    shutil.copyfile(src, dst)
     return package_dir
 
 
