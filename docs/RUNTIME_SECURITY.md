@@ -12,6 +12,12 @@
 - Streamlit limits image uploads to 10 MB and validates image bytes before decoding.
 - City input is capped at 100 characters and control characters are removed before API calls and logging.
 - Pipeline/model failures are returned through typed results rather than exposing uncontrolled tracebacks in the UI.
+- (Phase 7) `.streamlit/config.toml` sets `client.showErrorDetails = "none"` -
+  Streamlit's own default (`"full"`) would show the exception type, message,
+  and full traceback in the browser for *any* uncaught exception, including
+  one from a bug in page-rendering code not covered by the pipeline's own
+  try/except above. Full detail remains available server-side via
+  `utils.logger` regardless.
 
 ## Model artifact deserialization
 
@@ -31,7 +37,12 @@
 ## Container security
 
 - The production container uses Python 3.12 slim Bookworm.
-- The application runs as an unprivileged `appuser`.
+- The application runs as an unprivileged `appuser` (fixed UID 10001).
+- (Phase 7) Only `/app/data` (the SQLite history directory) and the
+  runtime user's own home directory are writable by `appuser` -
+  application source is root-owned and read-only even to the process
+  that serves requests, so a code-execution bug cannot be used to modify
+  the app's own source files, only to write within `data/`.
 - A container healthcheck targets Streamlit's health endpoint.
 - No trained model artifacts are embedded in the image; trusted artifacts must be supplied separately.
 
