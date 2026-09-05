@@ -39,6 +39,8 @@ def recorded_inspection(detection_single_panel, classification_clean, default_ph
         processing_time=1.0,
         status="SUCCESS",
         city="Testville",
+        classifier_source="production",
+        xgboost_available=True,
     )
     storage.record_inspection(result, city="Testville")
 

@@ -28,7 +28,7 @@ from PIL import Image
 
 from utils.config import CFG
 from utils.exceptions import ModelLoadError, PredictionError
-from utils.image_utils import pil_to_numpy, resize_for_yolo
+from utils.image_utils import resize_for_yolo
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -125,7 +125,6 @@ class SolarPanelDetector:
 
         # Preprocess
         img_resized = resize_for_yolo(image)
-        img_array = pil_to_numpy(img_resized)
 
         logger.info(
             "Running YOLO inference (conf=%.2f, iou=%.2f).",
@@ -134,8 +133,18 @@ class SolarPanelDetector:
         )
 
         try:
+            # Pass the PIL Image directly rather than a raw RGB numpy array.
+            # Ultralytics treats a bare numpy array as already OpenCV-style
+            # BGR (matching cv2.imread) and leaves it unconverted before its
+            # own internal BGR->RGB flip in Predictor.preprocess() — so an
+            # RGB array from PIL would silently reach the network with red
+            # and blue channels swapped. Ultralytics' PIL-input path performs
+            # the correct RGB->BGR conversion first specifically so that
+            # later flip restores true RGB. See
+            # docs/ML_DOMAIN_REMEDIATION.md ("Root cause: RGB/BGR channel
+            # inversion") for the confirmed repro.
             raw = self._model(
-                img_array,
+                img_resized,
                 conf=_CONF_THRESH,
                 iou=_IOU_THRESH,
                 imgsz=_IMG_SIZE,

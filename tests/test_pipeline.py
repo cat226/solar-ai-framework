@@ -105,12 +105,26 @@ class TestEntryPointValidation:
         assert result.status == "ERROR"
         assert "panel_age" in result.error_message
 
-    def test_panel_age_at_boundary_100_is_accepted(self):
+    def test_panel_age_at_boundary_100_is_accepted(self, monkeypatch):
+        """The real thing under test is that panel_age=100.0 clears input
+        validation (isn't rejected as > 100) - not what happens downstream.
+        Explicitly mocks model_manager to fail deterministically, so this
+        assertion holds regardless of whether real model artifacts happen
+        to be present on the machine running the suite (they now genuinely
+        are, for YOLO and the v1 MobileNet checkpoint - see
+        test_validation_stops_before_models for the same pattern)."""
         img = Image.new("RGB", (10, 10))
+        from unittest.mock import MagicMock
+        from utils.exceptions import ModelLoadError
+
+        mm = MagicMock()
+        mm.get_detector.side_effect = ModelLoadError("YOLO", "mocked - unrelated to input validation")
+        monkeypatch.setattr("services.pipeline.model_manager", mm)
+
         result = run_pipeline(image=img, panel_age=100.0)
-        # Validation passes; failure comes from missing mocks (ModelLoadError).
         assert result.status == "ERROR"
         assert result.error_type == "ModelLoadError"
+        assert "panel_age" not in result.error_message  # confirms validation itself passed
 
     def test_negative_maintenance_count_returns_error_result(self):
         img = Image.new("RGB", (10, 10))

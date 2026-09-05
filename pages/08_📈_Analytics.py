@@ -1,4 +1,4 @@
-"""pages/3_📈_Analytics.py — Trend charts over real recorded history.
+"""pages/08_📈_Analytics.py — Trend charts over real recorded history.
 
 Every chart here is computed from services.storage's recorded inspections.
 With fewer than 2 data points, trend charts are not meaningful — the page
@@ -35,7 +35,15 @@ if len(df) < 2:
     st.stop()
 
 st.subheader("Efficiency loss over time")
-st.line_chart(df.set_index("created_at")["efficiency_loss_pct"])
+if "xgboost_available" in df.columns and (df["xgboost_available"] == 0).any():
+    st.caption("⚠️ Points from inspections where prediction was unavailable are excluded from this chart.")
+    eff_df = df[df["xgboost_available"] == 1]
+else:
+    eff_df = df
+if not eff_df.empty:
+    st.line_chart(eff_df.set_index("created_at")["efficiency_loss_pct"])
+else:
+    empty_state("No inspections with an available prediction yet.")
 
 col_a, col_b = st.columns(2)
 with col_a:

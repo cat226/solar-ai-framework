@@ -1,4 +1,4 @@
-"""pages/4_🚨_Alerts.py — Real alerts derived from recorded inspection history,
+"""pages/09_🚨_Alerts.py — Real alerts derived from recorded inspection history,
 plus live system-availability alerts derived from actual model readiness.
 
 No alert on this page is synthetic — each is either a stored inspection
@@ -24,7 +24,16 @@ st.title("🚨 Alerts")
 # ---------------------------------------------------------------------------
 st.subheader("System availability")
 status = model_manager.artifact_status
-missing = [name for name, entry in status.items() if not entry["exists"]]
+mn_status = model_manager.mobilenet_status
+
+# Only YOLO/MobileNet being absent is a genuine, actionable fault - install
+# real weights and it's resolved. XGBoost's absence is v1's documented,
+# permanent capability boundary (no legitimate training dataset exists - see
+# Limitations), not an operational problem to alert on the same way.
+missing = [name for name in ("YOLO",) if not status[name]["exists"]]
+if mn_status["state"] == "missing":
+    missing.append("MobileNet")
+
 if missing:
     st.error(
         f"**Model unavailable**: {', '.join(missing)} artifact(s) are not present. "
@@ -32,7 +41,18 @@ if missing:
         "are supplied in `weights/`."
     )
 else:
-    st.success("All model artifacts are present and inference is ready.")
+    st.success(
+        "Detection and classification are fully ready — v1 supports Clean, Dusty, "
+        "and Hotspot. Bird-Drop, Electrical-Damage, and Physical-Damage remain a "
+        "documented future expansion; see the **Limitations** page."
+    )
+
+if not status["XGBoost"]["exists"]:
+    st.info(
+        "ℹ️ Efficiency-loss/output-power prediction is unavailable in v1 — no "
+        "legitimate training dataset was found (see **Limitations**). This is an "
+        "expected v1 boundary, not a fault."
+    )
 
 st.divider()
 
