@@ -7,6 +7,16 @@ Baseline: `v1.0.0` tag at `14df9b9cdb5411cef79c4282174c7d042abb1a96` (frozen, un
 Phase 6B completed at `9864dcb` (YOLO `confidence_threshold` recalibrated to `0.30`,
 selected from validation data only).
 
+> **Update (2026-09-05, `docs/ML_DOMAIN_REMEDIATION.md`)**: this phase's
+> one open CONDITIONAL lead, OpenStat Madagascar, has since been directly
+> verified and closed as **REJECT** (CC BY 4.0 confirmed, but confirmed
+> nadir/overhead viewpoint, not close-up/ground-level). That same later
+> phase also found and fixed a real RGB/BGR channel-order bug in
+> `models/detector.py` that had been corrupting every detection call
+> (aerial and close-up alike) independently of the domain-shift finding
+> documented below, which otherwise still stands. See
+> `docs/ML_DOMAIN_REMEDIATION.md` for the full, current picture.
+
 ## 1. Objective
 
 Address the dominant limitation identified in Phase 6B: **YOLO

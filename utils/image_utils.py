@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Tuple, Union
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 
 from utils.config import CFG
 from utils.exceptions import ImageValidationError
@@ -47,7 +47,7 @@ def load_pil_image(source: Union[str, Path, bytes]) -> Image.Image:
         )
     if isinstance(source, (str, Path)):
         try:
-            img = Image.open(str(source)).convert("RGB")
+            img = ImageOps.exif_transpose(Image.open(str(source))).convert("RGB")
         except (FileNotFoundError, OSError, ValueError) as exc:
             raise ImageValidationError(
                 f"Could not open image at '{source}': {exc}. "
@@ -61,7 +61,7 @@ def load_pil_image(source: Union[str, Path, bytes]) -> Image.Image:
             )
         import io
         try:
-            img = Image.open(io.BytesIO(bytes(source))).convert("RGB")
+            img = ImageOps.exif_transpose(Image.open(io.BytesIO(bytes(source)))).convert("RGB")
         except (OSError, ValueError) as exc:
             raise ImageValidationError(
                 f"Could not decode image from byte buffer: {exc}. "

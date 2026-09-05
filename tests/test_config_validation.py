@@ -69,10 +69,11 @@ class TestRealConfigurationValidates:
     def test_section_and_value_pins(self, project_config):
         assert project_config["weather"]["timeout_seconds"] == 10
         assert project_config["weather"]["base_url"].startswith("https://")
-        # Recalibrated 2026-09-05 (Phase 6B) from 0.45 to 0.30 via a
-        # validation-split-only confidence-threshold sweep - see
-        # docs/ML_HARDENING_PHASE6B.md for the full methodology and evidence.
-        assert project_config["models"]["yolo"]["confidence_threshold"] == 0.30
+        # Recalibrated 2026-09-05 (Phase 6C domain-remediation audit) from
+        # 0.30 back to 0.45 after fixing an RGB/BGR channel-order bug in
+        # models/detector.py invalidated Phase 6B's original sweep - see
+        # docs/ML_DOMAIN_REMEDIATION.md for the full methodology and evidence.
+        assert project_config["models"]["yolo"]["confidence_threshold"] == 0.45
         assert project_config["models"]["yolo"]["iou_threshold"] == 0.50
         assert project_config["models"]["yolo"]["image_size"] == 640
         assert project_config["models"]["mobilenet"]["num_classes"] == 6

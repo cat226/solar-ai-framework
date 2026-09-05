@@ -428,3 +428,58 @@ class TestMalformedOutputValidation:
         img = Image.new("RGB", (640, 640))
         with pytest.raises(PredictionError, match="non-finite"):
             detector.detect(img)
+
+
+# ---------------------------------------------------------------------------
+# H. RGB/BGR channel-order regression (docs/ML_DOMAIN_REMEDIATION.md)
+# ---------------------------------------------------------------------------
+
+class TestChannelOrderRegression:
+    """detect() must hand ultralytics a PIL.Image, never a bare numpy array.
+
+    Root cause (confirmed by direct inspection of the installed ultralytics
+    ``LoadPilAndNumpy._single_check``): a PIL.Image input is explicitly
+    converted RGB->BGR before ultralytics' own internal BGR->RGB flip in
+    ``Predictor.preprocess()``, so the network correctly receives RGB. A
+    bare numpy array is instead ASSUMED to already be OpenCV-style BGR and
+    is left unconverted - so an RGB numpy array (e.g. from
+    ``pil_to_numpy(resize_for_yolo(image))``, the array this module used to
+    build) reaches that same unconditional flip already in the wrong order,
+    and comes out with red/blue channels swapped. This silently corrupted
+    every production detection call; fixing it raised production-path
+    recall on a 200-image real held-out aerial test sample from 25.2% to
+    86.1% at the unchanged conf=0.30 threshold (see
+    docs/ML_DOMAIN_REMEDIATION.md).
+    """
+
+    def test_detect_passes_a_pil_image_to_the_model_not_a_numpy_array(self):
+        detector = SolarPanelDetector()
+        fake_model = _make_mock_yolo_model()
+        fake_model.return_value = [_make_yolo_result()]
+        detector.set_model(fake_model)
+
+        img = Image.new("RGB", (800, 600), (255, 0, 0))
+        detector.detect(img)
+
+        assert fake_model.call_count == 1
+        passed_arg = fake_model.call_args[0][0]
+        assert isinstance(passed_arg, Image.Image), (
+            "detector.detect() must pass ultralytics a PIL.Image (which it "
+            "converts to BGR correctly) rather than a raw numpy array "
+            "(which ultralytics assumes is already BGR, inverting actual "
+            "RGB data). See docs/ML_DOMAIN_REMEDIATION.md."
+        )
+
+    def test_passed_image_is_the_letterboxed_square_canvas(self):
+        """The fix must still letterbox before handing off to the model -
+        only the numpy conversion was the bug, not the resize step."""
+        detector = SolarPanelDetector()
+        fake_model = _make_mock_yolo_model()
+        fake_model.return_value = [_make_yolo_result()]
+        detector.set_model(fake_model)
+
+        img = Image.new("RGB", (800, 400), (0, 255, 0))
+        detector.detect(img)
+
+        passed_arg = fake_model.call_args[0][0]
+        assert passed_arg.size == (640, 640)

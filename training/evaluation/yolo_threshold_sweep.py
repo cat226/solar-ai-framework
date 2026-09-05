@@ -41,7 +41,7 @@ from training.evaluation.common import (
     load_yolo_ground_truth,
     sha256_file,
 )
-from utils.image_utils import pil_to_numpy, resize_for_yolo, unletterbox_box
+from utils.image_utils import resize_for_yolo, unletterbox_box
 
 _DEFAULT_GRID = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45,
                   0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90]
@@ -68,8 +68,11 @@ def _collect_candidates(raw_model, iou_thresh: float, imgsz: int, data_root: Pat
     for i, img_path in enumerate(image_paths):
         image = Image.open(img_path).convert("RGB")
         img_resized = resize_for_yolo(image)
-        img_array = pil_to_numpy(img_resized)
-        raw = raw_model(img_array, conf=_LOW_CONF, iou=iou_thresh, imgsz=imgsz, verbose=False)
+        # Pass the PIL Image directly - see models/detector.py's identical
+        # fix and docs/ML_DOMAIN_REMEDIATION.md for why a raw RGB numpy
+        # array must never be passed to ultralytics (it is silently
+        # interpreted as pre-existing BGR, inverting the channels).
+        raw = raw_model(img_resized, conf=_LOW_CONF, iou=iou_thresh, imgsz=imgsz, verbose=False)
 
         boxes, confs = [], []
         for pred in raw:

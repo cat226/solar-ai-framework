@@ -24,7 +24,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from PIL import Image
+from PIL import Image, ImageOps
 
 from training.evaluation.common import sha256_file
 
@@ -128,7 +128,10 @@ def main() -> int:
 
         try:
             with Image.open(path) as im:
-                image = im.convert("RGB")
+                # Match app.py's real production loading path exactly
+                # (EXIF-orientation-aware), so this validation reflects
+                # what a real user's upload actually experiences.
+                image = ImageOps.exif_transpose(im).convert("RGB")
         except Exception as exc:  # noqa: BLE001
             result_entry["status"] = "DECODE_ERROR"
             result_entry["error"] = f"{type(exc).__name__}: {exc}"

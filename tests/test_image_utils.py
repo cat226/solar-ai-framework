@@ -128,10 +128,46 @@ class TestLoadPilImage:
         img_path = tmp_path / "test.jpg"
         img = Image.new("RGB", (100, 100), (0, 255, 0))
         img.save(img_path, format="JPEG")
-        
+
         result = load_pil_image(str(img_path))
         assert isinstance(result, Image.Image)
         assert result.mode == "RGB"
+
+    def test_applies_exif_orientation_from_path(self, tmp_path):
+        """Real phone photos are frequently stored with pixel data in the
+        camera's native (often landscape) orientation plus an EXIF
+        Orientation tag rather than pre-rotated pixels. Without applying
+        that tag, a portrait photo reaches YOLO/MobileNet sideways. Build a
+        wide image with EXIF Orientation=6 ("rotate 270"/mirror per the
+        Exif spec's need for a 90 deg CW rotation to display correctly) and
+        confirm the loaded result is actually rotated, not left as-is."""
+        img_path = tmp_path / "rotated.jpg"
+        img = Image.new("RGB", (200, 100), (255, 0, 0))  # landscape pixels
+        exif = img.getexif()
+        exif[0x0112] = 6  # Orientation tag: rotate 90 CW to display upright
+        img.save(img_path, format="JPEG", exif=exif)
+
+        result = load_pil_image(str(img_path))
+        # Orientation 6 swaps width/height on display.
+        assert result.size == (100, 200)
+
+    def test_applies_exif_orientation_from_bytes(self):
+        buf = io.BytesIO()
+        img = Image.new("RGB", (200, 100), (0, 0, 255))
+        exif = img.getexif()
+        exif[0x0112] = 6
+        img.save(buf, format="JPEG", exif=exif)
+
+        result = load_pil_image(buf.getvalue())
+        assert result.size == (100, 200)
+
+    def test_no_exif_orientation_leaves_size_unchanged(self, tmp_path):
+        img_path = tmp_path / "normal.jpg"
+        img = Image.new("RGB", (200, 100), (0, 255, 0))
+        img.save(img_path, format="JPEG")
+
+        result = load_pil_image(str(img_path))
+        assert result.size == (200, 100)
 
 
 # ---------------------------------------------------------------------------

@@ -17,7 +17,7 @@ import io
 import re
 
 import streamlit as st
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 from services import storage
 from services.pipeline import PipelineResult, run_pipeline
@@ -117,7 +117,11 @@ def _render_sidebar() -> tuple[Image.Image | None, bytes | None, str, float, int
             with Image.open(io.BytesIO(raw_bytes)) as image:
                 image.verify()
             with Image.open(io.BytesIO(raw_bytes)) as image:
-                pil_image = image.convert("RGB")
+                # Real phone photos are frequently stored with an EXIF
+                # Orientation tag rather than pre-rotated pixel data; without
+                # this, a portrait photo can reach YOLO/MobileNet rotated
+                # 90/180/270 degrees from how the user (and camera) saw it.
+                pil_image = ImageOps.exif_transpose(image).convert("RGB")
         except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as exc:
             logger.warning("Rejected invalid uploaded image: %s", exc)
             st.sidebar.error(
