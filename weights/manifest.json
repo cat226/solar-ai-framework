@@ -1,0 +1,17 @@
+{
+  "release": "v1.0.0",
+  "artifacts": [
+    {
+      "path": "yolo_solar.pt",
+      "sha256": "0b58609905b8ffe41465751cb842b6ed0368ca2555927e31fb5cd587af37e8ea",
+      "model_type": "YOLOv8n (ultralytics)",
+      "role": "solar-panel detector"
+    },
+    {
+      "path": "mobilenet_solar_v1.pth",
+      "sha256": "afccaccfcc309952f7a94d754aaafc22e7e3391416b9518c5f4a8635b1c2682b",
+      "model_type": "MobileNetV2 (torchvision, 3-class head)",
+      "role": "fault classifier (v1 release: Clean, Dusty, Hotspot)"
+    }
+  ]
+}

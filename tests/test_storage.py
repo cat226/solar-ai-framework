@@ -34,6 +34,8 @@ def success_result(detection_single_panel, classification_clean, default_weather
         processing_time=1.23,
         status="SUCCESS",
         city="Testville",
+        classifier_source="v1",
+        xgboost_available=True,  # this fixture represents a full run with a real prediction
     )
 
 
@@ -84,3 +86,102 @@ class TestReadHelpers:
         # classification_clean + prediction_normal should be OK/INFO severity, not an alert.
         storage.record_inspection(success_result, city="Testville")
         assert storage.get_alerts() == []
+
+
+class TestClassifierSourceAndXgboostTracking:
+    """classifier_source / xgboost_available columns, added alongside the
+    v1-classifier-freeze and graceful-XGBoost-degradation pipeline work."""
+
+    def test_classifier_source_and_xgboost_available_persisted(self, success_result):
+        row_id = storage.record_inspection(success_result, city="Testville")
+        row = storage.get_inspection(row_id)
+        assert row["classifier_source"] == "v1"
+        assert row["xgboost_available"] == 1
+
+    def test_six_class_and_unavailable_prediction_recorded_honestly(self, success_result):
+        from dataclasses import replace
+        from models.predictor import PredictionResult
+
+        six_class_result = replace(
+            success_result,
+            classifier_source="six_class",
+            xgboost_available=False,
+            efficiency_prediction=PredictionResult(prediction_successful=False),
+        )
+        row_id = storage.record_inspection(six_class_result, city="Testville")
+        row = storage.get_inspection(row_id)
+        assert row["classifier_source"] == "six_class"
+        assert row["xgboost_available"] == 0
+
+    def test_summary_stats_counts_xgboost_unavailable(self, success_result):
+        from dataclasses import replace
+
+        storage.record_inspection(success_result, city="A")  # xgboost_available=True
+        storage.record_inspection(replace(success_result, xgboost_available=False), city="B")
+        stats = storage.get_summary_stats()
+        assert stats["xgboost_unavailable_count"] == 1
+
+    def test_avg_efficiency_loss_excludes_unavailable_predictions(self, success_result):
+        """A row with no real prediction (efficiency_loss_pct defaults to
+        0.0) must not drag down the average - it was never measured, not
+        genuinely zero."""
+        from dataclasses import replace
+        from models.predictor import PredictionResult
+
+        storage.record_inspection(success_result, city="A")  # real prediction, xgboost_available=True
+        storage.record_inspection(
+            replace(success_result, xgboost_available=False, efficiency_prediction=PredictionResult(prediction_successful=False)),
+            city="B",
+        )
+        stats = storage.get_summary_stats()
+        # Only the one real prediction should count toward the average.
+        assert stats["avg_efficiency_loss_pct"] == success_result.efficiency_prediction.efficiency_loss_pct
+
+    def test_avg_efficiency_loss_is_none_when_no_row_ever_had_a_prediction(self, success_result):
+        """When every stored inspection has xgboost_available=False, SQL AVG()
+        over an empty set returns NULL. That must surface as None, never a
+        fabricated 0.0 - a UI rendering 0.0 directly would be indistinguishable
+        from a genuinely measured zero-loss average."""
+        from dataclasses import replace
+        from models.predictor import PredictionResult
+
+        storage.record_inspection(
+            replace(success_result, xgboost_available=False, efficiency_prediction=PredictionResult(prediction_successful=False)),
+            city="A",
+        )
+        stats = storage.get_summary_stats()
+        assert stats["avg_efficiency_loss_pct"] is None
+
+    def test_avg_efficiency_loss_is_none_with_no_history_at_all(self):
+        stats = storage.get_summary_stats()
+        assert stats["total_inspections"] == 0
+        assert stats["avg_efficiency_loss_pct"] is None
+
+    def test_summary_stats_class_counts_from_fault_distribution(self, success_result):
+        storage.record_inspection(success_result, city="Testville")  # classification_clean -> "Clean"
+        stats = storage.get_summary_stats()
+        assert stats["clean_count"] == 1
+        assert stats["dusty_count"] == 0
+        assert stats["hotspot_count"] == 0
+
+    def test_total_panels_analyzed_sums_panel_count(self, success_result):
+        storage.record_inspection(success_result, city="A")
+        storage.record_inspection(success_result, city="B")
+        stats = storage.get_summary_stats()
+        assert stats["total_panels_analyzed"] == 2 * success_result.detection_result.panel_count
+
+    def test_panels_and_site_summary_stored_in_result_json(self, success_result):
+        import json
+        from dataclasses import replace
+        from services.pipeline import PanelResult, SiteSummary
+
+        result_with_panels = replace(
+            success_result,
+            panels=[PanelResult(panel_index=1, classification=success_result.classification_result)],
+            site_summary=SiteSummary(total_panels=1, class_counts={"Clean": 1}),
+        )
+        row_id = storage.record_inspection(result_with_panels, city="Testville")
+        row = storage.get_inspection(row_id)
+        stored = json.loads(row["result_json"])
+        assert len(stored["panels"]) == 1
+        assert stored["site_summary"]["total_panels"] == 1

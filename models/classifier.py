@@ -98,14 +98,26 @@ class SolarFaultClassifier:
         self._device: torch.device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu"
         )
+        self._labels: List[str] = _LABELS
 
-    def set_model(self, model: torch.nn.Module) -> None:
+    def set_model(self, model: torch.nn.Module, labels: Optional[List[str]] = None) -> None:
         """Inject the loaded MobileNetV2 model.
 
         Args:
             model: A loaded ``torch.nn.Module`` obtained from
                    :class:`~models.model_manager.ModelManager`, already in
                    eval mode and on the correct device.
+            labels: The class label list matching *model*'s output layer, in
+                    index order. Defaults to the full six-class
+                    ``classification.labels`` list from config when omitted,
+                    preserving prior behavior exactly. Pass
+                    :attr:`models.model_manager.ModelManager.classifier_labels`
+                    here so a smaller-class-set checkpoint (e.g. the v1
+                    release artifact) reports its own real class names
+                    instead of being silently mismatched against the
+                    6-label list - see the "danger demonstration" in
+                    training/classification/INTERIM_MODEL_REPORT.md for what
+                    happens if this isn't done.
 
         Raises:
             ModelLoadError: If *model* is ``None``.
@@ -115,12 +127,16 @@ class SolarFaultClassifier:
                 "MobileNet", "set_model() received None — check ModelManager."
             )
         self._model = model
+        self._labels = labels if labels is not None else _LABELS
         # Sync device with the model's first parameter
         try:
             self._device = next(model.parameters()).device
         except StopIteration:
             pass
-        logger.debug("SolarFaultClassifier: model injected (device=%s).", self._device)
+        logger.debug(
+            "SolarFaultClassifier: model injected (device=%s, labels=%s).",
+            self._device, self._labels,
+        )
 
     def classify(self, image: Image.Image) -> ClassificationResult:
         """Run MobileNetV2 inference on a PIL image.
@@ -158,6 +174,20 @@ class SolarFaultClassifier:
 
         probs_np = probs.squeeze(0).cpu().numpy()
 
+        if len(probs_np) != len(self._labels):
+            # The exact failure mode documented in
+            # training/classification/INTERIM_MODEL_REPORT.md's "danger
+            # demonstration": zip() silently truncates/mispairs when the
+            # label list doesn't match the model's real output size (e.g. a
+            # 3-class checkpoint run against the 6-label future full list).
+            # Fail loudly instead of ever returning a mismatched label.
+            raise PredictionError(
+                "MobileNet",
+                f"Model output has {len(probs_np)} classes but {len(self._labels)} labels "
+                f"were provided ({self._labels}) - set_model() was called with a label list "
+                "that doesn't match the injected model's actual output size.",
+            )
+
         if not all(math.isfinite(p) for p in probs_np):
             raise PredictionError(
                 "MobileNet",
@@ -184,10 +214,10 @@ class SolarFaultClassifier:
                 f"Classification confidence out of range [0,1]: {confidence}",
             )
 
-        label: str = _LABELS[class_id] if class_id < len(_LABELS) else "Unknown"
+        label: str = self._labels[class_id] if class_id < len(self._labels) else "Unknown"
 
         prob_dict: Dict[str, float] = {
-            lbl: float(p) for lbl, p in zip(_LABELS, probs_np)
+            lbl: float(p) for lbl, p in zip(self._labels, probs_np)
         }
 
         logger.info(

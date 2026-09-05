@@ -31,7 +31,7 @@ service directly.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import List, Optional
 import math
 import time
 
@@ -55,6 +55,7 @@ from utils.exceptions import (
     PredictionError,
     SolarAIError,
 )
+from utils.image_utils import crop_panel
 from utils.logger import get_logger
 from utils.security import sanitize_for_log
 
@@ -62,8 +63,86 @@ logger = get_logger(__name__)
 
 
 # ---------------------------------------------------------------------------
-# Result data class
+# Result data classes
 # ---------------------------------------------------------------------------
+
+@dataclass
+class PanelResult:
+    """Per-panel analysis: one detected bounding box, classified and
+    (when the XGBoost artifact is available) predicted independently of
+    every other panel in the same image.
+
+    Attributes:
+        panel_index: 1-based index matching the order panels were detected in
+                     (and the numbering drawn on the detection overlay).
+        box: [x1, y1, x2, y2] in the *original* uploaded image's pixel
+             coordinates (already mapped out of YOLO's letterboxed space).
+        detection_confidence: YOLO's confidence for this specific box.
+        classification: MobileNet result for the cropped panel region -
+                         never the whole image.
+        physics: Physics computed using this panel's own classification
+                  label and shared (image-level) weather conditions.
+        prediction: XGBoost result for this panel.
+                    ``prediction_successful=False`` (with 0.0 fields, never
+                    a fabricated number) when the XGBoost artifact is not
+                    available - see ``PipelineResult.xgboost_available``.
+    """
+
+    panel_index: int = 0
+    box: List[float] = field(default_factory=list)
+    detection_confidence: float = 0.0
+    classification: ClassificationResult = field(default_factory=ClassificationResult)
+    physics: PhysicsResult = field(default_factory=PhysicsResult)
+    prediction: PredictionResult = field(default_factory=PredictionResult)
+
+
+@dataclass
+class SiteSummary:
+    """Site-level aggregation across every panel in ``PipelineResult.panels``.
+
+    Every field here is derived strictly from real per-panel results - never
+    fabricated when there are zero panels (all counts are 0, all rates are
+    0.0, not fabricated placeholders).
+    """
+
+    total_panels: int = 0
+    class_counts: dict[str, int] = field(default_factory=dict)
+    clean_pct: float = 0.0
+    average_efficiency_loss_pct: float = 0.0
+    average_estimated_output_w: float = 0.0
+    panels_with_prediction: int = 0
+
+
+def _build_site_summary(panels: List["PanelResult"]) -> SiteSummary:
+    """Aggregate a list of PanelResult into one SiteSummary. Pure function -
+    no I/O, no model calls - so it's trivially unit-testable and never
+    invents a value for an empty panel list."""
+    if not panels:
+        return SiteSummary()
+
+    class_counts: dict[str, int] = {}
+    for p in panels:
+        class_counts[p.classification.label] = class_counts.get(p.classification.label, 0) + 1
+
+    total = len(panels)
+    clean_count = class_counts.get("Clean", 0)
+    predicted = [p for p in panels if p.prediction.prediction_successful]
+
+    return SiteSummary(
+        total_panels=total,
+        class_counts=class_counts,
+        clean_pct=round(100.0 * clean_count / total, 2),
+        average_efficiency_loss_pct=(
+            round(sum(p.prediction.efficiency_loss_pct for p in predicted) / len(predicted), 2)
+            if predicted else 0.0
+        ),
+        average_estimated_output_w=(
+            round(sum(p.prediction.estimated_output_w for p in predicted) / len(predicted), 2)
+            if predicted else 0.0
+        ),
+        panels_with_prediction=len(predicted),
+    )
+
 
 @dataclass
 class PipelineResult:
@@ -75,11 +154,33 @@ class PipelineResult:
 
     Attributes:
         detection_result: YOLO detection result.
-        classification_result: MobileNet classification result.
+        classification_result: MobileNet classification result for the
+            *whole uploaded image* (kept for backward compatibility with
+            existing UI code) - see ``panels`` for the real per-detected-
+            panel breakdown (crop → classify → physics → predict).
         weather_data: Weather observation used in this run.
-        physics_data: Computed physics parameters.
-        feature_dataframe: Assembled features for inference.
-        efficiency_prediction: XGBoost regression output.
+        physics_data: Computed physics parameters for the whole-image result.
+        feature_dataframe: Assembled features for the whole-image prediction.
+        efficiency_prediction: XGBoost regression output for the whole-image
+            result. ``prediction_successful=False`` when the XGBoost
+            artifact is unavailable - see ``xgboost_available``.
+        panels: One :class:`PanelResult` per YOLO detection box, each
+            independently classified from its own cropped region (this is
+            what "Panel crops → MobileNet classification" in the pipeline
+            diagram refers to). Empty list on zero detections - never
+            fabricated placeholder panels.
+        site_summary: Aggregation of ``panels`` - see :class:`SiteSummary`.
+        classifier_source: ``"v1"`` (the frozen release classifier - the
+            normal, expected value), ``"six_class"`` (the future full
+            artifact, once trained), or ``"unknown"`` (set only when
+            classification never ran, e.g. on early validation failure) -
+            which MobileNet artifact actually produced
+            ``classification_result``/every ``panels[i].classification``.
+        xgboost_available: Whether the XGBoost artifact was present and
+            loadable for this run. When ``False``, every prediction field
+            above reports ``prediction_successful=False`` rather than the
+            whole pipeline aborting - detection and classification results
+            are still genuinely computed and returned.
         recommendations: Maintenance recommendation report.
         processing_time: Total time taken by the pipeline in seconds.
         status: "SUCCESS" or "ERROR".
@@ -94,6 +195,10 @@ class PipelineResult:
     physics_data: PhysicsResult = field(default_factory=PhysicsResult)
     feature_dataframe: pd.DataFrame = field(default_factory=pd.DataFrame)
     efficiency_prediction: PredictionResult = field(default_factory=PredictionResult)
+    panels: List[PanelResult] = field(default_factory=list)
+    site_summary: SiteSummary = field(default_factory=SiteSummary)
+    classifier_source: str = "unknown"
+    xgboost_available: bool = False
     recommendations: RecommendationReport = field(default_factory=RecommendationReport)
     processing_time: float = 0.0
     status: str = "ERROR"
@@ -245,10 +350,12 @@ def run_pipeline(
         detector.set_model(model_manager.get_detector())
         result.detection_result = detector.detect(image)
 
-        # ── Step 2: Classification ──────────────────────────────────────────
+        # ── Step 2: Classification (whole image, kept for backward compat) ──
         logger.info("Pipeline step 2/7: MobileNet classification")
         classifier = SolarFaultClassifier()
-        classifier.set_model(model_manager.get_classifier())
+        active_labels = model_manager.classifier_labels
+        result.classifier_source = model_manager.classifier_source or "unknown"
+        classifier.set_model(model_manager.get_classifier(), labels=active_labels)
         result.classification_result = classifier.classify(image)
 
         # ── Step 3: Weather ─────────────────────────────────────────────────
@@ -277,27 +384,105 @@ def run_pipeline(
         )
 
         # ── Step 6: Prediction ───────────────────────────────────────────────
+        # XGBoost is treated as an optional downstream component: when its
+        # artifact is genuinely absent (weights/xgboost_solar.joblib does
+        # not exist), that must be reported clearly - via
+        # xgboost_available=False and prediction_successful=False - rather
+        # than aborting a run that otherwise has real, useful detection and
+        # classification results. A model that loads but then fails during
+        # prediction is a different, real error and still aborts below.
         logger.info("Pipeline step 6/7: XGBoost prediction")
         predictor = EnergyPredictor()
-        predictor.set_model(model_manager.get_predictor())
-        result.efficiency_prediction = predictor.predict(result.feature_dataframe)
-
-        if not all(math.isfinite(v) for v in (
-            result.efficiency_prediction.efficiency_loss_pct,
-            result.efficiency_prediction.estimated_output_w,
-        )):
-            raise PredictionError(
-                "XGBoost",
-                "Prediction output contains non-finite values.",
+        try:
+            predictor.set_model(model_manager.get_predictor())
+            result.xgboost_available = True
+        except ModelLoadError as exc:
+            result.xgboost_available = False
+            logger.warning(
+                "XGBoost artifact unavailable - predictions will be reported as "
+                "unavailable, not fabricated: %s", exc,
             )
 
+        if result.xgboost_available:
+            result.efficiency_prediction = predictor.predict(result.feature_dataframe)
+            if not all(math.isfinite(v) for v in (
+                result.efficiency_prediction.efficiency_loss_pct,
+                result.efficiency_prediction.estimated_output_w,
+            )):
+                raise PredictionError(
+                    "XGBoost",
+                    "Prediction output contains non-finite values.",
+                )
+
+        # ── Step 6b: Per-panel analysis ──────────────────────────────────────
+        # "YOLO -> Panel crops -> MobileNet classification -> ... -> per-panel
+        # + site-level results" - each detected box is cropped from the real
+        # original image and classified/predicted independently, rather than
+        # every panel silently sharing the single whole-image classification
+        # above. Reuses the exact same classifier/predictor instances (no
+        # duplicated model-loading or inference logic).
+        logger.info("Pipeline step 6b: per-panel analysis (%d panel(s))", result.detection_result.panel_count)
+        panels: List[PanelResult] = []
+        for idx, (box, det_conf) in enumerate(
+            zip(result.detection_result.boxes, result.detection_result.confidences), start=1
+        ):
+            crop = crop_panel(image, tuple(box))
+            panel_classification = classifier.classify(crop)
+            panel_physics = compute_physics(
+                ambient_temp_c=result.weather_data.ambient_temp_c,
+                wind_speed_ms=result.weather_data.wind_speed_ms,
+                cloud_cover_pct=result.weather_data.cloud_cover_pct,
+                fault_label=panel_classification.label,
+                latitude=result.weather_data.latitude,
+                longitude=result.weather_data.longitude,
+                observation_time=result.weather_data.timestamp,
+            )
+            panel_prediction = PredictionResult()
+            if result.xgboost_available:
+                panel_features = build_feature_dataframe(
+                    weather=result.weather_data,
+                    physics=panel_physics,
+                    classification=panel_classification,
+                    detection=DetectionResult(
+                        boxes=[list(box)], confidences=[det_conf], class_ids=[0],
+                        panel_count=1, best_confidence=det_conf, detection_successful=True,
+                    ),
+                )
+                panel_prediction = predictor.predict(panel_features)
+                if not all(math.isfinite(v) for v in (
+                    panel_prediction.efficiency_loss_pct, panel_prediction.estimated_output_w,
+                )):
+                    raise PredictionError(
+                        "XGBoost",
+                        f"Panel #{idx} prediction output contains non-finite values.",
+                    )
+            panels.append(PanelResult(
+                panel_index=idx,
+                box=list(box),
+                detection_confidence=float(det_conf),
+                classification=panel_classification,
+                physics=panel_physics,
+                prediction=panel_prediction,
+            ))
+        result.panels = panels
+        result.site_summary = _build_site_summary(panels)
+
         # ── Step 7: Recommendations ──────────────────────────────────────────
-        logger.info("Pipeline step 7/7: Recommendation generation")
-        result.recommendations = generate_recommendations(
-            classification=result.classification_result,
-            physics=result.physics_data,
-            prediction=result.efficiency_prediction,
-        )
+        # Skipped (report stays at its honest default - see RecommendationReport
+        # in services/recommendation.py) when the prediction that recommendations
+        # are based on isn't real - showing "No issues detected" derived from a
+        # fabricated 0.0 efficiency loss would be exactly the kind of
+        # misleading-because-unlabeled result this project's no-fabrication
+        # policy forbids. The UI layer must check xgboost_available explicitly.
+        if result.xgboost_available:
+            logger.info("Pipeline step 7/7: Recommendation generation")
+            result.recommendations = generate_recommendations(
+                classification=result.classification_result,
+                physics=result.physics_data,
+                prediction=result.efficiency_prediction,
+            )
+        else:
+            logger.info("Pipeline step 7/7: skipped (XGBoost unavailable, no prediction to base recommendations on)")
 
         result.status = "SUCCESS"
         logger.info(

@@ -287,6 +287,60 @@ class TestLabelAndConfidenceHandling:
 
 
 # ---------------------------------------------------------------------------
+# E2. Custom (smaller-class-set) label override
+# ---------------------------------------------------------------------------
+
+class TestCustomLabelsOverride:
+    """set_model(model, labels=...) - the mechanism that lets a
+    smaller-class-set checkpoint (e.g. the v1 release artifact) report its
+    own real class names instead of being silently mismatched against the
+    6-label future full list."""
+
+    def test_set_model_without_labels_defaults_to_six_class_config(self, project_config):
+        model = _make_mock_model()
+        clf = SolarFaultClassifier()
+        clf.set_model(model)
+        assert clf._labels == project_config["classification"]["labels"]
+
+    def test_set_model_with_custom_labels_uses_them(self):
+        model = _make_mock_model()
+        clf = SolarFaultClassifier()
+        clf.set_model(model, labels=["Clean", "Dusty", "Hotspot"])
+        assert clf._labels == ["Clean", "Dusty", "Hotspot"]
+
+    def test_classify_with_matching_3_label_model_reports_correct_label(self):
+        model = _make_mock_model()
+        clf = SolarFaultClassifier()
+        clf.set_model(model, labels=["Clean", "Dusty", "Hotspot"])
+
+        probs = np.array([0.1, 0.1, 0.8], dtype=np.float32)
+        with _classification_mocks(model, probs):
+            img = Image.new("RGB", (224, 224))
+            result = clf.classify(img)
+
+        assert result.label == "Hotspot"
+        assert result.class_id == 2
+        assert set(result.probabilities.keys()) == {"Clean", "Dusty", "Hotspot"}
+
+    def test_classify_raises_on_label_count_mismatch_instead_of_silently_mispairing(self):
+        """The exact danger this guards against: a 3-output model paired
+        with the full 6-label future list must never silently zip-
+        truncate/mispair a label onto the wrong probability."""
+        model = _make_mock_model()
+        clf = SolarFaultClassifier()
+        # 6 future six-class labels injected against a model that will only
+        # ever produce 3 probabilities below.
+        clf.set_model(model, labels=CFG["classification"]["labels"])
+        assert len(clf._labels) == 6
+
+        probs = np.array([0.1, 0.1, 0.8], dtype=np.float32)  # only 3 classes
+        with _classification_mocks(model, probs):
+            img = Image.new("RGB", (224, 224))
+            with pytest.raises(PredictionError, match="3 classes but 6 labels"):
+                clf.classify(img)
+
+
+# ---------------------------------------------------------------------------
 # F. Inference exception handling
 # ---------------------------------------------------------------------------
 

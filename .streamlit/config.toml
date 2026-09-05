@@ -5,6 +5,16 @@ port = 8501
 maxUploadSize = 10
 enableXsrfProtection = true
 
+[client]
+# Streamlit's own default ("full") shows the exception type, message, AND
+# full traceback to the browser for any uncaught exception - including one
+# from a bug in page-rendering code that isn't wrapped in app.py's own
+# try/except around the pipeline call. "none" keeps that information
+# server-side only (still fully visible in the real logs via utils.logger),
+# matching this project's existing principle (docs/RUNTIME_SECURITY.md):
+# never expose uncontrolled tracebacks in the UI.
+showErrorDetails = "none"
+
 [browser]
 gatherUsageStats = false
 

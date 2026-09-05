@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Tuple, Union
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 
 from utils.config import CFG
 from utils.exceptions import ImageValidationError
@@ -47,7 +47,7 @@ def load_pil_image(source: Union[str, Path, bytes]) -> Image.Image:
         )
     if isinstance(source, (str, Path)):
         try:
-            img = Image.open(str(source)).convert("RGB")
+            img = ImageOps.exif_transpose(Image.open(str(source))).convert("RGB")
         except (FileNotFoundError, OSError, ValueError) as exc:
             raise ImageValidationError(
                 f"Could not open image at '{source}': {exc}. "
@@ -61,7 +61,7 @@ def load_pil_image(source: Union[str, Path, bytes]) -> Image.Image:
             )
         import io
         try:
-            img = Image.open(io.BytesIO(bytes(source))).convert("RGB")
+            img = ImageOps.exif_transpose(Image.open(io.BytesIO(bytes(source)))).convert("RGB")
         except (OSError, ValueError) as exc:
             raise ImageValidationError(
                 f"Could not decode image from byte buffer: {exc}. "
@@ -153,6 +153,34 @@ def unletterbox_box(
         max(0.0, min(orig_w, orig_x2)),
         max(0.0, min(orig_h, orig_y2)),
     )
+
+
+def crop_panel(image: Image.Image, box: tuple[float, float, float, float]) -> Image.Image:
+    """Crop a single detected panel out of the original (unresized) image.
+
+    `box` is expected in YOLO's letterboxed 640x640 coordinate space (as
+    stored on `DetectionResult.boxes`) - this maps it back to the original
+    image's pixel coordinates first (via :func:`unletterbox_box`) before
+    cropping, so the returned crop is a real region of the actual uploaded
+    photo, not a distorted region of the letterboxed canvas.
+
+    Args:
+        image: The original, full-resolution PIL image (RGB).
+        box: (x1, y1, x2, y2) in the letterboxed 640x640 canvas.
+
+    Returns:
+        A cropped PIL image. Degenerate/zero-area boxes (e.g. from a
+        corrupted detection) are widened by one pixel rather than
+        producing an empty crop, since MobileNet's own preprocessing
+        cannot handle a zero-size image.
+    """
+    x1, y1, x2, y2 = unletterbox_box(tuple(box), image.size)
+    x1i, y1i, x2i, y2i = int(round(x1)), int(round(y1)), int(round(x2)), int(round(y2))
+    x1i = max(0, min(x1i, image.width - 1))
+    y1i = max(0, min(y1i, image.height - 1))
+    x2i = max(x1i + 1, min(x2i, image.width))
+    y2i = max(y1i + 1, min(y2i, image.height))
+    return image.crop((x1i, y1i, x2i, y2i))
 
 
 def resize_for_mobilenet(img: Image.Image) -> Image.Image:

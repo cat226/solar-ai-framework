@@ -12,11 +12,12 @@ This file must remain under 120-150 lines.
 
 from __future__ import annotations
 
+import hashlib
 import io
 import re
 
 import streamlit as st
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 from services import storage
 from services.pipeline import PipelineResult, run_pipeline
@@ -116,7 +117,11 @@ def _render_sidebar() -> tuple[Image.Image | None, bytes | None, str, float, int
             with Image.open(io.BytesIO(raw_bytes)) as image:
                 image.verify()
             with Image.open(io.BytesIO(raw_bytes)) as image:
-                pil_image = image.convert("RGB")
+                # Real phone photos are frequently stored with an EXIF
+                # Orientation tag rather than pre-rotated pixel data; without
+                # this, a portrait photo can reach YOLO/MobileNet rotated
+                # 90/180/270 degrees from how the user (and camera) saw it.
+                pil_image = ImageOps.exif_transpose(image).convert("RGB")
         except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as exc:
             logger.warning("Rejected invalid uploaded image: %s", exc)
             st.sidebar.error(
@@ -145,40 +150,74 @@ def main() -> None:
 
     st.image(pil_image, caption="Uploaded Image", use_container_width=True)
 
-    with st.spinner("Running analysis pipeline…"):
-        try:
-            result: PipelineResult = run_pipeline(
-                image=pil_image,
-                city=city,
-                panel_age=panel_age,
-                maintenance_count=maintenance_count,
-                voltage=voltage,
-                current=current,
-                installation_type=installation_type,
-            )
-        except Exception as exc:  # noqa: BLE001
-            logger.exception("Unhandled pipeline exception in UI layer")
-            st.error(
-                "An unexpected error occurred while analysing the image. "
-                "Please try again; if the problem persists, check the logs."
-            )
-            return
-        logger.info(
-            "Pipeline returned status=%s for city='%s'.",
-            result.status,
-            sanitize_for_log(city),
-        )
+    # Streamlit reruns this whole script on every widget interaction, not
+    # just an explicit submit - without this gate, nudging any sidebar
+    # slider while an image is uploaded would re-run detection +
+    # classification + prediction and insert another history row for the
+    # *same* photo on every rerun. Gating on a real button click keeps
+    # inference and history writes tied to a deliberate user action.
+    image_hash = hashlib.sha256(raw_bytes).hexdigest() if raw_bytes else None
+    if st.session_state.get("last_image_hash") != image_hash:
+        # A different (or newly re-uploaded) image is on screen - any
+        # previously displayed result belongs to a different photo and must
+        # not keep showing as if it were this one's analysis.
+        st.session_state.pop("last_result", None)
+        st.session_state.pop("last_source_image", None)
 
-    if result.status == "ERROR":
-        st.error(f"Pipeline error [{result.error_type}]: {result.error_message}")
+    if st.button("🔍 Analyze", type="primary"):
+        with st.spinner("Running analysis pipeline…"):
+            try:
+                result: PipelineResult = run_pipeline(
+                    image=pil_image,
+                    city=city,
+                    panel_age=panel_age,
+                    maintenance_count=maintenance_count,
+                    voltage=voltage,
+                    current=current,
+                    installation_type=installation_type,
+                )
+            except Exception as exc:  # noqa: BLE001
+                logger.exception("Unhandled pipeline exception in UI layer")
+                st.error(
+                    "An unexpected error occurred while analysing the image. "
+                    "Please try again; if the problem persists, check the logs."
+                )
+                return
+            logger.info(
+                "Pipeline returned status=%s for city='%s'.",
+                result.status,
+                sanitize_for_log(city),
+            )
+
+        if result.status == "ERROR":
+            st.error(f"Pipeline error [{result.error_type}]: {result.error_message}")
+            return
+
+        st.success(f"Pipeline completed in {result.processing_time:.2f}s")
+        try:
+            storage.record_inspection(result, city=city, image_bytes=raw_bytes)
+        except Exception:  # noqa: BLE001 — history recording must never break the live result
+            logger.exception("Failed to record inspection to local history")
+            st.warning(
+                "⚠️ This analysis completed successfully (shown below), but could not be "
+                "saved to your inspection history — it will not appear on the History, "
+                "Analytics, or Alerts pages. See the application logs for details."
+            )
+
+        # Shared with pages/ (Panel Results, Site Health, Environment) via
+        # Streamlit session state - the only mechanism for one script to hand
+        # a result to another page in a multi-page app. Holds only the most
+        # recent live result; never persisted beyond this browser session.
+        st.session_state["last_result"] = result
+        st.session_state["last_source_image"] = pil_image
+        st.session_state["last_image_hash"] = image_hash
+
+    result = st.session_state.get("last_result")
+    if result is None:
+        st.info("Click **Analyze** to run detection, classification, and prediction on this image.")
         return
 
-    st.success(f"Pipeline completed in {result.processing_time:.2f}s")
-    try:
-        storage.record_inspection(result, city=city, image_bytes=raw_bytes)
-    except Exception:  # noqa: BLE001 — history recording must never break the live result
-        logger.exception("Failed to record inspection to local history")
-    display_results(result, source_image=pil_image)
+    display_results(result, source_image=st.session_state.get("last_source_image", pil_image))
 
 
 if __name__ == "__main__":

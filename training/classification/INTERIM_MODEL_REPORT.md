@@ -4,16 +4,26 @@ Generated: 2026-09-03
 Repository: https://github.com/cat226/solar-ai-framework
 Branch: feat/mobilenet-training-pipeline
 
-## Status: NOT the production model
+> **2026-09-04 status update (v1 freeze):** this report documents the local
+> pipeline-validation run and its `weights/mobilenet_interim_3class.pth`
+> artifact specifically. The full Kaggle run on the complete Clean/Dusty/
+> Hotspot dataset that followed it was later promoted and is now Solar AI
+> **v1's real, frozen release classifier** at `weights/mobilenet_solar_v1.pth`
+> (`models.mobilenet.v1_weights` in `configs/settings.yaml`) - see the main
+> `README.md` for v1's current scope statement. The rest of this report is
+> left as originally written below; it remains an accurate historical
+> record of the pipeline-validation run and the bug it caught.
+
+## Status (as of this report): NOT the production model
 
 This report documents an **interim, non-production** MobileNetV2 checkpoint trained on
 three of the six required classes (`Clean`, `Dusty`, `Hotspot`). It exists to validate the
 training pipeline end-to-end on genuine data while `Bird-Drop`, `Electrical-Damage`, and
 `Physical-Damage` remain blocked on data sourcing/access (see `DATASET_SOURCES.md`).
 
-**This checkpoint is not compatible with the production `ModelManager`** (which requires
-all six classes in the fixed production order) and must never be saved to or loaded from
-`weights/mobilenet_solar.pth`. It is saved to `weights/mobilenet_interim_3class.pth`
+**This checkpoint is not compatible with the future six-class `ModelManager` path**
+(which requires all six classes in the fixed future order) and must never be saved to or
+loaded from `weights/mobilenet_solar.pth`. It is saved to `weights/mobilenet_interim_3class.pth`
 (gitignored, not committed) purely as a local validation artifact.
 
 ## Critical bug found and fixed (2026-09-03, pre-merge review)
