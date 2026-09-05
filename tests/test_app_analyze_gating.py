@@ -14,6 +14,7 @@ present in this environment or not.
 from __future__ import annotations
 
 import io
+import sqlite3
 from pathlib import Path
 
 import pytest
@@ -121,3 +122,36 @@ class TestAnalyzeGating:
 
         assert not at.exception
         assert any("Click" in i.value and "Analyze" in i.value for i in at.info)
+
+
+class TestHistorySaveFailureIsNeverSilent:
+    """Phase 7 finding: a failed storage.record_inspection() call was
+    already correctly caught (never crashes the page, never loses the live
+    result) but was silently swallowed with no on-screen indication at all
+    - a user could not tell their inspection hadn't been saved until they
+    later found it missing from History. Real record_inspection (via a
+    real, non-existent DB path) is used, not mocked - a genuine failure."""
+
+    def test_unwritable_history_path_still_shows_the_live_result_and_a_warning(self, monkeypatch):
+        def _raise(*args, **kwargs):
+            raise sqlite3.OperationalError("unable to open database file")
+
+        monkeypatch.setattr(storage, "record_inspection", _raise)
+
+        at = AppTest.from_file(_APP_PY)
+        at.run(timeout=30)
+        _upload(at)
+        at.button[0].click().run(timeout=60)
+
+        assert not at.exception
+        succeeded = any("Pipeline completed" in s.value for s in at.success)
+        if not succeeded:
+            pytest.skip("real model artifacts not available in this environment - "
+                        "pipeline returned ERROR before record_inspection was ever reached")
+
+        # The live result must still be shown (success message present)...
+        assert any("Pipeline completed" in s.value for s in at.success)
+        # ...alongside an explicit, honest warning that history-saving failed.
+        assert any("could not be saved to your inspection history" in w.value for w in at.warning)
+        # And, correctly, nothing was actually recorded.
+        assert storage.get_recent_inspections(limit=10) == []

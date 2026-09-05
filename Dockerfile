@@ -21,8 +21,16 @@ COPY . .
 
 # Model artifacts are intentionally not bundled. Provide the trained files
 # under /app/weights at deployment time when inference is required.
+#
+# Only the one directory the app actually writes to at runtime
+# (services/storage.py's SQLite history file, data/inspections.db) is
+# owned by the runtime user. Application source stays root-owned and
+# read-only even to appuser - if the running app were ever compromised via
+# a code-execution bug, the attacker still could not rewrite the app's own
+# source files to persist a backdoor, only write within data/.
 RUN useradd --create-home --uid 10001 appuser \
-    && chown -R appuser:appuser /app
+    && mkdir -p /app/data \
+    && chown appuser:appuser /app/data
 USER appuser
 
 EXPOSE 8501

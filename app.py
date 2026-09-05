@@ -194,6 +194,11 @@ def main() -> None:
             storage.record_inspection(result, city=city, image_bytes=raw_bytes)
         except Exception:  # noqa: BLE001 — history recording must never break the live result
             logger.exception("Failed to record inspection to local history")
+            st.warning(
+                "⚠️ This analysis completed successfully (shown below), but could not be "
+                "saved to your inspection history — it will not appear on the History, "
+                "Analytics, or Alerts pages. See the application logs for details."
+            )
 
         # Shared with pages/ (Panel Results, Site Health, Environment) via
         # Streamlit session state - the only mechanism for one script to hand
