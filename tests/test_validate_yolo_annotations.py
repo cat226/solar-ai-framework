@@ -296,11 +296,28 @@ class TestVerifySplitLock:
         assert result["extra_in_images_dir"] == []
         assert result["sha256_mismatches"] == []
 
-    def test_drifted_split_counts_fail_lock(self, tmp_path):
-        images_dir, csv_path = _make_locked_campaign(tmp_path, {"train": 150, "val": 25, "test": 25})
+    def test_default_mode_derives_expectation_from_the_csv_itself(self, tmp_path):
+        """No expected_split_counts given: any internally-consistent
+        manifest (images_dir matches what the CSV itself claims) locks
+        correctly, regardless of size - this is what makes the same
+        function work for both the 200-image campaign and a much
+        smaller curated replacement manifest."""
+        images_dir, csv_path = _make_locked_campaign(tmp_path, {"train": 3, "val": 1, "test": 1})
         result = verify_split_lock(images_dir, csv_path)
+        assert result["locked_correctly"] is True
+        assert result["expected_split_counts"] == {"train": 3, "val": 1, "test": 1}
+
+    def test_strict_expected_counts_can_be_passed_explicitly(self, tmp_path):
+        images_dir, csv_path = _make_locked_campaign(tmp_path, {"train": 150, "val": 25, "test": 25})
+        result = verify_split_lock(images_dir, csv_path, expected_split_counts={"train": 152, "val": 24, "test": 24})
         assert result["locked_correctly"] is False
         assert result["split_counts_match"] is False
+        assert result["expected_split_counts"] == {"train": 152, "val": 24, "test": 24}
+
+    def test_strict_expected_counts_pass_when_they_actually_match(self, tmp_path):
+        images_dir, csv_path = _make_locked_campaign(tmp_path, {"train": 152, "val": 24, "test": 24})
+        result = verify_split_lock(images_dir, csv_path, expected_split_counts={"train": 152, "val": 24, "test": 24})
+        assert result["locked_correctly"] is True
 
     def test_missing_image_detected(self, tmp_path):
         images_dir, csv_path = _make_locked_campaign(tmp_path, {"train": 3, "val": 1, "test": 1})

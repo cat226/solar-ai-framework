@@ -51,6 +51,7 @@ import csv
 import hashlib
 import json
 import sys
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -58,7 +59,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 _SUPPORTED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tiff"}
 _COORD_TOLERANCE = 1e-6
-_EXPECTED_SPLIT_COUNTS = {"train": 152, "val": 24, "test": 24}
+# The original 200-image campaign's locked target - an explicit,
+# opt-in check (--strict-split-lock) for THAT specific manifest, never
+# assumed by default (a smaller curated manifest, e.g. a triage
+# replacement set, legitimately has different split counts).
+_ORIGINAL_200_SPLIT_COUNTS = {"train": 152, "val": 24, "test": 24}
 
 
 def _parse_label_line(line: str, lineno: int, allowed_class_id: int) -> tuple[dict[str, Any] | None, str | None]:
@@ -186,13 +191,24 @@ def _sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
-def verify_split_lock(images_dir: Path, selected_csv_path: Path) -> dict[str, Any]:
-    """Confirms images_dir contains EXACTLY the 200 images
-    select_annotation_sample.py locked into selected_200.csv, with
-    unchanged content (SHA-256 re-verified, not just filename presence),
-    and that the locked split counts have not drifted. This is what
-    stands between "an image quietly got moved/replaced/re-split" and
-    finding out only after training on a corrupted split boundary."""
+def verify_split_lock(
+    images_dir: Path, selected_csv_path: Path, expected_split_counts: dict[str, int] | None = None
+) -> dict[str, Any]:
+    """Confirms images_dir contains EXACTLY the images a selection CSV
+    (e.g. selected_200.csv or a smaller replacement/triage manifest)
+    locked in, with unchanged content (SHA-256 re-verified, not just
+    filename presence). This is what stands between "an image quietly
+    got moved/replaced/re-split" and finding out only after training on
+    a corrupted split boundary.
+
+    `expected_split_counts`, when given, is an explicit external target
+    (e.g. the original campaign's locked 152/24/24) - the check fails if
+    the CSV's own recorded counts don't match it. When omitted (the
+    default), the CSV's own recorded split counts ARE the expectation -
+    this verifies internal consistency (images_dir matches what the CSV
+    claims) without assuming any particular campaign size, so the same
+    function works unmodified for a full 200-image campaign or a much
+    smaller curated replacement set."""
     rows = list(csv.DictReader(selected_csv_path.open(encoding="utf-8")))
     locked = {row["filename"]: row for row in rows}
 
@@ -214,22 +230,22 @@ def verify_split_lock(images_dir: Path, selected_csv_path: Path) -> dict[str, An
                 "filename": filename, "expected_sha256": expected_hash, "actual_sha256": actual_hash,
             })
 
-    from collections import Counter
     actual_split_counts = dict(Counter(row["source_split"] for row in rows))
-    split_counts_match = actual_split_counts == _EXPECTED_SPLIT_COUNTS
+    target_split_counts = expected_split_counts if expected_split_counts is not None else actual_split_counts
+    split_counts_match = actual_split_counts == target_split_counts
 
     locked_correctly = (
         not missing_from_images_dir
         and not extra_in_images_dir
         and not sha256_mismatches
         and split_counts_match
-        and len(rows) == sum(_EXPECTED_SPLIT_COUNTS.values())
+        and len(rows) == sum(target_split_counts.values())
     )
 
     return {
         "locked_correctly": locked_correctly,
         "total_locked": len(rows),
-        "expected_split_counts": _EXPECTED_SPLIT_COUNTS,
+        "expected_split_counts": target_split_counts,
         "actual_split_counts_in_manifest": actual_split_counts,
         "split_counts_match": split_counts_match,
         "missing_from_images_dir": missing_from_images_dir,
@@ -246,10 +262,11 @@ def compute_statistics(images_dir: Path, labels_dir: Path, selected_csv_path: Pa
     rows = list(csv.DictReader(selected_csv_path.open(encoding="utf-8")))
     split_by_filename = {row["filename"]: row["source_split"] for row in rows}
     class_by_filename = {row["filename"]: row["source_class"] for row in rows}
+    campaign_splits = sorted(set(split_by_filename.values()))
 
     box_counts: dict[str, int] = {}
-    per_split_boxes: dict[str, int] = {s: 0 for s in _EXPECTED_SPLIT_COUNTS}
-    per_split_images_annotated: dict[str, int] = {s: 0 for s in _EXPECTED_SPLIT_COUNTS}
+    per_split_boxes: dict[str, int] = {s: 0 for s in campaign_splits}
+    per_split_images_annotated: dict[str, int] = {s: 0 for s in campaign_splits}
     per_class_boxes: dict[str, int] = {}
 
     for filename, split in split_by_filename.items():
@@ -279,7 +296,7 @@ def compute_statistics(images_dir: Path, labels_dir: Path, selected_csv_path: Pa
         "zero_box_images": sum(1 for c in counts if c == 0),
         "per_split_box_counts": per_split_boxes,
         "per_split_images_annotated": per_split_images_annotated,
-        "per_split_expected_images": _EXPECTED_SPLIT_COUNTS,
+        "per_split_expected_images": dict(Counter(split_by_filename.values())),
         "per_source_class_box_counts": per_class_boxes,
     }
     return stats
@@ -342,7 +359,13 @@ def main() -> int:
     parser.add_argument("--labels-dir", type=Path, required=True)
     parser.add_argument("--allowed-class-id", type=int, default=0)
     parser.add_argument("--selected-csv", type=Path, default=None,
-                         help="selected_200.csv - enables split-lock verification and statistics.")
+                         help="A selection manifest (e.g. selected_200.csv, or a smaller curated "
+                              "manifest) - enables split-lock verification and statistics.")
+    parser.add_argument("--strict-split-lock", action="store_true",
+                         help="Check against the ORIGINAL 200-image campaign's locked "
+                              "152/24/24 split specifically, instead of just verifying the "
+                              "manifest is internally self-consistent. Only use this against "
+                              "selected_200.csv itself - a smaller manifest will correctly fail.")
     parser.add_argument("--contact-sheets-dir", type=Path, default=None,
                          help="If given, render annotated contact sheets here for human QA.")
     parser.add_argument("--output", type=Path, default=None)
@@ -371,7 +394,8 @@ def main() -> int:
     output_payload: dict[str, Any] = {"mechanical_validation": summary}
 
     if args.selected_csv:
-        lock = verify_split_lock(args.images_dir, args.selected_csv)
+        strict_target = _ORIGINAL_200_SPLIT_COUNTS if args.strict_split_lock else None
+        lock = verify_split_lock(args.images_dir, args.selected_csv, expected_split_counts=strict_target)
         output_payload["split_lock"] = lock
         print(f"\nSplit lock: {'OK' if lock['locked_correctly'] else 'FAILED'} "
               f"(expected {lock['expected_split_counts']}, manifest has {lock['actual_split_counts_in_manifest']})")
