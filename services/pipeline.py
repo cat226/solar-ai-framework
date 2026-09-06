@@ -289,6 +289,7 @@ def run_pipeline(
     voltage: float = 0.0,
     current: float = 0.0,
     installation_type: str = "rooftop",
+    detector: Optional[SolarPanelDetector] = None,
 ) -> PipelineResult:
     """Execute the full Solar AI analysis pipeline on a single image.
 
@@ -302,6 +303,16 @@ def run_pipeline(
         current: Measured panel current in Amperes (future use).
         installation_type: Mounting type, e.g. ``"rooftop"`` or
                            ``"ground-mount"`` (future use).
+        detector: Optional pre-configured :class:`SolarPanelDetector` to use
+                  instead of the production singleton
+                  (``model_manager.get_detector()``). ``app.py`` and every
+                  existing caller omit this and get today's exact behavior
+                  unchanged. This exists so a validation/comparison run can
+                  swap in a different YOLO checkpoint while reusing every
+                  other pipeline step (preprocessing, thresholds, cropping,
+                  classification) byte-identically - see
+                  ``training/evaluation/validate_real_images.py``'s
+                  ``--yolo-weights`` option.
 
     Returns:
         :class:`PipelineResult` aggregating all service outputs.
@@ -346,8 +357,9 @@ def run_pipeline(
 
         # ── Step 1: Detection ───────────────────────────────────────────────
         logger.info("Pipeline step 1/7: YOLO detection")
-        detector = SolarPanelDetector()
-        detector.set_model(model_manager.get_detector())
+        if detector is None:
+            detector = SolarPanelDetector()
+            detector.set_model(model_manager.get_detector())
         result.detection_result = detector.detect(image)
 
         # ── Step 2: Classification (whole image, kept for backward compat) ──

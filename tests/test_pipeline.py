@@ -405,6 +405,93 @@ class TestExecutionOrder:
 
 
 # ---------------------------------------------------------------------------
+# C2. Detector override (used by the model-comparison validation tooling)
+# ---------------------------------------------------------------------------
+
+class TestDetectorOverride:
+    """run_pipeline's optional `detector` param lets a caller swap in a
+    pre-configured SolarPanelDetector (e.g. loaded from a different YOLO
+    checkpoint) while every other stage runs unchanged. Omitting it must
+    reproduce today's exact production behavior."""
+
+    def test_omitting_detector_uses_model_manager_singleton(self, monkeypatch):
+        img = Image.new("RGB", (224, 224))
+        mm = _make_mock_model_manager()
+        constructed_detector = _make_detector()
+        clf = _make_classifier()
+        predictor = _make_predictor()
+
+        monkeypatch.setattr("services.pipeline.model_manager", mm)
+        monkeypatch.setattr("services.pipeline.SolarPanelDetector", lambda: constructed_detector)
+        monkeypatch.setattr("services.pipeline.SolarFaultClassifier", lambda: clf)
+        monkeypatch.setattr("services.pipeline.EnergyPredictor", lambda: predictor)
+        monkeypatch.setattr("services.pipeline.fetch_weather", lambda city: MagicMock(fetch_successful=True, city=city))
+        monkeypatch.setattr("services.pipeline.compute_physics", lambda **kw: MagicMock())
+        monkeypatch.setattr("services.pipeline.build_feature_dataframe", lambda **kw: MagicMock())
+        monkeypatch.setattr("services.pipeline.generate_recommendations", lambda **kw: MagicMock(overall_severity=MagicMock(value="OK")))
+
+        result = run_pipeline(image=img, city="Chennai")
+
+        assert result.status == "SUCCESS"
+        mm.get_detector.assert_called_once()
+        constructed_detector.set_model.assert_called_once_with(mm.get_detector.return_value)
+        constructed_detector.detect.assert_called_once()
+
+    def test_passing_detector_bypasses_model_manager_and_constructor(self, monkeypatch):
+        img = Image.new("RGB", (224, 224))
+        mm = _make_mock_model_manager()
+        never_constructed = MagicMock(side_effect=AssertionError("SolarPanelDetector() should not be constructed when an override is passed"))
+        clf = _make_classifier()
+        predictor = _make_predictor()
+        override_detector = _make_detector()
+
+        monkeypatch.setattr("services.pipeline.model_manager", mm)
+        monkeypatch.setattr("services.pipeline.SolarPanelDetector", never_constructed)
+        monkeypatch.setattr("services.pipeline.SolarFaultClassifier", lambda: clf)
+        monkeypatch.setattr("services.pipeline.EnergyPredictor", lambda: predictor)
+        monkeypatch.setattr("services.pipeline.fetch_weather", lambda city: MagicMock(fetch_successful=True, city=city))
+        monkeypatch.setattr("services.pipeline.compute_physics", lambda **kw: MagicMock())
+        monkeypatch.setattr("services.pipeline.build_feature_dataframe", lambda **kw: MagicMock())
+        monkeypatch.setattr("services.pipeline.generate_recommendations", lambda **kw: MagicMock(overall_severity=MagicMock(value="OK")))
+
+        result = run_pipeline(image=img, city="Chennai", detector=override_detector)
+
+        assert result.status == "SUCCESS"
+        never_constructed.assert_not_called()
+        mm.get_detector.assert_not_called()
+        override_detector.detect.assert_called_once_with(img)
+        assert result.detection_result is override_detector.detect.return_value
+
+    def test_passed_detector_result_flows_through_to_panels(self, monkeypatch):
+        """The override isn't just called - its DetectionResult drives the
+        same crop/classify per-panel path as the default detector would."""
+        img = Image.new("RGB", (224, 224))
+        detection = MagicMock(panel_count=1, boxes=[[0, 0, 10, 10]], confidences=[0.9])
+        override_detector = _make_detector()
+        override_detector.detect.return_value = detection
+        mm = _make_mock_model_manager()
+        clf = _make_classifier()
+        predictor = _make_predictor()
+
+        monkeypatch.setattr("services.pipeline.model_manager", mm)
+        monkeypatch.setattr("services.pipeline.SolarFaultClassifier", lambda: clf)
+        monkeypatch.setattr("services.pipeline.EnergyPredictor", lambda: predictor)
+        monkeypatch.setattr("services.pipeline.crop_panel", lambda image, box: MagicMock())
+        monkeypatch.setattr("services.pipeline.fetch_weather", lambda city: MagicMock(fetch_successful=True, city=city))
+        monkeypatch.setattr("services.pipeline.compute_physics", lambda **kw: MagicMock())
+        monkeypatch.setattr("services.pipeline.build_feature_dataframe", lambda **kw: MagicMock())
+        monkeypatch.setattr("services.pipeline.generate_recommendations", lambda **kw: MagicMock(overall_severity=MagicMock(value="OK")))
+
+        result = run_pipeline(image=img, city="Chennai", detector=override_detector)
+
+        assert result.status == "SUCCESS"
+        assert result.detection_result is detection
+        assert len(result.panels) == 1
+        assert result.panels[0].box == [0, 0, 10, 10]
+        assert result.panels[0].detection_confidence == 0.9
+
+
+# ---------------------------------------------------------------------------
 # D. Data propagation
 # ---------------------------------------------------------------------------
 
