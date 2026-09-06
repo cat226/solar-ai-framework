@@ -52,7 +52,7 @@ def evaluate(model_path: Path, images_dir: Path, imgsz: int, project: Path, name
     results = model.val(data=str(yaml_path), split="val", imgsz=imgsz, project=str(project), name=name, exist_ok=True, verbose=False)
 
     n_images = len(list(images_dir.glob("*.png"))) + len(list(images_dir.glob("*.jpg")))
-    return {
+    metrics = {
         "model_path": str(model_path),
         "images_dir": str(images_dir),
         "num_images": n_images,
@@ -61,6 +61,21 @@ def evaluate(model_path: Path, images_dir: Path, imgsz: int, project: Path, name
         "mAP50": float(results.box.map50),
         "mAP50-95": float(results.box.map),
     }
+    # Confusion-matrix-derived counts at ultralytics' own fixed operating
+    # point (a separate, single-threshold snapshot from the PR-curve-based
+    # metrics above) - reported alongside, not in place of, mAP/precision/
+    # recall, purely as a concrete false-positive/false-negative count for
+    # human-readable reporting. Single class (index 0), so matrix[0,0]=TP,
+    # matrix[0,1]=FP (predicted panel, true background), matrix[1,0]=FN
+    # (predicted background, true panel).
+    try:
+        cm = results.confusion_matrix.matrix
+        metrics["confusion_matrix_true_positives"] = int(cm[0, 0])
+        metrics["confusion_matrix_false_positives"] = int(cm[0, 1])
+        metrics["confusion_matrix_false_negatives"] = int(cm[1, 0])
+    except Exception:  # noqa: BLE001
+        pass
+    return metrics
 
 
 def main() -> int:
