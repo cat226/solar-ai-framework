@@ -128,6 +128,28 @@ _SOURCE_RIGHTS_HOLDER = (
     "and Technology University; Nanjing Agricultural University"
 )
 
+# Sentinel license string for images whose provenance_category is NOT
+# numeric_native, used ONLY when a caller explicitly opts into including
+# them (allowed_provenance_categories widened beyond the default). This is
+# deliberately NOT a real license name (not "CC-BY-4.0", not any string in
+# prepare_closeup_dataset.py's _ALLOWED_LICENSES) so it can never be
+# silently accepted by that script's production license gate, and never be
+# mistaken for a verified permissive license downstream. It exists so a
+# personal/non-commercial/experimental run can include these images
+# without EVER claiming they are license-cleared - see
+# E:\SolarAI_Datasets\domain_adaptation_v1\reports\mendeley_ingestion_report.md
+# and the experimental-run addendum in that same reports directory.
+_EXPERIMENTAL_UNVERIFIED_LICENSE = "personal-experimental-unverified-provenance"
+_UNVERIFIED_RIGHTS_HOLDER_NOTE = (
+    "UNKNOWN/UNVERIFIED - this specific image's filename pattern was flagged "
+    "as provenance-contaminated or unverified during ingestion audit "
+    "(see mendeley_ingestion_report.md); the Mendeley uploader (Xing Yang et "
+    "al.) is NOT confirmed to be the rights holder for this specific image "
+    "and may not have had the right to license it. Included ONLY in an "
+    "explicitly-labelled personal/non-commercial/experimental training pool, "
+    "never represented as commercially cleared or redistributable."
+)
+
 
 def _sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
@@ -319,11 +341,10 @@ def convert_to_single_class(
     skipped_provenance: list[str] = []
 
     for rec in audit["images_with_panel_box"]:
-        if allowed_provenance_categories is not None:
-            cat = rec.get("provenance_category") or provenance_category(rec["stem"])
-            if cat not in allowed_provenance_categories:
-                skipped_provenance.append(rec["stem"])
-                continue
+        cat = rec.get("provenance_category") or provenance_category(rec["stem"])
+        if allowed_provenance_categories is not None and cat not in allowed_provenance_categories:
+            skipped_provenance.append(rec["stem"])
+            continue
         img_src = Path(rec["image_path"])
         label_src = Path(rec["label_path"])
         if not img_src.is_file():
@@ -359,14 +380,15 @@ def convert_to_single_class(
         label_dest.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
 
         img_sha256 = _sha256_file(dest_img)
+        is_confirmed_clean = cat == "numeric_native"
         provenance[img_src.stem] = {
             "source_url": _SOURCE_URL,
-            "license": _SOURCE_LICENSE,
-            "rights_holder": _SOURCE_RIGHTS_HOLDER,
+            "license": _SOURCE_LICENSE if is_confirmed_clean else _EXPERIMENTAL_UNVERIFIED_LICENSE,
+            "rights_holder": _SOURCE_RIGHTS_HOLDER if is_confirmed_clean else _UNVERIFIED_RIGHTS_HOLDER_NOTE,
             "group_key": _MANUAL_SITE_GROUPS.get(img_src.stem),
             "notes": (
                 f"original_split={rec['original_split']}; "
-                f"provenance_category={rec.get('provenance_category') or provenance_category(rec['stem'])}; "
+                f"provenance_category={cat}; "
                 f"retained_panel_boxes={len(panel_boxes)}; "
                 f"excluded_classes_present={[c for c in ('bird_drop','cracked','dusty')]}"
             ),

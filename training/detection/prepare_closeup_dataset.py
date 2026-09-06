@@ -182,9 +182,20 @@ def prepare_closeup_dataset(
     output_root: Path,
     seed: int = 20260905,
     split_ratios: tuple[float, float, float] = (0.70, 0.15, 0.15),
+    additional_allowed_licenses: frozenset[str] = frozenset(),
 ) -> Path:
+    """additional_allowed_licenses extends _ALLOWED_LICENSES for this call
+    only - it never mutates the module-level set, so every existing/default
+    caller keeps the exact production license gate unchanged. This exists
+    for explicitly-labelled personal/experimental/non-commercial runs that
+    knowingly include provenance-unverified images under a sentinel license
+    string (never a real permissive-license name) - see
+    training/detection/prepare_mendeley_panel_dataset.py's
+    _EXPERIMENTAL_UNVERIFIED_LICENSE for the concrete example. The manifest
+    records which extra licenses were allowed so this is never silent."""
     if abs(sum(split_ratios) - 1.0) > 1e-6:
         raise ValueError(f"split_ratios must sum to 1.0, got {split_ratios}")
+    allowed_licenses = _ALLOWED_LICENSES | {_normalize_license(v) for v in additional_allowed_licenses}
 
     images_dir = source_dir / "images"
     labels_dir = source_dir / "labels"
@@ -209,10 +220,10 @@ def prepare_closeup_dataset(
             continue
         license_raw = entry.get("license", "")
         license_norm = _normalize_license(license_raw)
-        if license_norm not in _ALLOWED_LICENSES:
+        if license_norm not in allowed_licenses:
             rejected.append({
                 "id": image_id,
-                "reason": f"license '{license_raw}' is not in the allowed set {sorted(_ALLOWED_LICENSES)}",
+                "reason": f"license '{license_raw}' is not in the allowed set {sorted(allowed_licenses)}",
             })
             continue
         if not entry.get("source_url") and not entry.get("rights_holder"):
@@ -331,6 +342,7 @@ def prepare_closeup_dataset(
             "across train/val/test."
         ),
         "dataset_content_hash_sha256": dataset_hash,
+        "additional_allowed_licenses": sorted(_normalize_license(v) for v in additional_allowed_licenses) or None,
         "counts": split_counts,
         "total_accepted": len(records),
         "total_rejected": len(rejected),
@@ -352,11 +364,20 @@ def main() -> int:
     parser.add_argument("--train-ratio", type=float, default=0.70)
     parser.add_argument("--val-ratio", type=float, default=0.15)
     parser.add_argument("--test-ratio", type=float, default=0.15)
+    parser.add_argument(
+        "--allow-license", action="append", default=[], dest="allow_licenses",
+        help="Extend the license allow-list for this run only (repeatable). "
+             "Never use a real permissive-license name here for content that "
+             "isn't actually verified under it - this is for explicit, "
+             "sentinel non-license markers on clearly-labelled experimental "
+             "runs only (see prepare_mendeley_panel_dataset.py).",
+    )
     args = parser.parse_args()
 
     manifest_path = prepare_closeup_dataset(
         args.source_dir, args.output, seed=args.seed,
         split_ratios=(args.train_ratio, args.val_ratio, args.test_ratio),
+        additional_allowed_licenses=frozenset(args.allow_licenses),
     )
     manifest = json.loads(manifest_path.read_text())
     print(f"Accepted {manifest['total_accepted']}, rejected {manifest['total_rejected']} images.")

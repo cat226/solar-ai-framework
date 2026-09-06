@@ -345,6 +345,44 @@ class TestManualSiteGroupKey:
         assert prov["999999"]["group_key"] is None
 
 
+class TestExperimentalInclusionLicenseHonesty:
+    """When a caller explicitly widens allowed_provenance_categories to
+    include flagged (non-numeric_native) images - e.g. for a personal,
+    clearly-labelled experimental training pool - the resulting
+    provenance.json must never claim those specific images are CC-BY-4.0
+    or that Xing Yang et al. are their confirmed rights holder."""
+
+    def test_numeric_native_image_keeps_real_license(self, tmp_path):
+        raw = tmp_path / "raw"
+        _make_raw_split(raw, "train", {"1108": "3 0.5 0.5 0.2 0.2\n"})
+        out = tmp_path / "out"
+        convert_to_single_class(raw, out, allowed_provenance_categories={"numeric_native", "confirmed_contaminated"})
+        import json
+        prov = json.loads((out / "provenance.json").read_text())
+        assert prov["1108"]["license"] == "CC-BY-4.0"
+
+    def test_flagged_image_gets_sentinel_license_not_cc_by(self, tmp_path):
+        raw = tmp_path / "raw"
+        _make_raw_split(raw, "train", {"a406": "3 0.5 0.5 0.2 0.2\n"})
+        out = tmp_path / "out"
+        stats = convert_to_single_class(raw, out, allowed_provenance_categories={"confirmed_contaminated"})
+        import json
+        prov = json.loads((out / "provenance.json").read_text())
+        assert stats["images_converted"] == 1
+        assert prov["a406"]["license"] != "CC-BY-4.0"
+        assert "unverified" in prov["a406"]["license"]
+        assert "UNKNOWN" in prov["a406"]["rights_holder"]
+
+    def test_unverified_prefixed_image_also_gets_sentinel_license(self, tmp_path):
+        raw = tmp_path / "raw"
+        _make_raw_split(raw, "train", {"b10": "3 0.5 0.5 0.2 0.2\n"})
+        out = tmp_path / "out"
+        convert_to_single_class(raw, out, allowed_provenance_categories={"unverified_prefixed"})
+        import json
+        prov = json.loads((out / "provenance.json").read_text())
+        assert prov["b10"]["license"] != "CC-BY-4.0"
+
+
 class TestAuditRawDatasetProvenanceBreakdown:
     def test_provenance_category_counts_present(self, tmp_path):
         _make_raw_split(tmp_path, "train", {

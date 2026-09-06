@@ -100,6 +100,41 @@ class TestLicenseGate:
         manifest = json.loads(manifest_path.read_text())
         assert manifest["total_accepted"] == 0
 
+    def test_default_call_rejects_experimental_sentinel_license(self, tmp_path):
+        """Confirms extending the gate is strictly opt-in: a caller that
+        doesn't pass additional_allowed_licenses gets exactly today's
+        production behavior, even for a string that looks intentional."""
+        source = _make_source_tree(tmp_path, {"img1": {"license": "personal-experimental-unverified-provenance"}})
+        manifest_path = prepare_closeup_dataset(source, tmp_path / "out")
+        manifest = json.loads(manifest_path.read_text())
+        assert manifest["total_accepted"] == 0
+        assert manifest["additional_allowed_licenses"] is None
+
+    def test_additional_allowed_licenses_accepts_only_when_passed(self, tmp_path):
+        source = _make_source_tree(tmp_path, {"img1": {"license": "personal-experimental-unverified-provenance"}})
+        manifest_path = prepare_closeup_dataset(
+            source, tmp_path / "out",
+            additional_allowed_licenses=frozenset({"personal-experimental-unverified-provenance"}),
+        )
+        manifest = json.loads(manifest_path.read_text())
+        assert manifest["total_accepted"] == 1
+        assert manifest["additional_allowed_licenses"] == ["personal-experimental-unverified-provenance"]
+
+    def test_additional_allowed_licenses_does_not_widen_other_images(self, tmp_path):
+        """An unrelated unknown license is still rejected even when some
+        other sentinel license was explicitly allowed for this run."""
+        source = _make_source_tree(tmp_path, {
+            "img1": {"license": "personal-experimental-unverified-provenance"},
+            "img2": {"license": "totally-made-up"},
+        })
+        manifest_path = prepare_closeup_dataset(
+            source, tmp_path / "out",
+            additional_allowed_licenses=frozenset({"personal-experimental-unverified-provenance"}),
+        )
+        manifest = json.loads(manifest_path.read_text())
+        assert manifest["total_accepted"] == 1
+        assert manifest["total_rejected"] == 1
+
 
 # ---------------------------------------------------------------------------
 # B. Annotation format enforcement (single class "solar_panel" = id 0)
