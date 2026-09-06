@@ -101,8 +101,9 @@ def _display_panel_selector(result: PipelineResult, source_image: Image.Image | 
         if source_image is not None:
             st.image(crop_panel(source_image, tuple(panel.box)), caption=f"Panel #{panel.panel_index} crop", use_container_width=True)
     with col_data:
+        st.caption("**Panel-level classification** — from this cropped detection region only, independent of the whole-image result above.")
         c1, c2 = st.columns(2)
-        c1.metric("Classification", panel.classification.label, f"{panel.classification.confidence:.0%} confidence")
+        c1.metric("Panel Classification", panel.classification.label, f"{panel.classification.confidence:.0%} confidence")
         c2.metric("Detection confidence", f"{panel.detection_confidence:.0%}")
         if panel.prediction.prediction_successful:
             c3, c4 = st.columns(2)
@@ -112,12 +113,39 @@ def _display_panel_selector(result: PipelineResult, source_image: Image.Image | 
             st.caption("Efficiency/output estimate unavailable for this panel (XGBoost artifact not present).")
 
 
+def whole_image_classification_caption(result: PipelineResult) -> str:
+    """The exact disclosure text shown above the whole-image classification
+    result. A pure function (no Streamlit calls) so this wording - and the
+    guarantee that it never implies a panel-level diagnosis - is directly
+    unit-testable without a Streamlit runtime. See
+    services/pipeline.py's ClassificationResult docstring: this label is
+    computed from the *entire uploaded photo*, independently of whether
+    YOLO detected a panel, and must never be presented as equivalent to a
+    validated per-panel (or, for thermal input, a validated electrical
+    hotspot) diagnosis."""
+    base = "**Whole-image classification — not panel-level diagnosis.**"
+    if result.detection_result.detection_successful:
+        return (
+            f"{base} This label describes the overall photo. See "
+            "**Panel-by-Panel Detail** below for the real per-panel result."
+        )
+    return (
+        f"{base} No panel was detected in this image (see **Panel Detection** "
+        "above), so this is the only classification signal available for this "
+        "photo - it is not a substitute for a panel-level result."
+    )
+
+
 def _display_classification(result: PipelineResult) -> None:
-    """Show MobileNet fault classification."""
+    """Show MobileNet's whole-image fault classification - always labeled
+    explicitly as whole-image (see whole_image_classification_caption), and
+    never conflated with the separate per-panel classification shown in
+    _display_panel_selector when YOLO actually detected a panel."""
     clf = result.classification_result
-    st.subheader("🏷️ Fault Classification")
+    st.subheader("🏷️ Whole-Image Classification")
+    st.caption(whole_image_classification_caption(result))
     col1, col2 = st.columns(2)
-    col1.metric("Fault Type", clf.label)
+    col1.metric("Predicted Label (whole image)", clf.label)
     col2.metric("Confidence", f"{clf.confidence:.1%}")
     if clf.probabilities:
         st.bar_chart(clf.probabilities)

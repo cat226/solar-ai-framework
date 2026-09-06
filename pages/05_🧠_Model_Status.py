@@ -40,10 +40,20 @@ mn_status = model_manager.mobilenet_status
 st.subheader("🎯 YOLO — panel detection")
 yolo = status["YOLO"]
 if yolo["exists"]:
-    st.success("Ready")
+    st.success("Ready — production checkpoint loaded")
     yolo_path = Path(yolo["path"])
     with st.spinner("Computing checkpoint hash…"):
         st.code(f"path   = {yolo['path']}\nsha256 = {_sha256(yolo_path)}", language="text")
+    st.warning(
+        "⚠️ **Known domain limitation.** This detector was trained and validated on "
+        "aerial/satellite imagery. Real close-up/ground-level photos (the kind most "
+        "users upload) are detected unreliably — an independent 16-image real-photo "
+        "validation measured 0/16 detections, and an earlier 156-image sample measured "
+        "~2.6%. When no panel is detected, the app still runs whole-image classification "
+        "and labels it explicitly as such — it is never substituted for a panel-level "
+        "result. See **Limitations** for the full picture, including the experimental "
+        "ground-domain checkpoint under evaluation (not used in this deployment)."
+    )
 else:
     st.error(f"Missing — expected at `{yolo['path']}`")
 
@@ -137,12 +147,19 @@ if st.button("Run deep verification"):
 st.divider()
 st.subheader("Overall")
 if yolo["exists"] and mn_status["state"] != "missing" and xgb["exists"]:
-    st.success("✅ Fully operational — detection, classification, and efficiency prediction all ready.")
+    st.success(
+        "✅ Application pipeline ready — detection, classification, and efficiency "
+        "prediction all execute without error. This describes pipeline *readiness*, not "
+        "detection *accuracy* on close-up photos — see the YOLO note above and "
+        "**Limitations**."
+    )
 elif yolo["exists"] and mn_status["state"] != "missing":
     st.success(
-        "✅ **Solar AI v1 is fully operational.** Detection and classification (Clean, "
-        "Dusty, Hotspot) work; efficiency/output prediction is unavailable — a documented "
-        "v1 boundary, not a fault (see **Limitations**)."
+        "✅ **Solar AI v1's pipeline runs end-to-end.** Detection and whole-image "
+        "classification (Clean, Dusty, Hotspot) execute on every valid upload; "
+        "efficiency/output prediction is unavailable — a documented v1 boundary, not a "
+        "fault (see **Limitations**). Detection reliability on close-up/ground-level "
+        "photos remains limited — see the note above."
     )
 else:
     st.error("❌ Not ready — a required artifact (YOLO or MobileNet) is missing.")

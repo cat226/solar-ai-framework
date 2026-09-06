@@ -76,6 +76,16 @@ python scripts/verify_model_artifacts.py --manifest weights/manifest.json
 | Training experiment | `solar-yolo-full-v1` — `training/experiments/registry.jsonl` |
 | Real test-split metrics | mAP50 = 0.739, mAP50-95 = 0.476, precision = 0.706, recall = 0.807 (2,581 test images, 1,640 instances) |
 
+**Post-release note (does not change this frozen v1.0.0 record):** a
+ground-domain-adapted **experimental** checkpoint,
+`weights/yolo_solar_domain_v1.pt` (SHA-256
+`3dc092882be8feabcada21f427263d508e1b796eaed287ec7f1d761df6b50603`),
+was fine-tuned from this exact artifact and evaluated in a later work
+cycle. It is not part of this release, is not referenced by
+`weights/manifest.json`, and is not loaded by the production runtime.
+See `PROJECT_STATUS_FINAL.md` for its measured results and current
+status.
+
 ### MobileNet — fault classifier (v1 release artifact)
 
 | Field | Value |

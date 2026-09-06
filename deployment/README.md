@@ -194,6 +194,31 @@ your deployment platform's own secret store). Do not attempt to back up
 `weights/` — those are externally-supplied, reproducible from
 `docs/RELEASE_v1.0.0.md`'s manifest, not generated state.
 
+## 10b. Known historical bug: root-owned `inspections.db` from images built before this fix
+
+Images built from this repository **before** `.dockerignore` excluded
+`data/*.db` could bake a developer's local `data/inspections.db` into the
+image (`COPY . .` runs before `USER appuser`, so any such file lands
+root-owned). The first time a fresh named volume was mounted over
+`/app/data`, Docker's `local` volume driver copied that root-owned file
+into the volume verbatim - permanently breaking history writes with
+`sqlite3.OperationalError: attempt to write a readonly database` (caught
+by `app.py` and surfaced as an on-screen warning, never a silent
+failure or a crash, but a real functional gap). Confirmed and fixed by
+direct container testing.
+
+**If a deployment shows this symptom:** the running image is fine (the
+`.dockerignore` fix is already in the checked-out source) - the *volume*
+is the stale part. Fix in place without losing history:
+
+```bash
+docker run --rm -v <your-data-volume>:/data alpine chown -R 10001:10001 /data
+```
+
+or, if the history is disposable, simply recreate the volume (a fresh
+one initializes correctly under the fixed image, per §11's recovery
+procedure).
+
 ## 11. Recovery
 
 If `data/inspections.db` is lost or corrupted: stop the container, replace

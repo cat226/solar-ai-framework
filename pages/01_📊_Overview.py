@@ -88,7 +88,7 @@ else:
     st.divider()
     col_a, col_b = st.columns(2)
     with col_a:
-        st.subheader("Fault distribution")
+        st.subheader("Fault distribution (whole-image classification)")
         if stats["fault_distribution"]:
             df = pd.DataFrame({"count": stats["fault_distribution"]}).sort_values("count", ascending=False)
             st.bar_chart(df)
@@ -102,7 +102,7 @@ else:
             df = pd.DataFrame(recent)[
                 ["created_at", "city", "fault_label", "panel_count", "efficiency_loss_pct", "severity"]
             ]
-            df.columns = ["When", "City", "Fault", "Panels", "Eff. loss %", "Severity"]
+            df.columns = ["When", "City", "Fault (whole image)", "Panels", "Eff. loss %", "Severity"]
             st.dataframe(df, use_container_width=True, hide_index=True)
         else:
             empty_state("No inspections yet.")

@@ -69,7 +69,7 @@ if not alerts:
 else:
     for row in alerts:
         st.markdown(
-            f"{severity_pill(row['severity'])} &nbsp; **{row['fault_label']}** "
+            f"{severity_pill(row['severity'])} &nbsp; **{row['fault_label']}** *(whole-image classification)* "
             f"— {row['city']} — {row['created_at']}  \n"
             f"Panels: {row['panel_count']} · Efficiency loss: {row['efficiency_loss_pct']:.1f}% "
             f"· [View in History →](/📜_History)",

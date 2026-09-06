@@ -74,6 +74,11 @@ if source_filter and "classifier_source" in filtered.columns:
     filtered = filtered[filtered["classifier_source"].isin(source_filter)]
 
 st.caption(f"Showing {len(filtered)} of {len(df)} recorded inspections.")
+st.caption(
+    "ℹ️ **Fault** below is the whole-image classification, independent of whether a "
+    "panel was detected — it is not a panel-level diagnosis. Expand an inspection's "
+    "full JSON below for its real per-panel results (present only when **Panels** > 0)."
+)
 
 if filtered.empty:
     empty_state("No inspections match the current filters.")
@@ -85,7 +90,7 @@ if filtered.empty:
 display_cols = ["id", "created_at", "city", "fault_label", "fault_confidence", "panel_count",
                  "efficiency_loss_pct", "severity"]
 rename_map = {
-    "id": "ID", "created_at": "When", "city": "City", "fault_label": "Fault",
+    "id": "ID", "created_at": "When", "city": "City", "fault_label": "Fault (whole image)",
     "fault_confidence": "Confidence", "panel_count": "Panels",
     "efficiency_loss_pct": "Eff. loss %", "severity": "Severity",
 }
@@ -119,7 +124,7 @@ if selected_id:
             st.caption("⚠️ Efficiency/output prediction was unavailable for this inspection.")
         result = json.loads(row["result_json"])
         c1, c2, c3 = st.columns(3)
-        c1.metric("Fault", row["fault_label"], f"{row['fault_confidence']:.1%} confidence")
+        c1.metric("Fault (whole image)", row["fault_label"], f"{row['fault_confidence']:.1%} confidence")
         c2.metric("Panels detected", row["panel_count"])
         c3.metric("Efficiency loss", f"{row['efficiency_loss_pct']:.1f}%" if row.get("xgboost_available", 1) else "unavailable")
         with st.expander("Full recorded result (JSON)"):

@@ -46,6 +46,36 @@ else:
 
 st.divider()
 
+st.subheader("Detection coverage")
+st.error(
+    "❌ **Panel-level detection is not currently reliable on close-up/ground-level "
+    "photos** — the kind most users upload. The production detector "
+    "(`weights/yolo_solar.pt`) was trained and validated on aerial/satellite imagery "
+    "(BDAPPV). Independent measurements: ~2.6% detection rate on a 156-image close-up "
+    "sample, and 0/16 on a separate 16-image real-photo validation set."
+)
+st.markdown(
+    "**What this means in practice:**\n"
+    "- When YOLO detects a panel, the app shows a real bounding-box overlay and runs "
+    "genuine panel-crop classification, clearly labeled as panel-level.\n"
+    "- When YOLO detects nothing (the common case for a close-up upload), **no crop is "
+    "manufactured and no whole-image result is presented as if it were panel-level.** "
+    "The app still runs whole-image classification independently and labels it "
+    "explicitly: *\"Whole-image classification — not panel-level diagnosis.\"*\n"
+    "- An **experimental** ground-domain-adapted checkpoint "
+    "(`weights/yolo_solar_domain_v1.pt`) was fine-tuned and evaluated this project cycle. "
+    "It shows a real, measured improvement on a held-out ground-level benchmark "
+    "(mAP50 0.000 → 0.445) and does not meaningfully regress aerial performance, but an "
+    "end-to-end real-photo validation found it still produces **zero** detections at the "
+    "deployed confidence threshold on the same 16-image sample as the production model — "
+    "the benchmark gain has not yet translated into different real-world application "
+    "behavior. It is **not used in this deployment** and is not planned for promotion "
+    "until that changes. Full evidence: the domain-adaptation and end-to-end validation "
+    "reports referenced in `docs/RELEASE_v1.0.0.md`."
+)
+
+st.divider()
+
 st.subheader("Other known limitations")
 st.markdown(
     "- **Efficiency/output estimates depend on environmental inputs and model "
