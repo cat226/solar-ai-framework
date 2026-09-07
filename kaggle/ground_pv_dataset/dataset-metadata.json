@@ -1,0 +1,11 @@
+{
+  "title": "Solar AI ground-level PV defect research v1",
+  "id": "REPLACE_WITH_YOUR_KAGGLE_USERNAME/solar-ai-ground-pv-research-v1",
+  "licenses": [
+    {
+      "name": "CC-BY-4.0"
+    }
+  ],
+  "subtitle": "Class-normalized YOLOv8 ground-level PV defect detection dataset (panel / bird_drop / cracked / dusty)",
+  "description": "Solar AI ground-level PV defect research dataset.\n\nThis is a class-normalized, audited repackaging of a publicly available Roboflow Universe dataset for RESEARCH / non-commercial use. Solar AI did NOT create the underlying photographs.\n\nSource dataset:\n  Susan. \"panel solar Dataset.\" Roboflow Universe.\n  https://universe.roboflow.com/susan-ifblr/panel-solar-bw945\n  workspace/project/version: susan-ifblr / panel-solar-bw945 / 1\n  export format: YOLOv8\n\nLicense: CC BY 4.0, as displayed by the source on Roboflow. Attribution preserved. Image-level provenance of individual photographs is NOT independently verified (see the audit report shipped with this dataset).\n\nClasses (canonical research taxonomy, fixed id order):\n  0 = panel      (individual solar-panel boundary)\n  1 = bird_drop  (bird-dropping contamination region)\n  2 = cracked    (crack / physical-damage region)\n  3 = dusty      (dust / soiling region)\n\nHotspot is deliberately excluded: RGB photographs cannot validate thermal-hotspot semantics.\n\nContents: images/ + labels/ + data.yaml (Ultralytics format), plus the Solar AI dataset audit report (dataset_audit.md / dataset_audit.json) and NORMALIZATION.json documenting the source->research class-id remap. The official train/valid/test split is preserved; a leakage-clean split is included only if the audit found cross-split duplicate leakage.\n\nIntended use: training a research-grade ground-level PV visual defect detector, evaluated separately. Not a validated engineering or safety diagnosis."
+}

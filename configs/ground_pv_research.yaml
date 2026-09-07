@@ -1,0 +1,133 @@
+# =============================================================================
+# Solar AI Framework — Ground-level PV defect RESEARCH detector config
+# configs/ground_pv_research.yaml
+# =============================================================================
+#
+# This describes a SEPARATE, RESEARCH-ONLY object detector for ground-level /
+# close-up RGB photographs of solar panels. It is NOT wired into the
+# production inference path and it does NOT replace weights/yolo_solar.pt
+# (the frozen aerial detector). See docs/GROUND_PV_RESEARCH.md.
+#
+# The Ultralytics-format data YAML consumed by training is generated from
+# this file + the audited dataset by scripts/train_ground_pv.py; it is NOT
+# this file. This file is the human-authored source of truth for the
+# research taxonomy, dataset provenance, and default hyperparameters.
+# -----------------------------------------------------------------------------
+
+research_model:
+  # Where the SELECTED research checkpoint is copied after evaluation.
+  # Never "weights/yolo_solar.pt".
+  weights: "weights/yolo_solar_ground_research_v1.pt"
+  base_model: "yolo11n.pt"          # pretrained COCO checkpoint, NOT the aerial model
+  fallback_base_model: "yolov8n.pt" # if the installed Ultralytics predates YOLO11
+  image_size: 640
+  # Inference defaults for the research inference utility
+  # (scripts/infer_ground_pv.py). Conservative starting points; retune
+  # against the real evaluation once a checkpoint exists.
+  confidence_threshold: 0.25
+  iou_threshold: 0.50
+
+# -----------------------------------------------------------------------------
+# Class taxonomy — canonical order, do not reorder.
+# Mirrors training/detection/ground_pv/class_map.py (RESEARCH_CLASS_ORDER).
+# -----------------------------------------------------------------------------
+names:
+  0: panel
+  1: bird_drop
+  2: cracked
+  3: dusty
+
+# Human-facing condition wording derived from detected defects. A panel may
+# carry more than one condition (panel + bird_drop + dusty is valid).
+defect_to_condition:
+  bird_drop: "BirdDrop"
+  cracked: "Damage"
+  dusty: "Dust"
+no_defect_condition: "Clean"
+
+# -----------------------------------------------------------------------------
+# Dataset provenance
+# -----------------------------------------------------------------------------
+dataset:
+  name: "panel solar"
+  owner: "Susan"
+  source: "Roboflow Universe"
+  url: "https://universe.roboflow.com/susan-ifblr/panel-solar-bw945"
+  workspace: "susan-ifblr"
+  project: "panel-solar-bw945"
+  version: 1
+  export_format: "yolov8"
+  license_as_displayed_by_source: "CC BY 4.0"
+  # Published figures — to be independently re-audited after download, NOT trusted as-is.
+  published_reported_images: 6493
+  published_instance_counts:
+    cracked: 6233
+    panel: 4477
+    dusty: 235
+    bird_drop: 60
+  raw_download_dir: "datasets/ground_pv_research/raw/panel_solar_bw945_v1"
+  normalized_yolo_dir: "datasets/ground_pv_research/yolo"
+  citation: >-
+    Susan. "panel solar Dataset." Roboflow Universe.
+    https://universe.roboflow.com/susan-ifblr/panel-solar-bw945
+
+# -----------------------------------------------------------------------------
+# Split policy
+# -----------------------------------------------------------------------------
+splits:
+  # Preserve the dataset's official train/valid/test split initially.
+  policy: "preserve_official"
+  # If exact / strong near-duplicate leakage is found across splits, a
+  # leakage-clean split is produced alongside (never replacing) the official one.
+  official_split_dir: "datasets/ground_pv_research/splits/official_split"
+  leakage_clean_split_dir: "datasets/ground_pv_research/splits/leakage_clean_split"
+  near_duplicate_hamming_threshold: 5   # dHash Hamming distance considered "near duplicate"
+
+# -----------------------------------------------------------------------------
+# Baseline training experiment
+# -----------------------------------------------------------------------------
+experiments:
+  baseline:
+    name: "ground_yolo11n_baseline_v1"
+    project: "research_runs/ground_pv"
+    epochs: 100
+    patience: 20
+    batch: -1          # automatic batch sizing where supported
+    imgsz: 640
+    seed: 42
+    optimizer: "auto"  # Ultralytics default (AdamW-family auto-select)
+    cos_lr: true
+    pretrained: true
+    device: "auto"
+    workers: "auto"
+  balanced:
+    name: "ground_yolo11n_balanced_v1"
+    project: "research_runs/ground_pv"
+    # Class-imbalance strategy: weighted image sampling on the TRAIN split
+    # only (images containing rare classes drawn more often). Validation and
+    # test splits are NEVER oversampled, duplicated, or synthesized.
+    strategy: "train_only_weighted_image_sampling"
+    epochs: 100
+    patience: 20
+    batch: -1
+    imgsz: 640
+    seed: 42
+
+# -----------------------------------------------------------------------------
+# Augmentation — conservative; must not distort defect semantics.
+# These override Ultralytics defaults where listed; everything else stays default.
+# -----------------------------------------------------------------------------
+augmentation:
+  hsv_h: 0.015
+  hsv_s: 0.4
+  hsv_v: 0.4
+  degrees: 5.0          # mild rotation only
+  translate: 0.1
+  scale: 0.3
+  shear: 0.0
+  perspective: 0.0
+  flipud: 0.0           # no vertical flip — panels have a physical "up"
+  fliplr: 0.5           # horizontal flip is physically reasonable
+  mosaic: 0.5
+  mixup: 0.0            # off — can fabricate implausible defect blends
+  copy_paste: 0.0
