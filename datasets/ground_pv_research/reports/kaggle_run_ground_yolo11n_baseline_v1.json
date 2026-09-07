@@ -1,0 +1,51 @@
+{
+  "experiment": "ground_yolo11n_baseline_v1",
+  "status": "training_launched",
+  "kaggle": {
+    "kernel": "edithstark/ground-yolo11n-baseline-v1",
+    "kernel_url": "https://www.kaggle.com/code/edithstark/ground-yolo11n-baseline-v1",
+    "kernel_version": 1,
+    "dataset": "edithstark/solar-ai-ground-pv-research-v1",
+    "dataset_url": "https://www.kaggle.com/datasets/edithstark/solar-ai-ground-pv-research-v1",
+    "enable_gpu": true,
+    "enable_internet": true,
+    "launched_at_utc": "2026-09-07T18:24:00Z",
+    "account": "edithstark"
+  },
+  "dataset_package": {
+    "source": "datasets/ground_pv_research/yolo/ (derived, leakage-clean, 3-class)",
+    "data_yaml_sha256": "31100f51ac218d9b37a49af6602a043108e165916ea37235999ba1080d52d21a",
+    "dataset_content_sha256": "178e75ff7bf296ed3badf90b8e221f8b93adfaa52f22769636e5530c5ae3b918",
+    "leakage_clean_manifest_sha256": "a9df3c0e483b585886ee6d831711602b8f4a7d498ad0e2a7b0f8004ba8debe6c",
+    "total_images": 6492,
+    "split_counts": {"train": 4546, "valid": 1297, "test": 649},
+    "leakage_families": {"total": 537, "train": 373, "valid": 109, "test": 55},
+    "no_group_crosses_splits": true,
+    "residual_cross_split_near_dup_pairs": 0
+  },
+  "training_config": {
+    "model": "yolo11n.pt (COCO-pretrained, Ultralytics)",
+    "classes": {"0": "panel", "1": "cracked", "2": "dusty"},
+    "bird_drop": "EXCLUDED - data availability (9 images / ~3 source photos), not a product limitation",
+    "imgsz": 640,
+    "epochs": 100,
+    "patience": 20,
+    "batch": "-1 (auto)",
+    "optimizer": "auto",
+    "cos_lr": true,
+    "seed": 42,
+    "device": "cuda:0 (Kaggle GPU)",
+    "augmentation": {
+      "hsv_h": 0.015, "hsv_s": 0.4, "hsv_v": 0.4, "degrees": 5.0, "translate": 0.1,
+      "scale": 0.3, "shear": 0.0, "perspective": 0.0, "flipud": 0.0, "fliplr": 0.5,
+      "mosaic": 0.5, "mixup": 0.0, "copy_paste": 0.0
+    },
+    "pinned_deps": ["torch==2.7.1", "torchvision==0.22.1", "ultralytics==8.4.138"]
+  },
+  "git_commit_at_launch": "1f2c882b57c757cd6f6f61a276c04c7c07416353",
+  "notes": [
+    "Research artifact only. Does NOT replace weights/yolo_solar.pt (aerial).",
+    "No RGB hotspot claim. No bird_drop performance claim.",
+    "Metrics / best-checkpoint hash / training duration / resolved GPU are filled in after retrieval."
+  ]
+}
