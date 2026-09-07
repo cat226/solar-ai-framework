@@ -110,3 +110,26 @@ def test_production_manifest_untouched():
     entry = next(a for a in manifest["artifacts"] if a["path"] == "yolo_solar.pt")
     assert entry["sha256"] == PROD_YOLO_SHA
     assert manifest["release"] == "v1.0.0"
+
+
+def test_evaluate_ground_pv_reads_class_names_from_data_yaml(tmp_path):
+    """The eval script's dataset-stats must use the dataset's own names,
+    not a hardcoded 4-class order (which mislabelled the 3-class counts)."""
+    import sys
+    sys.path.insert(0, str(_ROOT))
+    from scripts.evaluate_ground_pv import _class_names, _split_stats
+    import yaml as _yaml
+    from PIL import Image
+
+    root = tmp_path / "ds"
+    (root / "train" / "images").mkdir(parents=True)
+    (root / "train" / "labels").mkdir(parents=True)
+    Image.new("RGB", (16, 16)).save(root / "train" / "images" / "a.jpg")
+    (root / "train" / "labels" / "a.txt").write_text("0 0.5 0.5 0.4 0.4\n2 0.5 0.5 0.2 0.2\n")
+    dy = root / "data.yaml"
+    dy.write_text(_yaml.safe_dump({"path": str(root), "train": "train/images",
+                                   "names": {0: "panel", 1: "cracked", 2: "dusty"}}))
+    assert _class_names(dy) == {0: "panel", 1: "cracked", 2: "dusty"}
+    stats = _split_stats(dy, "train")
+    assert stats["instances_per_class"] == {"panel": 1, "cracked": 0, "dusty": 1}
+    assert "bird_drop" not in stats["instances_per_class"]

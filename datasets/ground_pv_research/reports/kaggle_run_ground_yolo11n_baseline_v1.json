@@ -1,16 +1,18 @@
 {
   "experiment": "ground_yolo11n_baseline_v1",
-  "status": "training_launched",
+  "status": "complete",
   "kaggle": {
     "kernel": "edithstark/ground-yolo11n-baseline-v1",
     "kernel_url": "https://www.kaggle.com/code/edithstark/ground-yolo11n-baseline-v1",
-    "kernel_version": 1,
+    "kernel_version": 2,
     "dataset": "edithstark/solar-ai-ground-pv-research-v1",
     "dataset_url": "https://www.kaggle.com/datasets/edithstark/solar-ai-ground-pv-research-v1",
     "enable_gpu": true,
     "enable_internet": true,
     "launched_at_utc": "2026-09-07T18:24:00Z",
-    "account": "edithstark"
+    "account": "edithstark",
+    "completed_at_utc": "2026-09-08T01:47:00Z",
+    "v1_error": "kernel v1 failed at Ultralytics dataset resolution (relative data.yaml path); fixed with absolute path in v2"
   },
   "dataset_package": {
     "source": "datasets/ground_pv_research/yolo/ (derived, leakage-clean, 3-class)",
@@ -18,14 +20,27 @@
     "dataset_content_sha256": "178e75ff7bf296ed3badf90b8e221f8b93adfaa52f22769636e5530c5ae3b918",
     "leakage_clean_manifest_sha256": "a9df3c0e483b585886ee6d831711602b8f4a7d498ad0e2a7b0f8004ba8debe6c",
     "total_images": 6492,
-    "split_counts": {"train": 4546, "valid": 1297, "test": 649},
-    "leakage_families": {"total": 537, "train": 373, "valid": 109, "test": 55},
+    "split_counts": {
+      "train": 4546,
+      "valid": 1297,
+      "test": 649
+    },
+    "leakage_families": {
+      "total": 537,
+      "train": 373,
+      "valid": 109,
+      "test": 55
+    },
     "no_group_crosses_splits": true,
     "residual_cross_split_near_dup_pairs": 0
   },
   "training_config": {
     "model": "yolo11n.pt (COCO-pretrained, Ultralytics)",
-    "classes": {"0": "panel", "1": "cracked", "2": "dusty"},
+    "classes": {
+      "0": "panel",
+      "1": "cracked",
+      "2": "dusty"
+    },
     "bird_drop": "EXCLUDED - data availability (9 images / ~3 source photos), not a product limitation",
     "imgsz": 640,
     "epochs": 100,
@@ -36,16 +51,80 @@
     "seed": 42,
     "device": "cuda:0 (Kaggle GPU)",
     "augmentation": {
-      "hsv_h": 0.015, "hsv_s": 0.4, "hsv_v": 0.4, "degrees": 5.0, "translate": 0.1,
-      "scale": 0.3, "shear": 0.0, "perspective": 0.0, "flipud": 0.0, "fliplr": 0.5,
-      "mosaic": 0.5, "mixup": 0.0, "copy_paste": 0.0
+      "hsv_h": 0.015,
+      "hsv_s": 0.4,
+      "hsv_v": 0.4,
+      "degrees": 5.0,
+      "translate": 0.1,
+      "scale": 0.3,
+      "shear": 0.0,
+      "perspective": 0.0,
+      "flipud": 0.0,
+      "fliplr": 0.5,
+      "mosaic": 0.5,
+      "mixup": 0.0,
+      "copy_paste": 0.0
     },
-    "pinned_deps": ["torch==2.7.1", "torchvision==0.22.1", "ultralytics==8.4.138"]
+    "pinned_deps": [
+      "torch==2.7.1",
+      "torchvision==0.22.1",
+      "ultralytics==8.4.138"
+    ]
   },
   "git_commit_at_launch": "1f2c882b57c757cd6f6f61a276c04c7c07416353",
   "notes": [
     "Research artifact only. Does NOT replace weights/yolo_solar.pt (aerial).",
     "No RGB hotspot claim. No bird_drop performance claim.",
     "Metrics / best-checkpoint hash / training duration / resolved GPU are filled in after retrieval."
+  ],
+  "results": {
+    "best_checkpoint_sha256": "2b26334dc4023ba4c89a80e2350ddc9012358a48cdef713aee86c8e79a1bbb50",
+    "promoted_to": "weights/yolo_solar_ground_research_v1.pt",
+    "gpu": "Tesla P100-PCIE-16GB",
+    "training_seconds": 5748.87,
+    "best_epoch": 88,
+    "total_epochs": 100,
+    "val": {
+      "precision": 0.8465,
+      "recall": 0.8088,
+      "mAP50": 0.8563,
+      "mAP50_95": 0.6629
+    },
+    "test_held_out": {
+      "precision": 0.8756,
+      "recall": 0.8014,
+      "mAP50": 0.8647,
+      "mAP50_95": 0.6775
+    },
+    "per_class_test": {
+      "panel": {
+        "precision": 0.9465,
+        "recall": 0.925,
+        "AP50": 0.9628,
+        "AP50_95": 0.8427
+      },
+      "cracked": {
+        "precision": 0.809,
+        "recall": 0.6531,
+        "AP50": 0.7495,
+        "AP50_95": 0.5296
+      },
+      "dusty": {
+        "precision": 0.8712,
+        "recall": 0.8261,
+        "AP50": 0.8819,
+        "AP50_95": 0.6601
+      }
+    },
+    "local_reeval_matches_kaggle": true,
+    "overfitting": "mild - val metrics plateau after ~ep60, best.pt @ep88; held-out test >= val",
+    "cross_domain": {
+      "aerial_yolo_solar_on_120_ground_test_imgs": "1/120 images detected (1%)",
+      "ground_model_on_same": "94/120 images panel-detected (78%)"
+    }
+  },
+  "pending_on_E_drive": [
+    "ground model vs aerial protocol on yolo_prepared/test (reverse cross-eval)",
+    "real-world rooftop holdout inference on E:/Solar Real Images/"
   ]
 }

@@ -33,6 +33,9 @@ sys.path.insert(0, str(_REPO_ROOT))
 
 import yaml  # noqa: E402
 
+# Fallback only. The actual class names are read from the dataset's own
+# data.yaml so this script works for either the 4-class research taxonomy
+# or the 3-class first-experiment taxonomy.
 RESEARCH_CLASS_ORDER = ("panel", "bird_drop", "cracked", "dusty")
 RARE_CLASSES = ("bird_drop", "dusty")
 DEFAULT_REPORTS_DIR = _REPO_ROOT / "datasets" / "ground_pv_research" / "reports"
@@ -42,12 +45,22 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _class_names(data_yaml: Path) -> dict[int, str]:
+    data = yaml.safe_load(data_yaml.read_text(encoding="utf-8")) or {}
+    names = data.get("names") or {}
+    if isinstance(names, list):
+        names = {i: n for i, n in enumerate(names)}
+    return {int(k): str(v) for k, v in names.items()} or dict(enumerate(RESEARCH_CLASS_ORDER))
+
+
 def _split_stats(data_yaml: Path, split_key: str) -> dict:
     data = yaml.safe_load(data_yaml.read_text(encoding="utf-8")) or {}
     root = Path(data.get("path", data_yaml.parent))
     rel = data.get(split_key)
     if not rel:
         return {}
+    names = _class_names(data_yaml)
+    order = [names[i] for i in sorted(names)]
     images_dir = (root / rel) if not Path(rel).is_absolute() else Path(rel)
     labels_dir = Path(str(images_dir).replace("/images", "/labels").replace("\\images", "\\labels"))
     images = [p for p in images_dir.glob("*") if p.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp"}]
@@ -66,16 +79,15 @@ def _split_stats(data_yaml: Path, split_key: str) -> dict:
                 cid = int(parts[0])
             except ValueError:
                 continue
-            if 0 <= cid < len(RESEARCH_CLASS_ORDER):
-                name = RESEARCH_CLASS_ORDER[cid]
-                inst[name] += 1
-                seen.add(name)
+            if cid in names:
+                inst[names[cid]] += 1
+                seen.add(names[cid])
         for name in seen:
             img_with[name] += 1
     return {
         "num_images": len(images),
-        "instances_per_class": {c: inst.get(c, 0) for c in RESEARCH_CLASS_ORDER},
-        "images_containing_class": {c: img_with.get(c, 0) for c in RESEARCH_CLASS_ORDER},
+        "instances_per_class": {c: inst.get(c, 0) for c in order},
+        "images_containing_class": {c: img_with.get(c, 0) for c in order},
     }
 
 
@@ -155,8 +167,12 @@ def main(argv: list[str] | None = None) -> int:
 
     args.reports_dir.mkdir(parents=True, exist_ok=True)
     json_path = args.reports_dir / "ground_research_evaluation.json"
+    # ground_research_evaluation.md is the curated narrative report (kept by
+    # hand: metrics + overfitting + cross-domain + verdict). This script
+    # writes the machine-generated metrics table to a sibling file so it
+    # never clobbers the curated one.
     json_path.write_text(json.dumps(results, indent=2, default=str), encoding="utf-8")
-    md_path = args.reports_dir / "ground_research_evaluation.md"
+    md_path = args.reports_dir / "ground_research_evaluation_metrics.md"
     md_path.write_text(_render_md(results), encoding="utf-8")
     print(f"\nWrote {md_path}\n      {json_path}")
     return 0
@@ -178,13 +194,13 @@ def _render_md(results: dict) -> str:
         lines.append(f"**Overall**: mAP50={o['mAP50']}  mAP50-95={o['mAP50_95']}  P={o['precision']}  R={o['recall']}\n")
         lines.append("| class | precision | recall | mAP50 | mAP50-95 | rare? |")
         lines.append("|---|---|---|---|---|---|")
-        for c in RESEARCH_CLASS_ORDER:
-            pc = m["per_class"].get(c, {})
+        for c, pc in m["per_class"].items():
             lines.append(f"| {c} | {pc.get('precision')} | {pc.get('recall')} | {pc.get('mAP50')} | "
                          f"{pc.get('mAP50_95')} | {'**YES**' if c in RARE_CLASSES else ''} |")
         lines.append("")
-    lines.append("> BirdDrop and Dust are severely underrepresented in the source dataset; "
-                 "their per-class metrics are high-variance and must not be over-interpreted.\n")
+    lines.append("> `dusty` (and, in the 4-class taxonomy, `bird_drop`) are severely "
+                 "underrepresented; their per-class metrics are high-variance and must "
+                 "not be over-interpreted.\n")
     return "\n".join(lines) + "\n"
 
 

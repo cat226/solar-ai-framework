@@ -228,85 +228,124 @@ mosaic=0.5, mixup=0.0, copy_paste=0.0`.
 
 ## 15. Hardware / device
 
-Training: Kaggle GPU (NVIDIA **T4** preferred; **P100** sm_60 also
-supported via the `torch==2.7.1` / `torchvision==0.22.1` pin). Detected at
-runtime with `torch.cuda.is_available()` / `torch.cuda.get_device_name(0)`;
-the notebook fails closed if CUDA is unavailable. Local machine: no usable
-GPU (data prep / eval / inference only).
+Training ran on a Kaggle **Tesla P100-PCIE-16GB** (the free pool assigned
+P100, not T4 — handled by the `torch==2.7.1` / `torchvision==0.22.1` pin;
+the notebook fails closed if CUDA is unavailable). Wall time **~1 h 36 m**
+for 100 epochs. Local machine: no usable GPU (data prep / eval /
+inference only, on CPU).
 
 ## 16. Random seed
 
 `42` everywhere (`configs/ground_pv_research.yaml`, `train_ground_pv.py`,
-notebook).
+the notebook).
 
 ## 17–18. Evaluation metrics / per-class metrics
 
-_PENDING_ — `scripts/evaluate_ground_pv.py` writes
-`datasets/ground_pv_research/reports/ground_research_evaluation.{md,json}`
-with overall mAP50 / mAP50-95 / precision / recall **and** per-class
-mAP50 / mAP50-95 / precision / recall for `panel`, `bird_drop`, `cracked`,
-`dusty`, plus per-split image counts, instances per class, and
-images-containing-each-class. BirdDrop and Dust are flagged rare.
+Full report: `datasets/ground_pv_research/reports/ground_research_evaluation.{md,json}`
+(the `.json` and `_metrics.md` are `scripts/evaluate_ground_pv.py` output;
+the `.md` is the curated narrative). Protocol: `YOLO.val()`, imgsz 640, IoU
+0.50, on the **leakage-clean split**. Kaggle-GPU and independent local-CPU
+runs of the same checkpoint agree to 4 decimals.
+
+**Held-out TEST (649 images / 55 families):** overall P 0.876 · R 0.801 ·
+mAP50 **0.865** · mAP50-95 **0.677**.
+
+| class | precision | recall | AP50 | AP50-95 | test instances |
+|---|---|---|---|---|---|
+| panel | 0.947 | 0.925 | 0.963 | 0.843 | 560 / 539 imgs |
+| cracked | 0.809 | 0.653 | 0.749 | 0.530 | 637 / 328 imgs |
+| dusty | 0.871 | 0.826 | 0.882 | 0.660 | 69 / 30 imgs |
+
+**Validation (1,297 images / 109 families):** overall P 0.846 · R 0.809 ·
+mAP50 0.856 · mAP50-95 0.663. Confusion matrices + PR/F1 curves in
+`reports/training_artifacts/`.
+
+**Overfitting:** mild — train losses fall throughout, validation metrics
+plateau after ~epoch 60 (`best.pt` = epoch 88), `val/dfl_loss` drifts up
+slightly (1.078 → 1.109). Held-out test ≥ validation on every overall
+metric, so no leakage-driven inflation.
+
+**Cross-domain (req 12):** on 120 sampled ground close-up test images the
+production aerial `yolo_solar.pt` detects anything in only 1/120 (1 %); the
+ground model detects a panel in 94/120 (78 %). The two do not overlap in
+domain, classes, or training data. The reverse direction (ground model on
+the aerial test split at the aerial protocol) is **pending the `E:`
+remount** — expected near-zero.
 
 ## 19. Real-world qualitative evaluation
 
-_PENDING_ — `scripts/infer_ground_pv.py` runs the detector on the owner's
-real rooftop photos (`datasets/ground_pv_research/real_world_holdout/`,
-qualitative only, never training data) and writes
-`datasets/ground_pv_research/reports/real_world_holdout.md`. Each prediction
-is classified qualitatively (plausible / likely false positive / missed
-defect / localization problem / correct panel localization / uncertain).
-No TP/FP/FN is fabricated. Images with zero detections are recorded.
+**Pending the `E:` drive remount** — `E:/Solar Real Images/` (the 6 owner
+photos) is not currently mounted. `scripts/infer_ground_pv.py` will run
+there (qualitative only, no fabricated ground truth) and write
+`reports/real_world_holdout.md` when `E:` is back.
 
 ## 20. Known limitations
 
-- `bird_drop` (~60 instances) and `dusty` (~235) are severely
-  underrepresented — per-class metrics for them are high-variance.
-- Source image-level provenance is unverified.
-- Domain gap between the source dataset and the owner's rooftop photos.
-- No RGB hotspot validation — out of scope by design.
-- A baseline run is not production-ready and is not wired into the app's
-  inference path.
+- **`bird_drop`: not trained or evaluated** — the audited source has it in
+  only 9 images (~3 unique photos). Excluded for this experiment; **no
+  bird_drop performance is claimed**.
+- `dusty` held-out metrics rest on 69 instances / 30 images → high variance.
+- `cracked` recall 0.65 on test — misses ~1/3 of cracks; assistive flag, not
+  exhaustive.
+- Source image-level provenance unverified; ~574 unique source photos
+  behind 6,492 augmented instances.
+- Domain gap between the source dataset and the owner's rooftop photos
+  (real-world holdout pending).
+- No RGB hotspot — out of scope by design.
+- Research artifact — not wired into `models/` / `services/`; branch not merged.
 
 ## 21. Exact checkpoint SHA-256
 
-_PENDING_ — recorded in
-`datasets/ground_pv_research/reports/ground_research_model_manifest.json`
-after the selected checkpoint is copied to
-`weights/yolo_solar_ground_research_v1.pt`.
+`weights/yolo_solar_ground_research_v1.pt` =
+**`2b26334dc4023ba4c89a80e2350ddc9012358a48cdef713aee86c8e79a1bbb50`**
+— identical to the Kaggle `best.pt` (epoch 88) after retrieval and to the
+checkpoint used by the local re-evaluation. Recorded in
+`datasets/ground_pv_research/reports/ground_research_model_manifest.json`.
+`weights/yolo_solar_ground_research_v1.last.pt` (epoch 100) is also kept.
 
 ## 22. Git commit
 
-Pipeline built on branch `feat/cloud-training-orchestration`. The exact
-build commit is recorded in the model manifest and training manifest once
-training runs.
+Work on branch `feat/ground-pv-research-detector`. Training launched at
+commit `1f2c882`; notebook path fix `c6a9297`; the exact commit for each
+artifact is in `training_manifest.json` / `ground_research_model_manifest.json`
+/ `kaggle_run_ground_yolo11n_baseline_v1.json`.
+
+## Kaggle artifacts
+
+- Dataset: `edithstark/solar-ai-ground-pv-research-v1` (private) —
+  6,492 images + `provenance/` (audit + remediation + split manifests).
+- Kernel: <https://www.kaggle.com/code/edithstark/ground-yolo11n-baseline-v1>
+  (notebook, version 2; v1 failed on a relative-path bug, fixed in v2).
+- Retrieved outputs (gitignored): `training/cloud/runs/ground-yolo11n-baseline-v1/output/`
+  — `best.pt`, `last.pt`, `results.csv`, plots, confusion matrices,
+  `training_manifest.json`, `evaluation.json`, test-set predictions.
 
 ---
 
-## Status / blockers (as of 2026-09-07)
+## Status (as of 2026-09-08)
 
-**Dataset acquired** (D:, immutable), **audited** (FAILED CLOSED), and
-**remediated** → derived leakage-clean 3-class training dataset at
-`datasets/ground_pv_research/yolo/`. **Remediation verdict: APPROVED WITH
-CAVEATS** (see §Remediation). The raw dataset stays BLOCKED / immutable.
+Acquired → audited (FAILED CLOSED) → remediated (leakage-clean 3-class) →
+**trained on Kaggle GPU** → evaluated. The raw dataset stays immutable.
 
-1. ~~Mixed annotation format~~ → 614 polygons converted to boxes in the
-   derived copy.
-2. ~~Cross-split leakage~~ → leakage-clean split built; 0 families cross
-   splits, 0 residual cross-split near-dup pairs.
-3. ~~`bird_drop` unusable~~ → excluded from the first experiment (documented
-   data-availability exclusion, not a product limitation).
-4. **Published counts wrong** — Roboflow page says dusty 235 / bird_drop 60;
-   actual images-containing 156 / 9. Documented; nothing to "fix".
+1. ~~Mixed annotation format~~ → 614 polygons converted to boxes.
+2. ~~Cross-split leakage~~ → leakage-clean split; 0 families cross splits.
+3. ~~`bird_drop` unusable~~ → excluded from this experiment (documented).
+4. ~~Kaggle GPU training~~ → **done** (P100, ~1 h 36 m). `ground_yolo11n_baseline_v1`.
+   Test mAP50 **0.865**, mAP50-95 **0.677**. Checkpoint promoted to
+   `weights/yolo_solar_ground_research_v1.pt` (sha `2b26334d…`).
+
+**Production recommendation: KEEP SEPARATE / CANDIDATE for a close-up
+sub-feature.** `panel` detection is strong (test AP50 0.96); `dusty`
+promising but under-sampled; `cracked` recall 0.65 is assistive-only. It is
+NOT a replacement for the aerial detector and is not wired into production.
 
 Still open:
 
-5. **Kaggle GPU training is a cost/compute action** — not launched without
-   explicit owner approval. Not started.
-6. **`E:` drive intermittently unavailable** — raw + derived datasets are
-   on D: as a result. Real-world holdout photos still on E:.
-7. **`dusty` split imbalance** and **dHash-threshold tuning** — see
-   §Remediation caveats.
+5. **`E:` drive unavailable** — the aerial-protocol reverse cross-eval and
+   the real-world rooftop holdout inference are pending its remount.
+6. **`dusty` split imbalance** and **dHash-threshold tuning** — see
+   §Remediation caveats. Mild overfitting after ~ep60 (see §17–18).
+7. Branch `feat/ground-pv-research-detector` **not merged**; no deploy.
 
 ## Production-model safety
 

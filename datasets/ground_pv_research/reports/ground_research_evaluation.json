@@ -1,0 +1,100 @@
+{
+  "weights": "weights\\yolo_solar_ground_research_v1.pt",
+  "weights_sha256": "2b26334dc4023ba4c89a80e2350ddc9012358a48cdef713aee86c8e79a1bbb50",
+  "data_yaml": "datasets\\ground_pv_research\\yolo\\data.yaml",
+  "ultralytics_version": "8.4.118",
+  "config": {
+    "imgsz": 640,
+    "iou": 0.5
+  },
+  "splits": {
+    "val": {
+      "dataset_stats": {
+        "num_images": 1297,
+        "instances_per_class": {
+          "panel": 1214,
+          "cracked": 2122,
+          "dusty": 75
+        },
+        "images_containing_class": {
+          "panel": 932,
+          "cracked": 832,
+          "dusty": 21
+        }
+      },
+      "metrics": {
+        "overall": {
+          "precision": 0.8464937517538492,
+          "recall": 0.8088012798400426,
+          "mAP50": 0.8562741882961172,
+          "mAP50_95": 0.6629495477651525
+        },
+        "per_class": {
+          "panel": {
+            "precision": 0.8959861966792585,
+            "recall": 0.8747940691927513,
+            "mAP50": 0.9270815461208219,
+            "mAP50_95": 0.8117401425444151
+          },
+          "cracked": {
+            "precision": 0.857254270706292,
+            "recall": 0.7782764369940431,
+            "mAP50": 0.8395425689430034,
+            "mAP50_95": 0.595584947085596
+          },
+          "dusty": {
+            "precision": 0.7862407878759973,
+            "recall": 0.7733333333333333,
+            "mAP50": 0.8021984498245263,
+            "mAP50_95": 0.5815235536654464
+          }
+        },
+        "save_dir": "D:\\Documents\\Projects\\solar-ai-framework\\runs\\detect\\val-3"
+      }
+    },
+    "test": {
+      "dataset_stats": {
+        "num_images": 649,
+        "instances_per_class": {
+          "panel": 560,
+          "cracked": 637,
+          "dusty": 69
+        },
+        "images_containing_class": {
+          "panel": 539,
+          "cracked": 328,
+          "dusty": 30
+        }
+      },
+      "metrics": {
+        "overall": {
+          "precision": 0.8755931641449556,
+          "recall": 0.801382727003845,
+          "mAP50": 0.8647350484282449,
+          "mAP50_95": 0.677469701852825
+        },
+        "per_class": {
+          "panel": {
+            "precision": 0.9465348599484664,
+            "recall": 0.925,
+            "mAP50": 0.9628127518464877,
+            "mAP50_95": 0.8427276123704651
+          },
+          "cracked": {
+            "precision": 0.8090230128673809,
+            "recall": 0.6530612244897959,
+            "mAP50": 0.7495067321869836,
+            "mAP50_95": 0.5295809416922473
+          },
+          "dusty": {
+            "precision": 0.8712216196190193,
+            "recall": 0.8260869565217391,
+            "mAP50": 0.8818856612512631,
+            "mAP50_95": 0.6601005514957624
+          }
+        },
+        "save_dir": "D:\\Documents\\Projects\\solar-ai-framework\\runs\\detect\\val-4"
+      }
+    }
+  }
+}

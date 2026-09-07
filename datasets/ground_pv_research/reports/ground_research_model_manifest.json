@@ -1,0 +1,89 @@
+{
+  "model_path": "weights/yolo_solar_ground_research_v1.pt",
+  "sha256": "2b26334dc4023ba4c89a80e2350ddc9012358a48cdef713aee86c8e79a1bbb50",
+  "role": "RESEARCH ONLY - ground-level / close-up RGB PV visual defect detector",
+  "is_production": false,
+  "does_not_replace": "weights/yolo_solar.pt (aerial/overhead panel detector) - different domain, classes, and training data",
+  "source_checkpoint": "best.pt from Kaggle kernel edithstark/ground-yolo11n-baseline-v1 (version 2), epoch 88",
+  "last_checkpoint": "weights/yolo_solar_ground_research_v1.last.pt (epoch 100)",
+  "base_model": "yolo11n.pt (YOLO11n, COCO-pretrained, Ultralytics) - NOT weights/yolo_solar.pt",
+  "classes": {"0": "panel", "1": "cracked", "2": "dusty"},
+  "excluded_classes": {
+    "bird_drop": "only 9 images / ~3 unique source photos in the audited source dataset - insufficient independent data to train or evaluate. Data-availability exclusion for this experiment, NOT a product limitation.",
+    "hotspot": "out of scope - RGB imagery cannot validate thermal-hotspot semantics"
+  },
+  "dataset": "panel solar (Susan) / Roboflow Universe, version 1 - audited + remediated leakage-clean 3-class derived set",
+  "dataset_url": "https://universe.roboflow.com/susan-ifblr/panel-solar-bw945",
+  "dataset_version": 1,
+  "dataset_license": "CC BY 4.0 (as displayed by Roboflow); image-level provenance not independently verified",
+  "kaggle_dataset": "edithstark/solar-ai-ground-pv-research-v1",
+  "kaggle_kernel": "https://www.kaggle.com/code/edithstark/ground-yolo11n-baseline-v1",
+  "kaggle_kernel_version": 2,
+  "dataset_content_sha256": "178e75ff7bf296ed3badf90b8e221f8b93adfaa52f22769636e5530c5ae3b918",
+  "leakage_clean_manifest_sha256": "a9df3c0e483b585886ee6d831711602b8f4a7d498ad0e2a7b0f8004ba8debe6c",
+  "split_counts": {"train": 4546, "valid": 1297, "test": 649},
+  "leakage_families": {"total": 537, "train": 373, "valid": 109, "test": 55, "no_family_crosses_splits": true},
+  "training_args": {
+    "model": "yolo11n.pt", "imgsz": 640, "epochs": 100, "patience": 20, "batch": -1,
+    "optimizer": "auto", "cos_lr": true, "pretrained": true, "seed": 42, "device": "cuda:0",
+    "augmentation": {
+      "hsv_h": 0.015, "hsv_s": 0.4, "hsv_v": 0.4, "degrees": 5.0, "translate": 0.1, "scale": 0.3,
+      "shear": 0.0, "perspective": 0.0, "flipud": 0.0, "fliplr": 0.5, "mosaic": 0.5, "mixup": 0.0, "copy_paste": 0.0
+    }
+  },
+  "training": {
+    "gpu": "Tesla P100-PCIE-16GB (16 GB)",
+    "duration_seconds": 5748.87,
+    "duration_human": "~1h 36m",
+    "best_epoch": 88,
+    "total_epochs": 100,
+    "python": "3.12.13", "torch": "2.7.1+cu126", "torchvision": "0.22.1+cu126", "ultralytics": "8.4.138"
+  },
+  "evaluation": {
+    "protocol": "Ultralytics YOLO.val(), imgsz=640, iou=0.50, on the leakage-clean split",
+    "validation": {
+      "images": 1297,
+      "overall": {"precision": 0.8465, "recall": 0.8088, "mAP50": 0.8563, "mAP50_95": 0.6629},
+      "per_class": {
+        "panel":   {"precision": 0.8960, "recall": 0.8748, "AP50": 0.9271, "AP50_95": 0.8117},
+        "cracked": {"precision": 0.8573, "recall": 0.7783, "AP50": 0.8395, "AP50_95": 0.5956},
+        "dusty":   {"precision": 0.7862, "recall": 0.7733, "AP50": 0.8022, "AP50_95": 0.5815}
+      }
+    },
+    "test_held_out": {
+      "images": 649,
+      "overall": {"precision": 0.8756, "recall": 0.8014, "mAP50": 0.8647, "mAP50_95": 0.6775},
+      "per_class": {
+        "panel":   {"precision": 0.9465, "recall": 0.9250, "AP50": 0.9628, "AP50_95": 0.8427},
+        "cracked": {"precision": 0.8090, "recall": 0.6531, "AP50": 0.7495, "AP50_95": 0.5296},
+        "dusty":   {"precision": 0.8712, "recall": 0.8261, "AP50": 0.8819, "AP50_95": 0.6601}
+      }
+    }
+  },
+  "overfitting": "mild - train losses fell throughout while val metrics plateaued after ~epoch 60 (best epoch 88); val losses did not degrade (val/dfl rose slightly 1.078 @ep51 -> 1.109 @ep100). Held-out test metrics >= validation metrics, so no leakage-driven inflation.",
+  "cross_domain_check": {
+    "note": "confirms the ground model does NOT replace the aerial detector",
+    "on_120_ground_closeup_test_images": {
+      "production_yolo_solar_pt_conf0.45": "detections in 1/120 images (1%), 1 box total",
+      "ground_research_model_conf0.25": "panel detected in 94/120 images (78%), 104 panel boxes"
+    },
+    "aerial_protocol_reverse_direction": "PENDING - ground model on the aerial test split (E:/Solar AI Training Images/yolo_prepared/test) needs the E: drive remounted"
+  },
+  "production_integrity": {
+    "yolo_solar_pt_sha256_before_and_after": "0b58609905b8ffe41465751cb842b6ed0368ca2555927e31fb5cd587af37e8ea",
+    "unchanged": true,
+    "mobilenet_solar_v1_pth_unchanged": true,
+    "weights_manifest_json_unchanged": true,
+    "v1_0_0_tag": "4b0287dc98ad68f4fda8710fb522d6d37b08ffad (unchanged)"
+  },
+  "git_commit": "c6a9297d56bfbda24f760852b53e446243e14503",
+  "training_date": "2026-09-08",
+  "limitations": [
+    "bird_drop not trained or evaluated (data availability) - no bird_drop performance claim",
+    "no RGB hotspot detection - out of scope",
+    "dusty test set has only ~69 instances across few families -> its test metrics are high-variance",
+    "source image-level provenance unverified; ~574 unique source photos behind 6,492 augmented instances",
+    "domain gap: source images may differ from the owner's rooftop photos; real-world holdout inference pending E: remount",
+    "research artifact - not wired into models/ or services/ production inference; branch not merged"
+  ]
+}
