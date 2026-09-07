@@ -1,0 +1,139 @@
+{
+  "staging_dir": "D:\\Documents\\Projects\\solar-ai-framework\\kaggle\\ground_pv_dataset",
+  "taxonomy": "experiment3",
+  "class_names": {
+    "0": "panel",
+    "1": "cracked",
+    "2": "dusty"
+  },
+  "counts": {
+    "train": {
+      "images": 4546,
+      "labels": 4546
+    },
+    "valid": {
+      "images": 1297,
+      "labels": 1297
+    },
+    "test": {
+      "images": 649,
+      "labels": 649
+    }
+  },
+  "total_images": 6492,
+  "data_yaml": "D:\\Documents\\Projects\\solar-ai-framework\\kaggle\\ground_pv_dataset\\data.yaml",
+  "data_yaml_sha256": "31100f51ac218d9b37a49af6602a043108e165916ea37235999ba1080d52d21a",
+  "dataset_content_sha256": "178e75ff7bf296ed3badf90b8e221f8b93adfaa52f22769636e5530c5ae3b918",
+  "provenance_files_copied": [
+    "REMEDIATION.json",
+    "TRACEABILITY.csv",
+    "acquisition_manifest.json",
+    "dataset_audit.json",
+    "dataset_audit.md",
+    "leakage_clean_split__manifest.csv",
+    "official_split__README.md",
+    "official_split__manifest.csv",
+    "remediation_report.json",
+    "remediation_report.md"
+  ],
+  "provenance": {
+    "taxonomy": "experiment3",
+    "remediation_report": {
+      "raw_dir": "D:\\Documents\\Projects\\solar-ai-framework\\datasets\\ground_pv_research\\raw\\panel_solar_bw945_v1",
+      "derived_dir": "D:\\Documents\\Projects\\solar-ai-framework\\datasets\\ground_pv_research\\yolo",
+      "raw_image_count": 6493,
+      "derived_image_count": 6492,
+      "images_removed_total": 1,
+      "exact_duplicates_removed": 1,
+      "near_duplicate_groups": 537,
+      "near_duplicate_pairs_16x16": 333,
+      "family_grouping": {
+        "definition": "exact SHA-256 U source basename U 16x16 dHash Hamming <= 8 (different-basename only)",
+        "total_families_over_raw": 537,
+        "total_families_over_kept": 537,
+        "largest_family_images": 273,
+        "singleton_families": 0,
+        "dhash16_merge_hamming": 8
+      },
+      "final_split_counts": {
+        "train": 4546,
+        "valid": 1297,
+        "test": 649
+      },
+      "class_counts": {
+        "train": {
+          "panel": 4545,
+          "cracked": 6277,
+          "dusty": 207
+        },
+        "valid": {
+          "cracked": 2122,
+          "panel": 1214,
+          "dusty": 75
+        },
+        "test": {
+          "cracked": 637,
+          "panel": 560,
+          "dusty": 69
+        },
+        "total": {
+          "panel": 6319,
+          "cracked": 9036,
+          "dusty": 351
+        }
+      },
+      "unique_groups_per_split": {
+        "train": 373,
+        "valid": 109,
+        "test": 55
+      },
+      "no_group_crosses_splits": true,
+      "polygon_to_box_conversions": 614,
+      "unparseable_lines_dropped": 0,
+      "bird_drop_annotations_excluded": 81,
+      "bird_drop_images_affected": 9,
+      "other_exclusions": [
+        {
+          "reason": "exact byte-duplicate (kept one copy)",
+          "count": 1,
+          "groups": [
+            {
+              "sha_group": [
+                "test/Screenshot-2023-04-02-002436_png_jpg.rf.ff762fb15d12276b24f64f2a12789ba5.jpg",
+                "train/Screenshot-2023-04-02-002436_png_jpg.rf.0f280b7f6b16e81aff4adef3b7fa13ef.jpg"
+              ]
+            }
+          ]
+        },
+        {
+          "reason": "bird_drop class excluded from the first experiment",
+          "annotations_dropped": 81,
+          "images_affected": 9,
+          "note": "only 9 images / ~3 unique source photos in the audited source dataset - insufficient independent data to train or evaluate; not a product limitation"
+        }
+      ],
+      "derived_taxonomy": {
+        "0": "panel",
+        "1": "cracked",
+        "2": "dusty"
+      },
+      "official_split_counts": {
+        "test": 648,
+        "train": 4546,
+        "valid": 1299
+      },
+      "seed": 42,
+      "filename_collisions_renamed": 0,
+      "residual_cross_split_near_dup_pairs": 0,
+      "crossing_families": {}
+    },
+    "leakage_clean_manifest_sha256": "a9df3c0e483b585886ee6d831711602b8f4a7d498ad0e2a7b0f8004ba8debe6c",
+    "leakage_families_total": 537,
+    "leakage_families_per_split": {
+      "train": 373,
+      "valid": 109,
+      "test": 55
+    },
+    "manifest_rows": 6492
+  }
+}
