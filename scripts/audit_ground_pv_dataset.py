@@ -69,9 +69,13 @@ def main(argv: list[str] | None = None) -> int:
 
     payload = result.as_dict()
     t = payload["totals"]
-    print(f"\n  images={t['images']} labels={t['labels']} boxes={t['boxes']}")
-    print(f"  class instances: {result.class_instance_counts}")
+    print(f"\n  images={t['images']} labels={t['labels']} "
+          f"annotations={t['annotations']} (bbox={t['annotations_bbox']}, polygon={t['annotations_polygon']})")
+    print(f"  class instances (bbox+polygon): {result.class_instance_counts}")
     print(f"  images per class: {result.images_per_class}")
+    print(f"  annotation format: {result.annotation_format.get('files_bbox_only')} bbox-only / "
+          f"{result.annotation_format.get('files_polygon_only')} polygon-only / "
+          f"{result.annotation_format.get('files_mixed_bbox_and_polygon')} mixed files")
     print(f"  corrupt={t['corrupt_images']}  exact-dup-groups={t['exact_duplicate_groups']}  "
           f"near-dup-pairs={t['near_duplicate_pairs']}")
     print(f"  cross-split exact leakage={t['cross_split_exact_leakage']}  "

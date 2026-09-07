@@ -23,6 +23,8 @@ kaggle/ground_pv_dataset/images/
 kaggle/ground_pv_dataset/labels/
 !datasets/ground_pv_research/reports/
 !datasets/ground_pv_research/reports/**
+# ...except the uncapped audit dump (tens of MB of near-dup pair lists)
+datasets/ground_pv_research/reports/*_full.json
 
 # Ultralytics YOLO training runs and pretrained-checkpoint downloads
 runs/

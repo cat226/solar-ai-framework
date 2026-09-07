@@ -42,7 +42,11 @@ bird_drop` and `panel + dusty` are valid simultaneous detections.
 | source license | **CC BY 4.0, as displayed by Roboflow** |
 | dataset-level license (this repackaging) | CC BY 4.0, attribution preserved |
 | image-level provenance | **not independently verified** |
-| download date | _PENDING_ — blocked on `ROBOFLOW_API_KEY` (see §21) |
+| download date | 2026-09-07 (UTC), via `scripts/download_ground_pv_dataset.py` (Roboflow package) |
+| raw location | `datasets/ground_pv_research/raw/panel_solar_bw945_v1/` — **on D:** (E: drive was unstable; project policy normally puts it on E:); immutable, gitignored |
+| raw size | 371 MB (389,015,640 bytes), 6,493 JPEG images @ 640×640 RGB |
+| source `names:` order | `bird_drop, cracked, dusty, panel` (alphabetical) → research remap `{0→1, 1→2, 2→3, 3→0}` |
+| source preprocessing | auto-orient (EXIF stripped), resize 640×640 **stretch**; no source augmentation |
 
 Source class names (per the Roboflow project page): `panel`, `bird_drop`,
 `cracked`, `dusty`.
@@ -85,25 +89,48 @@ hotspot from brightness, white spots, reflections, or colour.
 
 ## 8. Dataset statistics
 
-_PENDING_ — produced by `scripts/audit_ground_pv_dataset.py` into
-`datasets/ground_pv_research/reports/dataset_audit.{md,json}`. Includes:
-file structure; per-split image/label counts; class instance counts;
-images-containing-each-class; multi-class image counts; image
-dimension/aspect-ratio distributions; box-area and tiny-object
-distributions; images with only defects and no panel; images with a panel
-but no defect.
+From `scripts/audit_ground_pv_dataset.py` (2026-09-07) →
+`datasets/ground_pv_research/reports/dataset_audit.{md,json}` and
+`acquisition_manifest.json`. **Audit result: FAILED CLOSED** (see §20 / §Blockers).
+
+- 6,493 images / 6,493 label files (train 4,546 / valid 1,299 / test 648); 0 corrupt; 0 missing labels; 0 truly-empty labels.
+- All images 640×640, aspect ratio 1.0 (source stretch-resize).
+- 15,791 annotations = **15,177 YOLO bbox lines + 614 YOLO-segmentation polygon lines** (see §Annotation format).
+- **True class distribution (bbox + polygon):**
+
+  | class | instances | images containing | published by Roboflow (unverified) |
+  |---|---|---|---|
+  | panel | 6,319 (6,310 bbox + 9 poly) | 5,227 | 4,477 |
+  | cracked | 9,040 (8,780 bbox + 260 poly) | 3,694 | 6,233 |
+  | dusty | 351 (6 bbox + **345 poly**) | 156 | 235 |
+  | bird_drop | 81 (81 bbox) | **9** | 60 |
+
+  Published counts do not match. `dusty` is almost entirely polygon annotations. **`bird_drop` appears in only 9 images**, all `.rf.`-hash variants of ~3 source photos.
+- Multi-class images: 2,593 (`cracked+panel` 2,428, `dusty+panel` 156, `bird_drop+panel` 9).
+- Images defect-only (no panel box): 1,266; panel-only (no defect): 2,634.
+- Box area: median 5.2% of frame, mean 21%, p95 99.8% (bimodal: small defect boxes + full-frame panel boxes). 731 tiny boxes (< 0.1% area).
+
+### Annotation format (mixed — a blocker)
+
+614 polygon lines across 410 files (244 polygon-only, 166 mixed with
+boxes). These are valid YOLO-**segmentation** annotations (`class x1 y1 …
+xn yn`), mostly the `IMG_85xx/86xx` soiling photos (`dusty`) and
+`pv_crack-*` (`cracked`). A pure-detection run needs them converted to
+bounding boxes; `training/detection/ground_pv/normalize.py` does this
+(min/max of polygon vertices, clamped to [0,1]) when materializing the
+normalized copy — the raw download is never modified.
 
 ## 9. Duplicate audit
 
-_PENDING_ — exact duplicates (SHA-256), perceptual near-duplicates (dHash,
-Hamming ≤ 5), and likely same-image augmentation families.
+- **Exact duplicates (SHA-256): 1 group** — `Screenshot-2023-04-02-002436` present in both `train/` and `test/` as two `.rf.`-hash copies.
+- **Perceptual near-duplicates (dHash, Hamming ≤ 5): 41,166 pairs.**
+- **Likely same-image augmentation/re-export families: 804** — same filename base, multiple `.rf.<hash>` copies, often split across train/val/test. Filenames like `1677069178370` (millisecond timestamps) and `Crack_126/127/…` sequences indicate burst / video-frame captures.
 
 ## 10. Leakage audit
 
-_PENDING_ — exact and near-duplicate leakage across train/valid/test. If
-strong leakage is found, a `leakage_clean_split/` is produced alongside
-(never replacing) `official_split/`, preferably grouped by near-duplicate
-family.
+- **Cross-split exact leakage: 1 image** (the Screenshot above).
+- **Cross-split near-duplicate leakage: 18,204 pairs spanning 3,401 unique images (~52% of the dataset)** — train 1,982 / valid 934 / test 485. Severe: the official split does **not** hold near-duplicate frames together.
+- A `leakage_clean_split/` grouped by near-duplicate family is **required** before any metric off this dataset can be trusted. Not yet built (awaiting direction). `official_split/` is preserved regardless.
 
 ## 11. Train / val / test split
 
@@ -207,17 +234,29 @@ training runs.
 
 ---
 
-## Blockers (as of 2026-09-07)
+## Status / blockers (as of 2026-09-07)
 
-1. **`ROBOFLOW_API_KEY` not set** — the Roboflow Universe API returns
-   401/403 without it, so the dataset cannot be downloaded. Nothing
-   downstream (audit, Kaggle packaging, training, evaluation) can run.
-   `scripts/download_ground_pv_dataset.py` exits with instructions.
-2. **Kaggle GPU training is a cost/compute action** — it is not launched
-   without explicit owner approval.
-3. **`E:` drive not mounted** at build time — holds the real-world holdout
-   photos (`E:\Solar Real Images\`) and the project's large-data staging
-   area. Reattach before the real-world inference step.
+**Dataset acquired** (D:, immutable) and **audited**. The audit **FAILED
+CLOSED** — the dataset is **BLOCKED for training** until remediated:
+
+1. **Mixed annotation format** — 614 YOLO-seg polygon lines / 410 files.
+   Fix: build the normalized copy (polygon→bbox conversion is implemented).
+2. **Cross-split leakage** — 1 exact + ~18,204 near-duplicate pairs across
+   ~52% of images. Fix: build a leakage-clean split grouped by
+   near-duplicate family (not yet built; needs direction).
+3. **`bird_drop` unusable** — 81 instances but only **9 images** (~3 unique
+   source photos). Cannot train or evaluate this class meaningfully;
+   options are drop it (3-class model) or keep it flagged unevaluable.
+4. **Published counts wrong** — Roboflow page says dusty 235 / bird_drop
+   60; actual images-containing are 156 / 9. `dusty` is 98% polygons.
+
+Not blockers but noted:
+
+5. **Kaggle GPU training is a cost/compute action** — not launched without
+   explicit owner approval.
+6. **`E:` drive intermittently unavailable** — holds the real-world holdout
+   photos and normally the large-data staging area; the raw dataset is on
+   D: as a result.
 
 ## Production-model safety
 

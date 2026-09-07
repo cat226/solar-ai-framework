@@ -117,6 +117,71 @@ def test_defect_only_and_panel_only_images_are_counted(tmp_path):
     assert any(m.endswith("panelonly.jpg") for m in result.images_panel_no_defect)
 
 
+def test_polygon_segmentation_lines_are_counted_not_called_malformed(tmp_path):
+    # default _SOURCE_NAMES = identity order: 0 panel / 1 bird_drop / 2 cracked / 3 dusty
+    # class 2 (cracked) as a triangle polygon; class 0 (panel) as a bbox
+    poly = "2 0.1 0.1 0.5 0.1 0.3 0.6"
+    root = _make_dataset(tmp_path / "ds", {
+        "train": [("a", [poly, "0 0.5 0.5 0.9 0.9"], (64, 64))],
+        "valid": [("c", ["0 0.5 0.5 0.5 0.5"], (64, 64))],
+        "test":  [("d", ["0 0.4 0.4 0.3 0.3"], (64, 64))],
+    })
+    result = run_audit(root)
+    kinds = {i.kind for i in result.label_issues}
+    assert "malformed_line" not in kinds
+    assert result.annotation_format["polygon_lines"] == 1
+    assert result.annotation_format["bbox_lines"] == 3
+    assert result.annotation_format["files_mixed_bbox_and_polygon"] == 1
+    assert result.annotation_format["is_pure_detection_dataset"] is False
+    # cracked polygon IS counted as an instance
+    assert result.class_instance_counts["cracked"] == 1
+    assert result.class_instance_counts_polygon["cracked"] == 1
+    assert result.class_instance_counts_bbox["cracked"] == 0
+    # mixed format is fail-closed
+    assert any("polygon" in r for r in result.fail_closed_reasons)
+
+
+def test_normalize_converts_polygons_to_bboxes(tmp_path):
+    poly = "2 0.10 0.10 0.50 0.10 0.30 0.60"  # xs 0.1..0.5, ys 0.1..0.6; class 2 = cracked
+    root = _make_dataset(tmp_path / "ds", {
+        "train": [("a", [poly], (64, 64))],
+        "valid": [("c", ["0 0.5 0.5 0.5 0.5"], (64, 64))],
+        "test":  [("d", ["0 0.4 0.4 0.3 0.3"], (64, 64))],
+    })
+    out = tmp_path / "yolo"
+    meta = normalize_dataset(root, out)
+    assert meta["polygons_converted_to_bbox"] == 1
+    line = (out / "train/labels/a.txt").read_text().split()
+    assert line[0] == "2"  # identity remap: cracked stays research id 2
+    cx, cy, w, h = map(float, line[1:])
+    assert abs(cx - 0.30) < 1e-4 and abs(cy - 0.35) < 1e-4
+    assert abs(w - 0.40) < 1e-4 and abs(h - 0.50) < 1e-4
+    # re-audit the normalized copy: now a pure-detection dataset
+    r2 = run_audit(out)
+    assert r2.annotation_format["is_pure_detection_dataset"] is True
+
+
+def test_write_reports_caps_verbose_lists_in_committed_json(tmp_path):
+    from training.detection.ground_pv.audit import _SAMPLE_CAP, write_reports
+    root = _make_dataset(tmp_path / "ds", {
+        "train": [(f"a{i}", ["0 0.5 0.5 0.4 0.4"], (64, 64)) for i in range(3)],
+        "valid": [("c", ["0 0.5 0.5 0.5 0.5"], (64, 64))],
+        "test":  [("d", ["0 0.4 0.4 0.3 0.3"], (64, 64))],
+    })
+    result = run_audit(root)
+    # inject an oversized list to exercise the cap
+    result.near_duplicate_pairs = [{"a": f"x{i}", "b": f"y{i}", "hamming": 1} for i in range(_SAMPLE_CAP + 50)]
+    reports = tmp_path / "reports"
+    json_path, md_path = write_reports(result, reports)
+    import json as _json
+    capped = _json.loads(json_path.read_text())
+    assert len(capped["near_duplicate_pairs"]) == _SAMPLE_CAP
+    assert capped["near_duplicate_pairs__truncated"]["total"] == _SAMPLE_CAP + 50
+    full = _json.loads((reports / "dataset_audit_full.json").read_text())
+    assert len(full["near_duplicate_pairs"]) == _SAMPLE_CAP + 50
+    assert json_path.stat().st_size < (reports / "dataset_audit_full.json").stat().st_size
+
+
 def test_normalize_applies_remap_and_writes_research_yaml(tmp_path):
     # source in alphabetical order -> non-identity remap
     root = _make_dataset(tmp_path / "ds", {

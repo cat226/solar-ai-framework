@@ -91,7 +91,12 @@ class AuditResult:
     image_dimensions: dict[str, Any] = field(default_factory=dict)
     aspect_ratios: dict[str, Any] = field(default_factory=dict)
     class_instance_counts: dict[str, int] = field(default_factory=dict)
+    class_instance_counts_bbox: dict[str, int] = field(default_factory=dict)
+    class_instance_counts_polygon: dict[str, int] = field(default_factory=dict)
     images_per_class: dict[str, int] = field(default_factory=dict)
+    annotation_format: dict[str, Any] = field(default_factory=dict)
+    truly_empty_label_files: list[str] = field(default_factory=list)
+    polygon_only_label_files: list[str] = field(default_factory=list)
     multi_class_images: int = 0
     multi_class_combos: dict[str, int] = field(default_factory=dict)
     exact_duplicate_groups: list[list[str]] = field(default_factory=list)
@@ -112,7 +117,9 @@ class AuditResult:
         d["totals"] = {
             "images": sum(s["num_images"] for s in self.per_split.values()),
             "labels": sum(s["num_label_files"] for s in self.per_split.values()),
-            "boxes": sum(self.class_instance_counts.values()),
+            "annotations": sum(self.class_instance_counts.values()),
+            "annotations_bbox": sum(self.class_instance_counts_bbox.values()),
+            "annotations_polygon": sum(self.class_instance_counts_polygon.values()),
             "corrupt_images": len(self.corrupt_images),
             "exact_duplicate_groups": len(self.exact_duplicate_groups),
             "near_duplicate_pairs": len(self.near_duplicate_pairs),
@@ -149,9 +156,21 @@ def _images_in(split_dir: Path) -> list[Path]:
 
 def _parse_label_file(
     path: Path, valid_source_ids: set[int]
-) -> tuple[list[tuple[int, float, float, float, float]], list[tuple[int, str, str]]]:
-    """Returns (boxes, issues). issues are (lineno, kind, detail)."""
-    boxes: list[tuple[int, float, float, float, float]] = []
+) -> tuple[list[tuple[int, float, float, float, float, str]], list[tuple[int, str, str]]]:
+    """Returns (boxes, issues).
+
+    Each box is (class_id, cx, cy, w, h, kind) with kind in {"bbox", "polygon"}.
+    A YOLO-detection line has exactly 5 fields. A YOLO-segmentation
+    (polygon) line has `class x1 y1 x2 y2 ... xn yn` with an even number
+    (>= 6) of coordinate fields; it is converted here to its axis-aligned
+    bounding box (min/max of the polygon vertices) and tagged "polygon" so
+    the caller can count formats separately - it is NOT a "malformed" line,
+    it is a different (valid) annotation format that a pure-detection
+    pipeline must convert before training.
+
+    issues are (lineno, kind, detail).
+    """
+    boxes: list[tuple[int, float, float, float, float, str]] = []
     issues: list[tuple[int, str, str]] = []
     text = path.read_text(encoding="utf-8", errors="replace").strip()
     if not text:
@@ -161,15 +180,33 @@ def _parse_label_file(
         if not line:
             continue
         parts = line.split()
-        if len(parts) != 5:
-            issues.append((lineno, "malformed_line", f"expected 5 fields, got {len(parts)}"))
+        n_coords = len(parts) - 1
+
+        if len(parts) == 5:
+            kind = "bbox"
+            try:
+                cls = int(parts[0])
+                cx, cy, w, h = (float(v) for v in parts[1:])
+            except ValueError:
+                issues.append((lineno, "non_numeric_field", line))
+                continue
+        elif n_coords >= 6 and n_coords % 2 == 0:
+            kind = "polygon"
+            try:
+                cls = int(parts[0])
+                coords = [float(v) for v in parts[1:]]
+            except ValueError:
+                issues.append((lineno, "non_numeric_field", line))
+                continue
+            xs, ys = coords[0::2], coords[1::2]
+            x1p, x2p, y1p, y2p = min(xs), max(xs), min(ys), max(ys)
+            cx, cy = (x1p + x2p) / 2, (y1p + y2p) / 2
+            w, h = (x2p - x1p), (y2p - y1p)
+        else:
+            issues.append((lineno, "malformed_line",
+                           f"expected 5 fields (bbox) or class + even>=6 coords (polygon), got {len(parts)}"))
             continue
-        try:
-            cls = int(parts[0])
-            cx, cy, w, h = (float(v) for v in parts[1:])
-        except ValueError:
-            issues.append((lineno, "non_numeric_field", line))
-            continue
+
         if cls not in valid_source_ids:
             issues.append((lineno, "invalid_class_id", f"class {cls} not in {sorted(valid_source_ids)}"))
         if not all(0.0 <= v <= 1.0 for v in (cx, cy, w, h)):
@@ -179,7 +216,7 @@ def _parse_label_file(
         x1, y1, x2, y2 = cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2
         if x1 < -1e-6 or y1 < -1e-6 or x2 > 1 + 1e-6 or y2 > 1 + 1e-6:
             issues.append((lineno, "box_edge_outside_image", f"({x1:.4f},{y1:.4f})-({x2:.4f},{y2:.4f})"))
-        boxes.append((cls, cx, cy, w, h))
+        boxes.append((cls, cx, cy, w, h, kind))
     return boxes, issues
 
 
@@ -277,6 +314,8 @@ def run_audit(
     all_sha: dict[str, list[str]] = defaultdict(list)          # sha256 -> ["split/name", ...]
     all_dhash: list[tuple[str, str, int]] = []                 # (split, name, dhash)
     class_instances: Counter[str] = Counter()
+    class_instances_bbox: Counter[str] = Counter()
+    class_instances_polygon: Counter[str] = Counter()
     images_with_class: defaultdict[str, set[str]] = defaultdict(set)
     multi_combo: Counter[str] = Counter()
     box_area_fracs: list[float] = []
@@ -285,6 +324,8 @@ def run_audit(
     aspects: list[float] = []
     tiny = 0
     total_images = 0
+    fmt_bbox_lines = fmt_poly_lines = 0
+    files_bbox_only = files_polygon_only = files_mixed = 0
 
     for split, split_dir in splits.items():
         images = _images_in(split_dir)
@@ -295,7 +336,9 @@ def run_audit(
 
         missing_labels = sorted(image_stems - label_stems)      # 4
         missing_images = sorted(label_stems - image_stems)      # 3
-        empty_labels: list[str] = []
+        empty_labels: list[str] = []          # zero parseable annotations (bbox OR polygon)
+        truly_empty_here: list[str] = []      # label file present but literally has no lines
+        polygon_only_here: list[str] = []     # every annotation in the file is a polygon
         corrupt_here: list[str] = []
         defect_only: list[str] = []
         panel_no_defect: list[str] = []
@@ -327,20 +370,35 @@ def run_audit(
             label_path = labels_dir / f"{img.stem}.txt"
             if not label_path.is_file():
                 continue
+            raw_text = label_path.read_text(encoding="utf-8", errors="replace").strip()
             boxes, issues = _parse_label_file(label_path, valid_source_ids)
             for lineno, kind, detail in issues:
                 result.label_issues.append(LabelIssue(split, label_path.name, lineno, kind, detail))
             if not boxes:
                 empty_labels.append(img.name)
+                if not raw_text:
+                    truly_empty_here.append(img.name)
                 continue
+            n_bbox = sum(1 for b in boxes if b[5] == "bbox")
+            n_poly = sum(1 for b in boxes if b[5] == "polygon")
+            fmt_bbox_lines += n_bbox
+            fmt_poly_lines += n_poly
+            if n_poly and n_bbox:
+                files_mixed += 1
+            elif n_poly:
+                files_polygon_only += 1
+                polygon_only_here.append(img.name)
+            else:
+                files_bbox_only += 1
             canon_here: set[str] = set()
             has_panel = False
             has_defect = False
-            for (cls, cx, cy, bw, bh) in boxes:
+            for (cls, cx, cy, bw, bh, bkind) in boxes:
                 canon = id_to_canon.get(cls)
                 if canon is None:
                     continue
                 class_instances[canon] += 1
+                (class_instances_polygon if bkind == "polygon" else class_instances_bbox)[canon] += 1
                 canon_here.add(canon)
                 images_with_class[canon].add(f"{split}/{img.name}")
                 area = max(0.0, bw) * max(0.0, bh)
@@ -373,8 +431,10 @@ def run_audit(
             "missing_label_count": len(missing_labels),
             "label_files_without_image": missing_images,
             "label_files_without_image_count": len(missing_images),
-            "empty_label_files": empty_labels,
-            "empty_label_count": len(empty_labels),
+            "images_with_no_parseable_annotation": empty_labels,
+            "images_with_no_parseable_annotation_count": len(empty_labels),
+            "truly_empty_label_count": len(truly_empty_here),
+            "polygon_only_label_count": len(polygon_only_here),
             "corrupt_images": corrupt_here,
             "corrupt_image_count": len(corrupt_here),
             "images_defect_only_no_panel_count": len(defect_only),
@@ -382,6 +442,8 @@ def run_audit(
         }
         result.images_defect_only_no_panel.extend(f"{split}/{n}" for n in defect_only)
         result.images_panel_no_defect.extend(f"{split}/{n}" for n in panel_no_defect)
+        result.truly_empty_label_files.extend(f"{split}/{n}" for n in truly_empty_here)
+        result.polygon_only_label_files.extend(f"{split}/{n}" for n in polygon_only_here)
 
     # --- 9. corruption gate ---
     if total_images and (len(result.corrupt_images) / total_images) > max_corruption_fraction:
@@ -395,11 +457,28 @@ def run_audit(
                                "height": _distribution([float(x) for x in heights])}
     result.aspect_ratios = _distribution(aspects)
 
-    # --- 12-14. class stats ---
+    # --- 12-14. class stats (bbox + polygon annotations both counted) ---
     result.class_instance_counts = {c: class_instances.get(c, 0) for c in RESEARCH_CLASS_ORDER}
+    result.class_instance_counts_bbox = {c: class_instances_bbox.get(c, 0) for c in RESEARCH_CLASS_ORDER}
+    result.class_instance_counts_polygon = {c: class_instances_polygon.get(c, 0) for c in RESEARCH_CLASS_ORDER}
     result.images_per_class = {c: len(images_with_class.get(c, set())) for c in RESEARCH_CLASS_ORDER}
     result.multi_class_images = sum(multi_combo.values())
     result.multi_class_combos = dict(multi_combo)
+
+    # --- annotation format (YOLO-detect bbox vs YOLO-seg polygon) ---
+    result.annotation_format = {
+        "bbox_lines": fmt_bbox_lines,
+        "polygon_lines": fmt_poly_lines,
+        "files_bbox_only": files_bbox_only,
+        "files_polygon_only": files_polygon_only,
+        "files_mixed_bbox_and_polygon": files_mixed,
+        "is_pure_detection_dataset": fmt_poly_lines == 0,
+        "note": (
+            "polygon lines are valid YOLO-segmentation annotations, converted here to their "
+            "bounding box for counting; a pure-detection training run needs the normalized "
+            "copy to bake that conversion in."
+        ) if fmt_poly_lines else "all annotations are YOLO detection boxes",
+    }
 
     # --- 20-21. box area / tiny objects ---
     result.box_area_distribution = _distribution(box_area_fracs)
@@ -453,24 +532,66 @@ def run_audit(
             "(train/val/test leakage) - a leakage-clean split is required before training"
         )
 
-    # any hard label issue (malformed, non-numeric, invalid class id, out-of-range) is fail-closed
+    # any hard label issue (truly malformed, non-numeric, invalid class id,
+    # out-of-range) is fail-closed. Polygon lines are NOT in this set - they
+    # parse fine, they are just a different valid annotation format.
     hard_kinds = {"malformed_line", "non_numeric_field", "invalid_class_id", "coord_out_of_range",
                   "zero_or_negative_box"}
     hard = [i for i in result.label_issues if i.kind in hard_kinds]
     if hard:
         result.fail_closed_reasons.append(f"{len(hard)} hard annotation error(s) (see label_issues)")
 
+    # mixed annotation format: a pure-detection training run needs the
+    # polygons converted to boxes first (done in the normalized copy, never
+    # the raw). Fail-closed so nobody trains straight off the raw mix.
+    if fmt_poly_lines:
+        result.fail_closed_reasons.append(
+            f"{fmt_poly_lines} YOLO-segmentation polygon line(s) across "
+            f"{files_polygon_only + files_mixed} file(s) ({files_mixed} mixed with boxes, "
+            f"{files_polygon_only} polygon-only) - the dataset mixes YOLO-seg and YOLO-detect "
+            "formats; the normalized copy must convert polygons to bounding boxes before "
+            "detection training"
+        )
+
     return result
 
 
+# Verbose per-item lists are capped in the committed dataset_audit.json
+# (the full lists can run to tens of MB on a dataset with heavy near-dup
+# leakage). The complete lists go to dataset_audit_full.json alongside,
+# which is git-ignored.
+_SAMPLE_CAP = 200
+_CAPPED_KEYS = (
+    "label_issues", "near_duplicate_pairs", "cross_split_near_leakage",
+    "cross_split_exact_leakage", "exact_duplicate_groups", "likely_augmentation_families",
+    "images_defect_only_no_panel", "images_panel_no_defect", "corrupt_images",
+    "truly_empty_label_files", "polygon_only_label_files",
+)
+
+
+def _cap_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    out = json.loads(json.dumps(payload, default=str))
+    for key in _CAPPED_KEYS:
+        val = out.get(key)
+        if isinstance(val, list) and len(val) > _SAMPLE_CAP:
+            out[key] = val[:_SAMPLE_CAP]
+            out[f"{key}__truncated"] = {"shown": _SAMPLE_CAP, "total": len(val),
+                                       "full_list_in": "dataset_audit_full.json"}
+    return out
+
+
 def write_reports(result: AuditResult, reports_dir: Path) -> tuple[Path, Path]:
-    """Write dataset_audit.json + dataset_audit.md. Returns (json_path, md_path)."""
+    """Write dataset_audit.json (capped, committable) + dataset_audit.md, and
+    dataset_audit_full.json (uncapped, git-ignored). Returns (json_path, md_path)."""
     reports_dir = Path(reports_dir)
     reports_dir.mkdir(parents=True, exist_ok=True)
     payload = result.as_dict()
 
+    full_path = reports_dir / "dataset_audit_full.json"
+    full_path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
+
     json_path = reports_dir / "dataset_audit.json"
-    json_path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
+    json_path.write_text(json.dumps(_cap_payload(payload), indent=2), encoding="utf-8")
 
     md_path = reports_dir / "dataset_audit.md"
     md_path.write_text(_render_markdown(result, payload), encoding="utf-8")
@@ -497,29 +618,45 @@ def _render_markdown(result: AuditResult, payload: dict[str, Any]) -> str:
                  f"(identity: {result.remap_is_identity})\n")
 
     lines.append("## Totals\n")
-    lines.append(f"- images: {t['images']}   label files: {t['labels']}   boxes: {t['boxes']}")
+    lines.append(f"- images: {t['images']}   label files: {t['labels']}")
+    lines.append(f"- annotations: {t['annotations']}  "
+                 f"(bbox: {t['annotations_bbox']}, polygon: {t['annotations_polygon']})")
     lines.append(f"- corrupt images: {t['corrupt_images']}")
     lines.append(f"- exact-duplicate groups: {t['exact_duplicate_groups']}")
     lines.append(f"- near-duplicate pairs (Hamming ≤ {NEAR_DUP_HAMMING}): {t['near_duplicate_pairs']}")
     lines.append(f"- cross-split exact leakage: {t['cross_split_exact_leakage']}")
     lines.append(f"- cross-split near leakage: {t['cross_split_near_leakage']}\n")
 
+    af = result.annotation_format
+    lines.append("## Annotation format\n")
+    lines.append(f"- bbox lines: {af.get('bbox_lines')}   polygon (YOLO-seg) lines: {af.get('polygon_lines')}")
+    lines.append(f"- files bbox-only: {af.get('files_bbox_only')}   "
+                 f"polygon-only: {af.get('files_polygon_only')}   "
+                 f"mixed: {af.get('files_mixed_bbox_and_polygon')}")
+    lines.append(f"- pure-detection dataset: {af.get('is_pure_detection_dataset')}")
+    lines.append(f"- {af.get('note')}\n")
+
     lines.append("## Per-split\n")
-    lines.append("| split | images | labels | missing labels | empty labels | label w/o image | corrupt | defect-only (no panel) | panel (no defect) |")
-    lines.append("|---|---|---|---|---|---|---|---|---|")
+    lines.append("| split | images | labels | missing labels | no-parseable-annot | truly empty | polygon-only | label w/o image | corrupt | defect-only (no panel) | panel (no defect) |")
+    lines.append("|---|---|---|---|---|---|---|---|---|---|---|")
     for s, d in result.per_split.items():
         lines.append(
             f"| {s} | {d['num_images']} | {d['num_label_files']} | {d['missing_label_count']} | "
-            f"{d['empty_label_count']} | {d['label_files_without_image_count']} | {d['corrupt_image_count']} | "
-            f"{d['images_defect_only_no_panel_count']} | {d['images_panel_no_defect_count']} |"
+            f"{d['images_with_no_parseable_annotation_count']} | {d['truly_empty_label_count']} | "
+            f"{d['polygon_only_label_count']} | {d['label_files_without_image_count']} | "
+            f"{d['corrupt_image_count']} | {d['images_defect_only_no_panel_count']} | "
+            f"{d['images_panel_no_defect_count']} |"
         )
     lines.append("")
 
     lines.append("## Class distribution\n")
-    lines.append("| class | instances | images containing |")
-    lines.append("|---|---|---|")
+    lines.append("| class | total instances | bbox | polygon | images containing |")
+    lines.append("|---|---|---|---|---|")
     for c in RESEARCH_CLASS_ORDER:
-        lines.append(f"| {c} | {result.class_instance_counts.get(c, 0)} | {result.images_per_class.get(c, 0)} |")
+        lines.append(f"| {c} | {result.class_instance_counts.get(c, 0)} | "
+                     f"{result.class_instance_counts_bbox.get(c, 0)} | "
+                     f"{result.class_instance_counts_polygon.get(c, 0)} | "
+                     f"{result.images_per_class.get(c, 0)} |")
     lines.append(f"\n- images with >1 distinct class: {result.multi_class_images}")
     lines.append(f"- combinations: {result.multi_class_combos}\n")
 

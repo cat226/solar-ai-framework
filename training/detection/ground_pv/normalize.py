@@ -53,24 +53,60 @@ def _read_source_names(raw_dir: Path) -> dict[int, str]:
     raise ValueError("could not read names: from source data.yaml")
 
 
-def _remap_label_text(text: str, remap: dict[int, int]) -> str:
+def _remap_label_text(text: str, remap: dict[int, int]) -> tuple[str, int, int]:
+    """Rewrite a YOLO label file for the research taxonomy.
+
+    - class ids are remapped source -> research
+    - YOLO-segmentation polygon lines (class + even>=6 coords) are converted
+      to their axis-aligned bounding box (min/max of the polygon vertices),
+      clamped to [0, 1]. This makes the normalized copy a clean pure-detection
+      dataset. The RAW dataset is never touched by this - only this out-of-tree
+      normalized copy.
+    - genuinely unparseable lines are dropped (they were fail-closed in the
+      audit; a normalized copy must not carry them forward silently - the
+      returned count says how many).
+
+    Returns (new_text, n_polygons_converted, n_lines_dropped).
+    """
     out_lines: list[str] = []
+    polys = dropped = 0
     for line in text.splitlines():
         line = line.strip()
         if not line:
             continue
         parts = line.split()
-        if len(parts) != 5:
-            out_lines.append(line)  # leave malformed lines for the audit to catch
-            continue
+        n_coords = len(parts) - 1
         try:
             src = int(parts[0])
         except ValueError:
-            out_lines.append(line)
+            dropped += 1
             continue
-        parts[0] = str(remap.get(src, src))
-        out_lines.append(" ".join(parts))
-    return "\n".join(out_lines) + ("\n" if out_lines else "")
+        dst = remap.get(src, src)
+        if len(parts) == 5:
+            try:
+                cx, cy, w, h = (float(v) for v in parts[1:])
+            except ValueError:
+                dropped += 1
+                continue
+        elif n_coords >= 6 and n_coords % 2 == 0:
+            try:
+                coords = [float(v) for v in parts[1:]]
+            except ValueError:
+                dropped += 1
+                continue
+            xs, ys = coords[0::2], coords[1::2]
+            x1, x2 = max(0.0, min(xs)), min(1.0, max(xs))
+            y1, y2 = max(0.0, min(ys)), min(1.0, max(ys))
+            cx, cy, w, h = (x1 + x2) / 2, (y1 + y2) / 2, x2 - x1, y2 - y1
+            polys += 1
+        else:
+            dropped += 1
+            continue
+        if w <= 0 or h <= 0:
+            dropped += 1
+            continue
+        out_lines.append(f"{dst} {cx:.6f} {cy:.6f} {w:.6f} {h:.6f}")
+    return ("\n".join(out_lines) + ("\n" if out_lines else ""), polys, dropped)
 
 
 def normalize_dataset(raw_dir: Path, out_dir: Path, *, overwrite: bool = False) -> dict[str, Any]:
@@ -100,7 +136,7 @@ def normalize_dataset(raw_dir: Path, out_dir: Path, *, overwrite: bool = False) 
         dst_images.mkdir(parents=True, exist_ok=True)
         dst_labels.mkdir(parents=True, exist_ok=True)
 
-        n_img = n_lbl = 0
+        n_img = n_lbl = n_poly = n_dropped = 0
         if src_images.is_dir():
             for img in sorted(src_images.glob("*")):
                 if img.suffix.lower() in _IMAGE_EXT:
@@ -109,12 +145,15 @@ def normalize_dataset(raw_dir: Path, out_dir: Path, *, overwrite: bool = False) 
         if src_labels.is_dir():
             for lbl in sorted(src_labels.glob("*.txt")):
                 text = lbl.read_text(encoding="utf-8", errors="replace")
-                if is_identity:
-                    (dst_labels / lbl.name).write_text(text, encoding="utf-8")
-                else:
-                    (dst_labels / lbl.name).write_text(_remap_label_text(text, remap), encoding="utf-8")
+                new_text, polys, dropped = _remap_label_text(text, remap)
+                (dst_labels / lbl.name).write_text(new_text, encoding="utf-8")
                 n_lbl += 1
-        split_counts[canon_split] = {"images": n_img, "labels": n_lbl}
+                n_poly += polys
+                n_dropped += dropped
+        split_counts[canon_split] = {
+            "images": n_img, "labels": n_lbl,
+            "polygons_converted_to_bbox": n_poly, "unparseable_lines_dropped": n_dropped,
+        }
 
     data_yaml = {
         "path": str(out_dir.resolve()),
@@ -134,6 +173,8 @@ def normalize_dataset(raw_dir: Path, out_dir: Path, *, overwrite: bool = False) 
         "remap_is_identity": is_identity,
         "research_names": data_yaml["names"],
         "split_counts": split_counts,
+        "polygons_converted_to_bbox": sum(s["polygons_converted_to_bbox"] for s in split_counts.values()),
+        "unparseable_lines_dropped": sum(s["unparseable_lines_dropped"] for s in split_counts.values()),
         "source_data_yaml_sha256": _sha256_file(raw_dir / "data.yaml"),
     }
     (out_dir / "NORMALIZATION.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
