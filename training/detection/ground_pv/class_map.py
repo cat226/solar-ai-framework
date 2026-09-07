@@ -40,6 +40,22 @@ from typing import Mapping
 RESEARCH_CLASS_ORDER: tuple[str, ...] = ("panel", "bird_drop", "cracked", "dusty")
 RESEARCH_CLASS_NAMES: dict[int, str] = {i: name for i, name in enumerate(RESEARCH_CLASS_ORDER)}
 
+# First-experiment taxonomy: bird_drop is EXCLUDED because the audit of the
+# Roboflow "panel solar" v1 dataset found it in only 9 images (~3 unique
+# source photographs) - far too few to train or evaluate as a class. This
+# is a DATA-availability exclusion for this experiment, NOT a statement that
+# the product does not support bird-dropping detection: the canonical
+# 4-class taxonomy above and configs/ground_pv_research.yaml keep bird_drop
+# as a first-class target for when adequate independent data exists.
+FIRST_EXPERIMENT_CLASS_ORDER: tuple[str, ...] = ("panel", "cracked", "dusty")
+FIRST_EXPERIMENT_CLASS_NAMES: dict[int, str] = {
+    i: name for i, name in enumerate(FIRST_EXPERIMENT_CLASS_ORDER)
+}
+EXCLUDED_FROM_FIRST_EXPERIMENT: dict[str, str] = {
+    "bird_drop": "only 9 images / ~3 unique source photos in the audited source dataset - "
+                 "insufficient independent data to train or evaluate; not a product limitation",
+}
+
 # Human-facing condition labels the application derives from detected defects
 # (kept separate from the detector class names - these are the words shown to
 # a user, matching the project's existing configs/settings.yaml taxonomy).

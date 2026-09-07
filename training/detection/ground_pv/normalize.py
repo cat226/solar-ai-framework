@@ -53,23 +53,28 @@ def _read_source_names(raw_dir: Path) -> dict[int, str]:
     raise ValueError("could not read names: from source data.yaml")
 
 
-def _remap_label_text(text: str, remap: dict[int, int]) -> tuple[str, int, int]:
-    """Rewrite a YOLO label file for the research taxonomy.
+def _remap_label_text(
+    text: str, remap: dict[int, int | None]
+) -> tuple[str, int, int, int]:
+    """Rewrite a YOLO label file for a research taxonomy.
 
-    - class ids are remapped source -> research
+    - class ids are remapped source -> derived via `remap`. A mapping VALUE
+      of ``None`` means "drop every annotation of this source class"
+      (used to exclude e.g. bird_drop from the first experiment); a source
+      id absent from `remap` is kept unchanged.
     - YOLO-segmentation polygon lines (class + even>=6 coords) are converted
       to their axis-aligned bounding box (min/max of the polygon vertices),
-      clamped to [0, 1]. This makes the normalized copy a clean pure-detection
-      dataset. The RAW dataset is never touched by this - only this out-of-tree
-      normalized copy.
+      clamped to [0, 1]. This makes the derived copy a clean pure-detection
+      dataset. The RAW dataset is never touched by this - only this
+      out-of-tree derived copy.
     - genuinely unparseable lines are dropped (they were fail-closed in the
-      audit; a normalized copy must not carry them forward silently - the
+      audit; a derived copy must not carry them forward silently - the
       returned count says how many).
 
-    Returns (new_text, n_polygons_converted, n_lines_dropped).
+    Returns (new_text, n_polygons_converted, n_lines_dropped, n_class_excluded).
     """
     out_lines: list[str] = []
-    polys = dropped = 0
+    polys = dropped = class_excluded = 0
     for line in text.splitlines():
         line = line.strip()
         if not line:
@@ -80,6 +85,9 @@ def _remap_label_text(text: str, remap: dict[int, int]) -> tuple[str, int, int]:
             src = int(parts[0])
         except ValueError:
             dropped += 1
+            continue
+        if src in remap and remap[src] is None:
+            class_excluded += 1
             continue
         dst = remap.get(src, src)
         if len(parts) == 5:
@@ -106,7 +114,7 @@ def _remap_label_text(text: str, remap: dict[int, int]) -> tuple[str, int, int]:
             dropped += 1
             continue
         out_lines.append(f"{dst} {cx:.6f} {cy:.6f} {w:.6f} {h:.6f}")
-    return ("\n".join(out_lines) + ("\n" if out_lines else ""), polys, dropped)
+    return ("\n".join(out_lines) + ("\n" if out_lines else ""), polys, dropped, class_excluded)
 
 
 def normalize_dataset(raw_dir: Path, out_dir: Path, *, overwrite: bool = False) -> dict[str, Any]:
@@ -145,7 +153,7 @@ def normalize_dataset(raw_dir: Path, out_dir: Path, *, overwrite: bool = False) 
         if src_labels.is_dir():
             for lbl in sorted(src_labels.glob("*.txt")):
                 text = lbl.read_text(encoding="utf-8", errors="replace")
-                new_text, polys, dropped = _remap_label_text(text, remap)
+                new_text, polys, dropped, _excluded = _remap_label_text(text, remap)
                 (dst_labels / lbl.name).write_text(new_text, encoding="utf-8")
                 n_lbl += 1
                 n_poly += polys

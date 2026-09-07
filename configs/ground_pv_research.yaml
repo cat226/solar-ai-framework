@@ -37,6 +37,22 @@ names:
   2: cracked
   3: dusty
 
+# FIRST EXPERIMENT taxonomy (contiguous 3-class) — used by the derived
+# leakage-clean training dataset at datasets/ground_pv_research/yolo/.
+# bird_drop is EXCLUDED for this experiment only: the audit of the source
+# dataset found it in just 9 images (~3 unique source photographs), far too
+# few to train or evaluate. This is a data-availability decision, NOT a
+# statement that the product does not support bird-dropping detection —
+# `names` above keeps bird_drop as a first-class target for when adequate
+# independent data exists. See docs/GROUND_PV_RESEARCH.md (Remediation) and
+# training/detection/ground_pv/class_map.py (FIRST_EXPERIMENT_CLASS_ORDER).
+first_experiment_names:
+  0: panel
+  1: cracked
+  2: dusty
+first_experiment_excluded:
+  bird_drop: "only 9 images / ~3 unique source photos in the audited source dataset"
+
 # Human-facing condition wording derived from detected defects. A panel may
 # carry more than one condition (panel + bird_drop + dusty is valid).
 defect_to_condition:

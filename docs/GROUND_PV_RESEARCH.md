@@ -130,13 +130,62 @@ normalized copy — the raw download is never modified.
 
 - **Cross-split exact leakage: 1 image** (the Screenshot above).
 - **Cross-split near-duplicate leakage: 18,204 pairs spanning 3,401 unique images (~52% of the dataset)** — train 1,982 / valid 934 / test 485. Severe: the official split does **not** hold near-duplicate frames together.
-- A `leakage_clean_split/` grouped by near-duplicate family is **required** before any metric off this dataset can be trusted. Not yet built (awaiting direction). `official_split/` is preserved regardless.
+- A `leakage_clean_split/` grouped by near-duplicate family is **required** before any metric off this dataset can be trusted. **Built** — see §Remediation.
+
+## Remediation (2026-09-07) — derived training dataset
+
+`scripts/remediate_ground_pv_dataset.py` +
+`training/detection/ground_pv/remediate.py` build a derived,
+research-training dataset at `datasets/ground_pv_research/yolo/` (gitignored)
+from the **immutable** raw. Report:
+`datasets/ground_pv_research/reports/remediation_report.{md,json}`.
+
+- **Polygon → bbox:** 614 YOLO-seg polygon lines converted (min/max of
+  vertices, clamped to [0,1]), reusing `normalize._remap_label_text`.
+- **Class filter:** first experiment is **3-class — `0=panel, 1=cracked,
+  2=dusty`**. `bird_drop` **excluded** (81 annotations / 9 images / ~3
+  unique source photos — a data-availability exclusion for this experiment,
+  **not** a product limitation; the canonical 4-class taxonomy and
+  `configs/ground_pv_research.yaml` keep bird_drop). The 9 affected images
+  are kept with their `panel` boxes; only the bird_drop boxes are dropped.
+- **Exact-duplicate removal:** 1 image (`Screenshot-2023-04-02-002436`
+  train↔test copy) de-duplicated → **6,492 derived images** (from 6,493).
+- **Near-duplicate families (grouped BEFORE splitting):**
+  `exact SHA-256 ∪ source basename (Roboflow .rf. suffix stripped) ∪ 16×16
+  dHash Hamming ≤ 8 (different-basename)`. 8×8 dHash was too coarse for
+  low-texture panel close-ups (collapsed the set into one family) → a finer
+  16×16 hash is used. **537 families**, largest 273 images, 0 singletons.
+- **Leakage-clean split** (whole families → one split, greedy ~70/20/10 by
+  image count, seed 42): **train 4,546 / valid 1,297 / test 649**
+  (373 / 109 / 55 unique families, disjoint). **No family crosses splits;
+  0 residual cross-split near-duplicate pairs.**
+- **Official Roboflow split preserved** at
+  `datasets/ground_pv_research/splits/official_split/manifest.csv` (every
+  raw image → its official split; reference only, never used for training).
+- **Traceability:** `datasets/ground_pv_research/yolo/TRACEABILITY.csv` and
+  `splits/leakage_clean_split/manifest.csv` — every derived image →
+  `source_path, source_official_split, family_id, sha256, classes`.
+- **Derived class instances:** panel 6,319 · cracked 9,036 (−4: the removed
+  exact-dup image's boxes) · dusty 351.
+
+### Remediation caveats
+
+- `dusty` is not evenly distributed across the leakage-clean split
+  (train 207 / valid 75 / test 69 instances) — a consequence of grouping
+  its few families intact; the split greedy balances image count, not rare
+  classes.
+- The 16×16-dHash threshold (8/256) was tuned on this dataset to reach 0
+  residual cross-split near-dups without over-merging; a different dataset
+  needs its own sweep.
+- Image-level provenance of the ~574 unique source photos is still
+  unverified (inherited from the source).
 
 ## 11. Train / val / test split
 
-Policy: **preserve the source's official split initially**
-(`configs/ground_pv_research.yaml: splits.policy = preserve_official`). Both
-`official_split` and (if needed) `leakage_clean_split` are kept. Splits are
+Policy: **preserve the source's official split for provenance**
+(`configs/ground_pv_research.yaml: splits.policy = preserve_official`), and
+**train on the leakage-clean split** (see §Remediation). Both
+`official_split` and `leakage_clean_split` are kept. Splits are
 never reshuffled without a documented reason. Rare classes are **never**
 balanced by duplicating or synthesizing validation/test examples.
 
@@ -236,27 +285,28 @@ training runs.
 
 ## Status / blockers (as of 2026-09-07)
 
-**Dataset acquired** (D:, immutable) and **audited**. The audit **FAILED
-CLOSED** — the dataset is **BLOCKED for training** until remediated:
+**Dataset acquired** (D:, immutable), **audited** (FAILED CLOSED), and
+**remediated** → derived leakage-clean 3-class training dataset at
+`datasets/ground_pv_research/yolo/`. **Remediation verdict: APPROVED WITH
+CAVEATS** (see §Remediation). The raw dataset stays BLOCKED / immutable.
 
-1. **Mixed annotation format** — 614 YOLO-seg polygon lines / 410 files.
-   Fix: build the normalized copy (polygon→bbox conversion is implemented).
-2. **Cross-split leakage** — 1 exact + ~18,204 near-duplicate pairs across
-   ~52% of images. Fix: build a leakage-clean split grouped by
-   near-duplicate family (not yet built; needs direction).
-3. **`bird_drop` unusable** — 81 instances but only **9 images** (~3 unique
-   source photos). Cannot train or evaluate this class meaningfully;
-   options are drop it (3-class model) or keep it flagged unevaluable.
-4. **Published counts wrong** — Roboflow page says dusty 235 / bird_drop
-   60; actual images-containing are 156 / 9. `dusty` is 98% polygons.
+1. ~~Mixed annotation format~~ → 614 polygons converted to boxes in the
+   derived copy.
+2. ~~Cross-split leakage~~ → leakage-clean split built; 0 families cross
+   splits, 0 residual cross-split near-dup pairs.
+3. ~~`bird_drop` unusable~~ → excluded from the first experiment (documented
+   data-availability exclusion, not a product limitation).
+4. **Published counts wrong** — Roboflow page says dusty 235 / bird_drop 60;
+   actual images-containing 156 / 9. Documented; nothing to "fix".
 
-Not blockers but noted:
+Still open:
 
 5. **Kaggle GPU training is a cost/compute action** — not launched without
-   explicit owner approval.
-6. **`E:` drive intermittently unavailable** — holds the real-world holdout
-   photos and normally the large-data staging area; the raw dataset is on
-   D: as a result.
+   explicit owner approval. Not started.
+6. **`E:` drive intermittently unavailable** — raw + derived datasets are
+   on D: as a result. Real-world holdout photos still on E:.
+7. **`dusty` split imbalance** and **dHash-threshold tuning** — see
+   §Remediation caveats.
 
 ## Production-model safety
 
