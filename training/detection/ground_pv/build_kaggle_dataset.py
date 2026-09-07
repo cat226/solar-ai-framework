@@ -137,12 +137,15 @@ def build(normalized_dir: Path, staging_dir: Path, reports_dir: Path, *, overwri
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--normalized-dir", type=Path,
-                        default=_REPO_ROOT / "datasets/ground_pv_research/yolo")
+    try:
+        from training.detection.ground_pv.paths import NORMALIZED_YOLO_DIR, REPORTS_DIR
+    except Exception:  # noqa: BLE001
+        NORMALIZED_YOLO_DIR = _REPO_ROOT / "datasets/ground_pv_research/yolo"
+        REPORTS_DIR = _REPO_ROOT / "datasets/ground_pv_research/reports"
+    parser.add_argument("--normalized-dir", type=Path, default=NORMALIZED_YOLO_DIR)
     parser.add_argument("--staging-dir", type=Path,
                         default=_REPO_ROOT / "kaggle/ground_pv_dataset")
-    parser.add_argument("--reports-dir", type=Path,
-                        default=_REPO_ROOT / "datasets/ground_pv_research/reports")
+    parser.add_argument("--reports-dir", type=Path, default=REPORTS_DIR)
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args(argv)
     summary = build(args.normalized_dir, args.staging_dir, args.reports_dir, overwrite=args.overwrite)

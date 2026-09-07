@@ -31,8 +31,12 @@ from training.detection.ground_pv.audit import (  # noqa: E402
     write_reports,
 )
 
-DEFAULT_DATASET_DIR = _REPO_ROOT / "datasets" / "ground_pv_research" / "raw" / "panel_solar_bw945_v1"
-DEFAULT_REPORTS_DIR = _REPO_ROOT / "datasets" / "ground_pv_research" / "reports"
+try:
+    from training.detection.ground_pv.paths import RAW_DATASET_DIR as DEFAULT_DATASET_DIR
+    from training.detection.ground_pv.paths import REPORTS_DIR as DEFAULT_REPORTS_DIR
+except Exception:  # noqa: BLE001
+    DEFAULT_DATASET_DIR = _REPO_ROOT / "datasets" / "ground_pv_research" / "raw" / "panel_solar_bw945_v1"
+    DEFAULT_REPORTS_DIR = _REPO_ROOT / "datasets" / "ground_pv_research" / "reports"
 
 
 def main(argv: list[str] | None = None) -> int:

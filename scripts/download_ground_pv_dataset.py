@@ -84,7 +84,10 @@ DATASET_URL = "https://universe.roboflow.com/susan-ifblr/panel-solar-bw945"
 LICENSE_AS_DISPLAYED = "CC BY 4.0"
 API_KEY_ENV_VAR = "ROBOFLOW_API_KEY"
 
-DEFAULT_DEST = _REPO_ROOT / "datasets" / "ground_pv_research" / "raw" / "panel_solar_bw945_v1"
+try:
+    from training.detection.ground_pv.paths import RAW_DATASET_DIR as DEFAULT_DEST
+except Exception:  # noqa: BLE001
+    DEFAULT_DEST = _REPO_ROOT / "datasets" / "ground_pv_research" / "raw" / "panel_solar_bw945_v1"
 
 _IMAGE_EXT = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"}
 

@@ -36,16 +36,27 @@ performs an independent audit.
 
 ## Directory layout
 
+Per the project storage policy (large local data lives on the E: drive,
+not the low-space C:/D: drives — see
+`training/cloud/base/storage_paths.py` and
+`training/detection/ground_pv/paths.py`), the **bulk image data** resolves
+to `E:/Solar AI Training Images/ground_pv_research/...` when that drive is
+available, falling back to the repo-relative paths below otherwise (CI, a
+machine with no E: drive). Only the small `reports/` tree is always kept in
+the repo and committed.
+
 ```
-datasets/ground_pv_research/
-├── raw/panel_solar_bw945_v1/     # immutable Roboflow download          (gitignored)
-├── yolo/                         # class-normalized Ultralytics copy    (gitignored)
+<bulk data root>/ground_pv_research/           # E:/Solar AI Training Images/... or <repo>/datasets/...
+├── raw/panel_solar_bw945_v1/     # immutable Roboflow download          (never committed)
+├── yolo/                         # class-normalized Ultralytics copy    (never committed)
 ├── splits/
-│   ├── official_split/           # the source's own train/valid/test    (gitignored)
-│   └── leakage_clean_split/      # only if cross-split leakage is found  (gitignored)
-├── real_world_holdout/images/    # user's real rooftop photos (qualitative only, gitignored)
+│   ├── official_split/           # the source's own train/valid/test    (never committed)
+│   └── leakage_clean_split/      # only if cross-split leakage is found  (never committed)
+└── real_world_holdout/images/    # real rooftop photos (qualitative only, never committed)
+
+<repo>/datasets/ground_pv_research/
 ├── reports/                      # dataset_audit.md/json, evaluation, manifests  (COMMITTED)
-└── audited/                      # scratch space for audit artifacts     (gitignored)
+└── real_world_holdout/README.md  # provenance record                    (COMMITTED)
 ```
 
 ## Workflow
