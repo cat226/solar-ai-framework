@@ -10,10 +10,13 @@ RESEARCH dataset from Roboflow Universe.
 
 This script is deliberately fail-closed and non-destructive:
 
-  * The Roboflow API key is read ONLY from the ROBOFLOW_API_KEY environment
-    variable. It is never hard-coded, never prompted for, never written to
-    disk, never logged. If it is missing, the script exits with a clear
-    message naming exactly that variable and does NOT proceed.
+  * The Roboflow API key is resolved via utils.config.get_secret, i.e. from
+    (1) Streamlit secrets, (2) the ROBOFLOW_API_KEY environment variable —
+    which is also populated automatically from the git-ignored project-root
+    .env file (loaded via python-dotenv when utils.config is imported). It
+    is never hard-coded, never prompted for, never written to disk, never
+    logged. If it is missing, the script exits with a clear message naming
+    exactly that variable and does NOT proceed.
   * If a raw download already exists at the target directory, it is NOT
     overwritten. Re-running is a no-op unless --force is given.
   * The raw download is treated as immutable. Normalization to the research
@@ -42,6 +45,36 @@ import sys
 from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(_REPO_ROOT))
+
+# Importing utils.config loads the project-root .env (python-dotenv,
+# override=False) and exposes get_secret — the project's standard secret
+# resolver (Streamlit secrets -> environment -> fallback). See utils/config.py.
+try:
+    from utils.config import get_secret as _get_secret
+except Exception:  # noqa: BLE001 - keep the downloader usable even if config is unavailable
+    _get_secret = None
+
+
+def _resolve_api_key() -> str:
+    """ROBOFLOW_API_KEY via get_secret if available, else the raw env var.
+    Never returns or logs the value anywhere it can be exposed."""
+    if _get_secret is not None:
+        return (_get_secret(API_KEY_ENV_VAR) or "").strip()
+    return os.environ.get(API_KEY_ENV_VAR, "").strip()
+
+
+def _dotenv_status() -> dict:
+    """Booleans only — whether a project-root .env exists and whether
+    utils.config loaded one. Never exposes any value from it."""
+    status = {"env_file_exists": (_REPO_ROOT / ".env").is_file()}
+    try:
+        from utils.config import _DOTENV_LOADED  # type: ignore
+        status["loaded_by_config"] = bool(_DOTENV_LOADED)
+    except Exception:  # noqa: BLE001
+        status["loaded_by_config"] = None
+    return status
+
 
 WORKSPACE = "susan-ifblr"
 PROJECT = "panel-solar-bw945"
@@ -98,7 +131,7 @@ def _describe_existing(dest: Path) -> dict:
 
 
 def _require_api_key() -> str:
-    key = os.environ.get(API_KEY_ENV_VAR, "").strip()
+    key = _resolve_api_key()
     if not key:
         sys.stderr.write(
             "\n".join([
@@ -116,10 +149,14 @@ def _require_api_key() -> str:
                 "To proceed:",
                 "  1. Sign in at https://app.roboflow.com and open Settings -> API Keys",
                 "     (or the 'Private API Key' shown on your workspace settings page).",
-                "  2. Export it (do NOT commit it anywhere):",
-                "       Windows (PowerShell):  $env:ROBOFLOW_API_KEY = \"<key>\"",
-                "       Windows (cmd):          set ROBOFLOW_API_KEY=<key>",
-                "       macOS/Linux:            export ROBOFLOW_API_KEY=<key>",
+                "  2. Provide it (do NOT commit it anywhere). Either:",
+                "     a) add a line to the git-ignored project-root .env file:",
+                "            ROBOFLOW_API_KEY=<key>",
+                "        (see .env.example), or",
+                "     b) export it for this shell:",
+                "            Windows (PowerShell):  $env:ROBOFLOW_API_KEY = \"<key>\"",
+                "            Windows (cmd):          set ROBOFLOW_API_KEY=<key>",
+                "            macOS/Linux:            export ROBOFLOW_API_KEY=<key>",
                 "  3. Re-run:  python scripts/download_ground_pv_dataset.py",
                 "",
                 "No dataset was downloaded. Nothing downstream (audit, Kaggle",
@@ -218,8 +255,10 @@ def main(argv: list[str] | None = None) -> int:
     state = _describe_existing(dest)
 
     if args.check_only:
-        state["api_key_present"] = bool(os.environ.get(API_KEY_ENV_VAR, "").strip())
+        # Presence only — the value itself is never printed or serialized.
+        state["api_key_present"] = bool(_resolve_api_key())
         state["api_key_env_var"] = API_KEY_ENV_VAR
+        state["dotenv_loaded"] = _dotenv_status()
         print(json.dumps(state, indent=2))
         return 0
 

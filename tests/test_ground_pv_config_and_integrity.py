@@ -68,12 +68,14 @@ def test_scripts_expose_help():
         assert "usage" in r.stdout.lower()
 
 
-def test_download_script_reads_key_only_from_env_var():
+def test_download_script_resolves_key_via_env_or_project_secret_resolver():
     src = (_ROOT / "scripts" / "download_ground_pv_dataset.py").read_text(encoding="utf-8")
-    assert 'os.environ.get(API_KEY_ENV_VAR' in src or 'os.environ.get("ROBOFLOW_API_KEY"' in src
-    assert "ROBOFLOW_API_KEY" in src
-    # no literal-looking key assignment
-    assert "api_key = \"" not in src.replace('api_key="<key>"', "")
+    assert 'API_KEY_ENV_VAR = "ROBOFLOW_API_KEY"' in src
+    # resolved via the project's get_secret (env / .env / streamlit) or the raw env var
+    assert "get_secret" in src
+    assert "os.environ.get(API_KEY_ENV_VAR" in src
+    # no hard-coded / literal key assignment
+    assert 'api_key = "' not in src.replace('api_key="<key>"', "")
 
 
 def test_kaggle_notebook_is_valid_and_gpu_configured():

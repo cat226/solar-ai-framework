@@ -28,3 +28,8 @@ pandas>=2.2.0
 
 # Configuration
 PyYAML>=6.0.1
+
+# Secret loading — utils.config loads the git-ignored project-root .env
+# (override=False) so API keys can live there instead of a shell export.
+# Guarded import: absence degrades gracefully to env-var-only resolution.
+python-dotenv>=1.0.0
