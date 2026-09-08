@@ -1,0 +1,154 @@
+{
+  "weights": "weights\\yolo_solar_condition_research_v1.pt",
+  "weights_sha256": "b077251a514424481d51b6a57ebcc30f4a607ea7559053cbb3ef7d0de88f9578",
+  "data_yaml": "datasets\\ground_pv_research\\condition\\data.yaml",
+  "ultralytics_version": "8.4.118",
+  "config": {
+    "imgsz": 640,
+    "iou": 0.5
+  },
+  "taxonomy": {
+    "0": "CLEAN",
+    "1": "DUSTY",
+    "2": "BIRD_DROP",
+    "3": "PHYSICAL_DAMAGE",
+    "4": "ELECTRICAL_DAMAGE"
+  },
+  "electrical_damage_semantic_risk": "HIGH",
+  "splits": {
+    "test": {
+      "dataset_stats": {
+        "num_images": 250,
+        "instances_per_class": {
+          "CLEAN": 545,
+          "DUSTY": 863,
+          "BIRD_DROP": 726,
+          "PHYSICAL_DAMAGE": 78,
+          "ELECTRICAL_DAMAGE": 144
+        },
+        "images_containing_class": {
+          "CLEAN": 95,
+          "DUSTY": 144,
+          "BIRD_DROP": 100,
+          "PHYSICAL_DAMAGE": 30,
+          "ELECTRICAL_DAMAGE": 44
+        }
+      },
+      "metrics": {
+        "overall": {
+          "precision": 0.623,
+          "recall": 0.4491,
+          "mAP50": 0.4718,
+          "mAP50_95": 0.254
+        },
+        "per_class": {
+          "CLEAN": {
+            "precision": 0.5897,
+            "recall": 0.4967,
+            "AP50": 0.5162,
+            "AP50_95": 0.3348
+          },
+          "DUSTY": {
+            "precision": 0.4925,
+            "recall": 0.3476,
+            "AP50": 0.3577,
+            "AP50_95": 0.1627
+          },
+          "BIRD_DROP": {
+            "precision": 0.5654,
+            "recall": 0.3203,
+            "AP50": 0.374,
+            "AP50_95": 0.1494
+          },
+          "PHYSICAL_DAMAGE": {
+            "precision": 0.6595,
+            "recall": 0.5256,
+            "AP50": 0.5228,
+            "AP50_95": 0.275
+          },
+          "ELECTRICAL_DAMAGE": {
+            "precision": 0.8079,
+            "recall": 0.5551,
+            "AP50": 0.5882,
+            "AP50_95": 0.348
+          }
+        },
+        "save_dir": "D:\\Documents\\Projects\\solar-ai-framework\\runs\\detect\\val-6"
+      },
+      "unique_families_per_class": {
+        "BIRD_DROP": 56,
+        "CLEAN": 53,
+        "DUSTY": 90,
+        "PHYSICAL_DAMAGE": 18,
+        "ELECTRICAL_DAMAGE": 31
+      }
+    },
+    "val": {
+      "dataset_stats": {
+        "num_images": 502,
+        "instances_per_class": {
+          "CLEAN": 1246,
+          "DUSTY": 1637,
+          "BIRD_DROP": 1516,
+          "PHYSICAL_DAMAGE": 166,
+          "ELECTRICAL_DAMAGE": 208
+        },
+        "images_containing_class": {
+          "CLEAN": 184,
+          "DUSTY": 261,
+          "BIRD_DROP": 194,
+          "PHYSICAL_DAMAGE": 79,
+          "ELECTRICAL_DAMAGE": 95
+        }
+      },
+      "metrics": {
+        "overall": {
+          "precision": 0.6237,
+          "recall": 0.4793,
+          "mAP50": 0.5205,
+          "mAP50_95": 0.2792
+        },
+        "per_class": {
+          "CLEAN": {
+            "precision": 0.655,
+            "recall": 0.5254,
+            "AP50": 0.5763,
+            "AP50_95": 0.3581
+          },
+          "DUSTY": {
+            "precision": 0.5053,
+            "recall": 0.3427,
+            "AP50": 0.3829,
+            "AP50_95": 0.1711
+          },
+          "BIRD_DROP": {
+            "precision": 0.5287,
+            "recall": 0.3355,
+            "AP50": 0.3469,
+            "AP50_95": 0.1394
+          },
+          "PHYSICAL_DAMAGE": {
+            "precision": 0.7254,
+            "recall": 0.6205,
+            "AP50": 0.6738,
+            "AP50_95": 0.3563
+          },
+          "ELECTRICAL_DAMAGE": {
+            "precision": 0.7042,
+            "recall": 0.5723,
+            "AP50": 0.6226,
+            "AP50_95": 0.3712
+          }
+        },
+        "save_dir": "D:\\Documents\\Projects\\solar-ai-framework\\runs\\detect\\val-7"
+      },
+      "unique_families_per_class": {
+        "BIRD_DROP": 118,
+        "CLEAN": 106,
+        "DUSTY": 163,
+        "ELECTRICAL_DAMAGE": 61,
+        "PHYSICAL_DAMAGE": 52
+      }
+    }
+  }
+}

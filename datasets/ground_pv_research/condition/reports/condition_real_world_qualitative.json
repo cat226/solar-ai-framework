@@ -1,0 +1,511 @@
+{
+  "pipeline": "image -> ground panel detector -> panel crop -> condition model",
+  "panel_weights": "weights\\yolo_solar_ground_research_v1.pt",
+  "panel_weights_sha256": "2b26334dc4023ba4c89a80e2350ddc9012358a48cdef713aee86c8e79a1bbb50",
+  "condition_weights": "weights\\yolo_solar_condition_research_v1.pt",
+  "condition_weights_sha256": "b077251a514424481d51b6a57ebcc30f4a607ea7559053cbb3ef7d0de88f9578",
+  "config": {
+    "panel_conf": 0.25,
+    "panel_iou": 0.5,
+    "condition_conf": 0.25,
+    "condition_iou": 0.5,
+    "crop_pad": 0.04,
+    "imgsz": 640
+  },
+  "condition_classes": [
+    "CLEAN",
+    "DUSTY",
+    "BIRD_DROP",
+    "PHYSICAL_DAMAGE",
+    "ELECTRICAL_DAMAGE"
+  ],
+  "num_images": 6,
+  "num_images_with_zero_panels": 0,
+  "images_with_zero_panels": [],
+  "total_panels_detected": 12,
+  "panels_with_zero_condition_predictions": 4,
+  "records": [
+    {
+      "image": "WhatsApp Image 2026-09-07 at 15.25.56.jpeg",
+      "image_path": "D:\\solar_ai_training_scratch\\Solar Real Images\\WhatsApp Image 2026-09-07 at 15.25.56.jpeg",
+      "image_size_wh": [
+        573,
+        1280
+      ],
+      "image_sha256": "583f063090d74ba32783951cab3aca28501b5c9f28bee5e0b1adb5a7fdf8080d",
+      "stage1_panel_detections": 2,
+      "stage1_other_detections": [
+        {
+          "class_name": "cracked",
+          "confidence": 0.613233208656311,
+          "bbox_xyxy": [
+            0.0,
+            1196.224365234375,
+            93.47210693359375,
+            1277.920654296875
+          ]
+        }
+      ],
+      "panels": [
+        {
+          "panel_id": 1,
+          "panel_bbox_xyxy": [
+            0.0,
+            243.95211791992188,
+            573.0,
+            1060.713134765625
+          ],
+          "panel_confidence": 0.8736,
+          "crop_bbox_xyxy": [
+            0,
+            211,
+            573,
+            1093
+          ],
+          "crop_file": "WhatsApp Image 2026-09-07 at 15.25.56__panel01.jpg",
+          "condition_predictions": [
+            {
+              "class_name": "DUSTY",
+              "class_id": 1,
+              "confidence": 0.3301762640476227,
+              "bbox_xyxy_in_crop": [
+                97.1612548828125,
+                44.22137451171875,
+                494.5814208984375,
+                763.0322875976562
+              ]
+            }
+          ],
+          "condition_classes_present": [
+            "DUSTY"
+          ],
+          "condition_detection_count": 1,
+          "note": "raw model predictions on the panel crop \u2014 NOT a verified condition"
+        },
+        {
+          "panel_id": 2,
+          "panel_bbox_xyxy": [
+            140.39515686035156,
+            0.048065185546875,
+            498.340576171875,
+            253.88357543945312
+          ],
+          "panel_confidence": 0.388,
+          "crop_bbox_xyxy": [
+            126,
+            0,
+            512,
+            264
+          ],
+          "crop_file": "WhatsApp Image 2026-09-07 at 15.25.56__panel02.jpg",
+          "condition_predictions": [],
+          "condition_classes_present": [],
+          "condition_detection_count": 0,
+          "note": "raw model predictions on the panel crop \u2014 NOT a verified condition"
+        }
+      ],
+      "qualitative_only": true
+    },
+    {
+      "image": "WhatsApp Image 2026-09-07 at 15.25.57 (1).jpeg",
+      "image_path": "D:\\solar_ai_training_scratch\\Solar Real Images\\WhatsApp Image 2026-09-07 at 15.25.57 (1).jpeg",
+      "image_size_wh": [
+        573,
+        1280
+      ],
+      "image_sha256": "24eb0006e67bfa5f4482ef02f673a3fd810914b6183851533aecfd7aeef1b9a9",
+      "stage1_panel_detections": 2,
+      "stage1_other_detections": [],
+      "panels": [
+        {
+          "panel_id": 1,
+          "panel_bbox_xyxy": [
+            0.0,
+            148.2958984375,
+            573.0,
+            1067.668701171875
+          ],
+          "panel_confidence": 0.8656,
+          "crop_bbox_xyxy": [
+            0,
+            111,
+            573,
+            1104
+          ],
+          "crop_file": "WhatsApp Image 2026-09-07 at 15.25.57 (1)__panel01.jpg",
+          "condition_predictions": [
+            {
+              "class_name": "BIRD_DROP",
+              "class_id": 2,
+              "confidence": 0.2736324965953827,
+              "bbox_xyxy_in_crop": [
+                0.0,
+                87.05455017089844,
+                484.2679138183594,
+                917.5543212890625
+              ]
+            }
+          ],
+          "condition_classes_present": [
+            "BIRD_DROP"
+          ],
+          "condition_detection_count": 1,
+          "note": "raw model predictions on the panel crop \u2014 NOT a verified condition"
+        },
+        {
+          "panel_id": 2,
+          "panel_bbox_xyxy": [
+            79.57492065429688,
+            0.1807861328125,
+            487.4230041503906,
+            167.916259765625
+          ],
+          "panel_confidence": 0.5053,
+          "crop_bbox_xyxy": [
+            63,
+            0,
+            503,
+            174
+          ],
+          "crop_file": "WhatsApp Image 2026-09-07 at 15.25.57 (1)__panel02.jpg",
+          "condition_predictions": [
+            {
+              "class_name": "DUSTY",
+              "class_id": 1,
+              "confidence": 0.44739580154418945,
+              "bbox_xyxy_in_crop": [
+                65.14263916015625,
+                0.0,
+                221.18936157226562,
+                153.04931640625
+              ]
+            }
+          ],
+          "condition_classes_present": [
+            "DUSTY"
+          ],
+          "condition_detection_count": 1,
+          "note": "raw model predictions on the panel crop \u2014 NOT a verified condition"
+        }
+      ],
+      "qualitative_only": true
+    },
+    {
+      "image": "WhatsApp Image 2026-09-07 at 15.25.57.jpeg",
+      "image_path": "D:\\solar_ai_training_scratch\\Solar Real Images\\WhatsApp Image 2026-09-07 at 15.25.57.jpeg",
+      "image_size_wh": [
+        573,
+        1280
+      ],
+      "image_sha256": "f6a6024376444fe7bcae425c4d3028a6b2e889407b6d701df768b8f158194ecf",
+      "stage1_panel_detections": 2,
+      "stage1_other_detections": [
+        {
+          "class_name": "cracked",
+          "confidence": 0.49542170763015747,
+          "bbox_xyxy": [
+            481.07171630859375,
+            1098.220458984375,
+            573.0,
+            1278.460205078125
+          ]
+        }
+      ],
+      "panels": [
+        {
+          "panel_id": 1,
+          "panel_bbox_xyxy": [
+            0.0,
+            100.7239990234375,
+            303.92901611328125,
+            1085.162109375
+          ],
+          "panel_confidence": 0.8482,
+          "crop_bbox_xyxy": [
+            0,
+            61,
+            316,
+            1124
+          ],
+          "crop_file": "WhatsApp Image 2026-09-07 at 15.25.57__panel01.jpg",
+          "condition_predictions": [
+            {
+              "class_name": "CLEAN",
+              "class_id": 0,
+              "confidence": 0.8063054084777832,
+              "bbox_xyxy_in_crop": [
+                0.0,
+                24.270429611206055,
+                304.10003662109375,
+                1040.296142578125
+              ]
+            }
+          ],
+          "condition_classes_present": [
+            "CLEAN"
+          ],
+          "condition_detection_count": 1,
+          "note": "raw model predictions on the panel crop \u2014 NOT a verified condition"
+        },
+        {
+          "panel_id": 2,
+          "panel_bbox_xyxy": [
+            307.7449951171875,
+            93.36181640625,
+            573.0,
+            1091.1170654296875
+          ],
+          "panel_confidence": 0.6763,
+          "crop_bbox_xyxy": [
+            297,
+            53,
+            573,
+            1131
+          ],
+          "crop_file": "WhatsApp Image 2026-09-07 at 15.25.57__panel02.jpg",
+          "condition_predictions": [
+            {
+              "class_name": "CLEAN",
+              "class_id": 0,
+              "confidence": 0.46074727177619934,
+              "bbox_xyxy_in_crop": [
+                27.011838912963867,
+                56.31779479980469,
+                276.0,
+                1051.425048828125
+              ]
+            }
+          ],
+          "condition_classes_present": [
+            "CLEAN"
+          ],
+          "condition_detection_count": 1,
+          "note": "raw model predictions on the panel crop \u2014 NOT a verified condition"
+        }
+      ],
+      "qualitative_only": true
+    },
+    {
+      "image": "WhatsApp Image 2026-09-07 at 15.25.58.jpeg",
+      "image_path": "D:\\solar_ai_training_scratch\\Solar Real Images\\WhatsApp Image 2026-09-07 at 15.25.58.jpeg",
+      "image_size_wh": [
+        573,
+        1280
+      ],
+      "image_sha256": "a8243d233c7be3dba7fc776c9f75e40d4255405dba015f123642fd6884b2dd24",
+      "stage1_panel_detections": 2,
+      "stage1_other_detections": [],
+      "panels": [
+        {
+          "panel_id": 1,
+          "panel_bbox_xyxy": [
+            94.98329162597656,
+            0.09478759765625,
+            548.617431640625,
+            153.76600646972656
+          ],
+          "panel_confidence": 0.5798,
+          "crop_bbox_xyxy": [
+            76,
+            0,
+            566,
+            159
+          ],
+          "crop_file": "WhatsApp Image 2026-09-07 at 15.25.58__panel01.jpg",
+          "condition_predictions": [],
+          "condition_classes_present": [],
+          "condition_detection_count": 0,
+          "note": "raw model predictions on the panel crop \u2014 NOT a verified condition"
+        },
+        {
+          "panel_id": 2,
+          "panel_bbox_xyxy": [
+            0.0,
+            134.93896484375,
+            573.0,
+            1263.040283203125
+          ],
+          "panel_confidence": 0.3864,
+          "crop_bbox_xyxy": [
+            0,
+            89,
+            573,
+            1280
+          ],
+          "crop_file": "WhatsApp Image 2026-09-07 at 15.25.58__panel02.jpg",
+          "condition_predictions": [],
+          "condition_classes_present": [],
+          "condition_detection_count": 0,
+          "note": "raw model predictions on the panel crop \u2014 NOT a verified condition"
+        }
+      ],
+      "qualitative_only": true
+    },
+    {
+      "image": "WhatsApp Image 2026-09-07 at 15.25.59 (1).jpeg",
+      "image_path": "D:\\solar_ai_training_scratch\\Solar Real Images\\WhatsApp Image 2026-09-07 at 15.25.59 (1).jpeg",
+      "image_size_wh": [
+        573,
+        1280
+      ],
+      "image_sha256": "0863acbca61c7ebf88d07b09bc0aacd5e7c687b6b78ff44efcfb3a66e10e14c0",
+      "stage1_panel_detections": 2,
+      "stage1_other_detections": [],
+      "panels": [
+        {
+          "panel_id": 1,
+          "panel_bbox_xyxy": [
+            0.0,
+            0.1162109375,
+            437.3672790527344,
+            193.45501708984375
+          ],
+          "panel_confidence": 0.6346,
+          "crop_bbox_xyxy": [
+            0,
+            0,
+            454,
+            201
+          ],
+          "crop_file": "WhatsApp Image 2026-09-07 at 15.25.59 (1)__panel01.jpg",
+          "condition_predictions": [
+            {
+              "class_name": "CLEAN",
+              "class_id": 0,
+              "confidence": 0.3194807171821594,
+              "bbox_xyxy_in_crop": [
+                8.564023971557617,
+                0.0,
+                437.0967712402344,
+                201.0
+              ]
+            }
+          ],
+          "condition_classes_present": [
+            "CLEAN"
+          ],
+          "condition_detection_count": 1,
+          "note": "raw model predictions on the panel crop \u2014 NOT a verified condition"
+        },
+        {
+          "panel_id": 2,
+          "panel_bbox_xyxy": [
+            0.0,
+            174.3662109375,
+            491.2420959472656,
+            1273.5037841796875
+          ],
+          "panel_confidence": 0.5891,
+          "crop_bbox_xyxy": [
+            0,
+            130,
+            510,
+            1280
+          ],
+          "crop_file": "WhatsApp Image 2026-09-07 at 15.25.59 (1)__panel02.jpg",
+          "condition_predictions": [
+            {
+              "class_name": "CLEAN",
+              "class_id": 0,
+              "confidence": 0.5492432713508606,
+              "bbox_xyxy_in_crop": [
+                0.0,
+                27.54886817932129,
+                510.0,
+                1150.0
+              ]
+            }
+          ],
+          "condition_classes_present": [
+            "CLEAN"
+          ],
+          "condition_detection_count": 1,
+          "note": "raw model predictions on the panel crop \u2014 NOT a verified condition"
+        }
+      ],
+      "qualitative_only": true
+    },
+    {
+      "image": "WhatsApp Image 2026-09-07 at 15.25.59.jpeg",
+      "image_path": "D:\\solar_ai_training_scratch\\Solar Real Images\\WhatsApp Image 2026-09-07 at 15.25.59.jpeg",
+      "image_size_wh": [
+        1280,
+        573
+      ],
+      "image_sha256": "7bf163746890f2e245b622a12f82c2c0ae94fba8c33d06e57c37929302dd99eb",
+      "stage1_panel_detections": 2,
+      "stage1_other_detections": [],
+      "panels": [
+        {
+          "panel_id": 1,
+          "panel_bbox_xyxy": [
+            755.745849609375,
+            97.59947204589844,
+            1280.0,
+            573.0
+          ],
+          "panel_confidence": 0.7499,
+          "crop_bbox_xyxy": [
+            734,
+            78,
+            1280,
+            573
+          ],
+          "crop_file": "WhatsApp Image 2026-09-07 at 15.25.59__panel01.jpg",
+          "condition_predictions": [
+            {
+              "class_name": "CLEAN",
+              "class_id": 0,
+              "confidence": 0.5954838991165161,
+              "bbox_xyxy_in_crop": [
+                145.54531860351562,
+                28.318082809448242,
+                537.2249755859375,
+                495.0
+              ]
+            },
+            {
+              "class_name": "CLEAN",
+              "class_id": 0,
+              "confidence": 0.28085026144981384,
+              "bbox_xyxy_in_crop": [
+                97.94377136230469,
+                36.95571517944336,
+                354.31793212890625,
+                495.0
+              ]
+            }
+          ],
+          "condition_classes_present": [
+            "CLEAN"
+          ],
+          "condition_detection_count": 2,
+          "note": "raw model predictions on the panel crop \u2014 NOT a verified condition"
+        },
+        {
+          "panel_id": 2,
+          "panel_bbox_xyxy": [
+            2.97161865234375,
+            128.03607177734375,
+            905.2761840820312,
+            571.9136962890625
+          ],
+          "panel_confidence": 0.665,
+          "crop_bbox_xyxy": [
+            0,
+            110,
+            941,
+            573
+          ],
+          "crop_file": "WhatsApp Image 2026-09-07 at 15.25.59__panel02.jpg",
+          "condition_predictions": [],
+          "condition_classes_present": [],
+          "condition_detection_count": 0,
+          "note": "raw model predictions on the panel crop \u2014 NOT a verified condition"
+        }
+      ],
+      "qualitative_only": true
+    }
+  ],
+  "disclaimer": "QUALITATIVE ONLY. No ground truth. NO accuracy/precision/recall/F1/mAP is computed. A condition prediction (CLEAN / DUSTY / BIRD_DROP / PHYSICAL_DAMAGE / ELECTRICAL_DAMAGE) is a raw model output, NOT a fact. Absence of a detection is NOT 'Clean'. ELECTRICAL_DAMAGE carries a HIGH semantic risk \u2014 the source boxes visually correspond to cell cracks, not confirmed electrical failure. Hotspot is out of scope and never inferred from RGB."
+}
