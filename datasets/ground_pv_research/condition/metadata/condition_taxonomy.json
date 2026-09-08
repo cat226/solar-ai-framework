@@ -1,0 +1,40 @@
+{
+  "unified_classes": {
+    "0": "CLEAN",
+    "1": "DUSTY",
+    "2": "BIRD_DROP",
+    "3": "PHYSICAL_DAMAGE",
+    "4": "ELECTRICAL_DAMAGE"
+  },
+  "aliases": {
+    "clean": "CLEAN",
+    "Clean": "CLEAN",
+    "Non-Defective": "CLEAN",
+    "Non Defective": "CLEAN",
+    "dusty": "DUSTY",
+    "Dusty": "DUSTY",
+    "dusdusty": "DUSTY",
+    "bird-drop": "BIRD_DROP",
+    "Bird-drop": "BIRD_DROP",
+    "Bird Drop": "BIRD_DROP",
+    "bird-droppings": "BIRD_DROP",
+    "Bird-Drop": "BIRD_DROP",
+    "physical-damage": "PHYSICAL_DAMAGE",
+    "Physical-Damage": "PHYSICAL_DAMAGE",
+    "Physical_Damge": "PHYSICAL_DAMAGE",
+    "physical-dmg": "PHYSICAL_DAMAGE",
+    "electrical-damage": "ELECTRICAL_DAMAGE",
+    "Electrical-Damage": "ELECTRICAL_DAMAGE",
+    "Electrical_Damge": "ELECTRICAL_DAMAGE",
+    "electrical-dmg": "ELECTRICAL_DAMAGE"
+  },
+  "dropped_source_classes": {
+    "snow / Snow / snow-covered / Snow-Covered": "excluded - out of RGB scope",
+    "Defective": "excluded - ambiguous; not present in S1/S3 anyway"
+  },
+  "electrical_damage_semantic_risk": {
+    "flag": "HIGH",
+    "applies_to": "all S1 electrical-damage annotations",
+    "reason": "the audit found S1 'electrical-damage' boxes visually correspond to cell cracks; original source class preserved, NOT relabelled"
+  }
+}

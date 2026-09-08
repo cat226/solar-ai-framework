@@ -1,0 +1,13 @@
+{
+  "S1": {
+    "raw_dir": "datasets/ground_pv_research/candidate_defects/raw/S1_detection-for-defects_v2",
+    "data_yaml_sha256": "4a1fabadb4fc2cfe1caacb2b99e6a35d9e9af9bb30f9f5ba65fbf5b8d3f7e827",
+    "roboflow_url": "https://universe.roboflow.com/defects-kgig6/detection-for-defects-in-solar-panels/dataset/2"
+  },
+  "S3": {
+    "raw_dir": "datasets/ground_pv_research/candidate_defects/raw/S3_dusty-and-bird-droppings_v1",
+    "data_yaml_sha256": "b8bba4abfb209651f16701564a811e567805901caacec1f687ee724300197fed",
+    "roboflow_url": "https://universe.roboflow.com/solar-panel-a5cyn/dusty-and-bird-droppings/dataset/1"
+  },
+  "note": "raw datasets are byte-immutable and NOT copied here; this is a reference only."
+}

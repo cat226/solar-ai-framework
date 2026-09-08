@@ -1,0 +1,17 @@
+path: datasets/ground_pv_research/condition
+train: images/train/images
+val: images/valid/images
+test: images/test/images
+names:
+  0: CLEAN
+  1: DUSTY
+  2: BIRD_DROP
+  3: PHYSICAL_DAMAGE
+  4: ELECTRICAL_DAMAGE
+provenance_grade: C
+provenance_tag: personal-experimental-unverified-provenance
+do_not:
+- redistribute
+- publish
+- use commercially
+- claim verified CC BY image rights
