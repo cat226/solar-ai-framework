@@ -1,0 +1,634 @@
+{
+  "raw": {
+    "workspace": {
+      "name": "Solar Panel Defects",
+      "url": "solar-panel-defects-ax0gw"
+    },
+    "project": {
+      "id": "solar-panel-defects-ax0gw/solar-panel-defect-w1dfi",
+      "type": "object-detection",
+      "name": "SOLAR PANEL DEFECT",
+      "created": 1716048063.74,
+      "updated": 1716798986.303,
+      "images": 570,
+      "unannotated": -4,
+      "annotation": "Defective-and-Non-Defective",
+      "versions": 8,
+      "public": true,
+      "license": "CC BY 4.0",
+      "splits": {
+        "valid": 114,
+        "test": 57,
+        "export": 0,
+        "train": 399
+      },
+      "colors": {
+        "Dusty": "#00a0ff",
+        "Snow": "#eaeb00",
+        "Non-Defective": "#8300ff",
+        "Defective": "#fc0000",
+        "Physical-Damage": "#FF8000",
+        "Bird-drop": "#3eff21",
+        "Electrical-Damage": "#00FFCE"
+      },
+      "classes": {
+        "Dusty": 577,
+        "Snow": 346,
+        "Non-Defective": 1294,
+        "Defective": 440,
+        "Physical-Damage": 622,
+        "Bird-drop": 1091,
+        "Electrical-Damage": 123
+      },
+      "icon": {
+        "original": "https://source.roboflow.com/nJVIBxT0eagrCthETVS4jQd6Nq63/5Mua1GDpdCyjrrwjUf3b/original.jpg",
+        "thumb": "https://source.roboflow.com/nJVIBxT0eagrCthETVS4jQd6Nq63/5Mua1GDpdCyjrrwjUf3b/thumb.jpg",
+        "annotation": "https://source.roboflow.com/nJVIBxT0eagrCthETVS4jQd6Nq63/5Mua1GDpdCyjrrwjUf3b/annotation-Defective-and-Non-Defective.png"
+      },
+      "preprocessing": {
+        "auto-orient": true,
+        "resize": {
+          "format": "Stretch to",
+          "width": 640,
+          "height": 640
+        }
+      },
+      "augmentation": {
+        "image": {
+          "versions": 3
+        },
+        "flip": {
+          "horizontal": true,
+          "vertical": true
+        },
+        "rotate": {
+          "degrees": 15
+        },
+        "brightness": {
+          "brighten": true,
+          "percent": 15,
+          "darken": true
+        },
+        "noise": {
+          "percent": 0.1
+        },
+        "bbexposure": {
+          "percent": 10
+        },
+        "bbblur": {
+          "pixels": 2.5
+        }
+      }
+    },
+    "versions": [
+      {
+        "id": "solar-panel-defects-ax0gw/solar-panel-defect-w1dfi/8",
+        "name": "2024-05-27 2:06pm",
+        "created": 1716798986.244,
+        "images": 1368,
+        "splits": {
+          "valid": 114,
+          "test": 57,
+          "train": 1197
+        },
+        "generating": false,
+        "progress": 1,
+        "preprocessing": {
+          "auto-orient": true,
+          "resize": {
+            "width": 640,
+            "format": "Stretch to",
+            "height": 640
+          }
+        },
+        "augmentation": {
+          "rotate": {
+            "degrees": 15
+          },
+          "image": {
+            "versions": 3
+          },
+          "brightness": {
+            "brighten": true,
+            "percent": 15,
+            "darken": true
+          },
+          "bbexposure": {
+            "percent": 10
+          },
+          "noise": {
+            "percent": 0.1
+          },
+          "bbblur": {
+            "pixels": 2.5
+          },
+          "flip": {
+            "horizontal": true,
+            "vertical": true
+          }
+        },
+        "exports": [
+          "coco",
+          "multiclass",
+          "openai",
+          "paligemma",
+          "tensorflow",
+          "voc",
+          "yolo26",
+          "yolov11",
+          "yolov12",
+          "yolov7pytorch",
+          "yolov8",
+          "yolov8-obb",
+          "yolov9"
+        ]
+      },
+      {
+        "id": "solar-panel-defects-ax0gw/solar-panel-defect-w1dfi/7",
+        "name": "2024-05-23 1:48pm",
+        "created": 1716452338.934,
+        "images": 1368,
+        "splits": {
+          "valid": 87,
+          "test": 51,
+          "train": 915
+        },
+        "generating": false,
+        "progress": 1,
+        "preprocessing": {
+          "auto-orient": true,
+          "resize": {
+            "width": 640,
+            "format": "Stretch to",
+            "height": 640
+          }
+        },
+        "augmentation": {
+          "image": {
+            "versions": 3
+          },
+          "rotate": {
+            "degrees": 15
+          },
+          "brightness": {
+            "brighten": true,
+            "percent": 15,
+            "darken": true
+          },
+          "bbexposure": {
+            "percent": 10
+          },
+          "noise": {
+            "percent": 0.1
+          },
+          "bbblur": {
+            "pixels": 2.5
+          },
+          "flip": {
+            "horizontal": true,
+            "vertical": true
+          }
+        },
+        "exports": [
+          "coco",
+          "yolov5pytorch",
+          "yolov8"
+        ]
+      },
+      {
+        "id": "solar-panel-defects-ax0gw/solar-panel-defect-w1dfi/6",
+        "name": "2024-05-23 1:48pm",
+        "created": 1716452329.675,
+        "images": 1368,
+        "splits": {
+          "valid": 87,
+          "test": 51,
+          "train": 915
+        },
+        "generating": false,
+        "progress": 1,
+        "preprocessing": {
+          "auto-orient": true,
+          "resize": {
+            "format": "Stretch to",
+            "width": 640,
+            "height": 640
+          }
+        },
+        "augmentation": {
+          "rotate": {
+            "degrees": 15
+          },
+          "image": {
+            "versions": 3
+          },
+          "brightness": {
+            "brighten": true,
+            "percent": 15,
+            "darken": true
+          },
+          "bbexposure": {
+            "percent": 10
+          },
+          "noise": {
+            "percent": 0.1
+          },
+          "bbblur": {
+            "pixels": 2.5
+          },
+          "flip": {
+            "horizontal": true,
+            "vertical": true
+          }
+        },
+        "exports": [
+          "coco",
+          "yolov8"
+        ]
+      },
+      {
+        "id": "solar-panel-defects-ax0gw/solar-panel-defect-w1dfi/5",
+        "name": "2024-05-23 12:53pm",
+        "created": 1716449019.568,
+        "images": 1368,
+        "splits": {
+          "valid": 87,
+          "test": 51,
+          "train": 915
+        },
+        "generating": false,
+        "progress": 1,
+        "preprocessing": {
+          "auto-orient": true,
+          "resize": {
+            "width": 640,
+            "format": "Stretch to",
+            "height": 640
+          }
+        },
+        "augmentation": {
+          "image": {
+            "versions": 3
+          },
+          "rotate": {
+            "degrees": 15
+          },
+          "brightness": {
+            "brighten": true,
+            "percent": 15,
+            "darken": true
+          },
+          "bbexposure": {
+            "percent": 10
+          },
+          "noise": {
+            "percent": 0.1
+          },
+          "bbblur": {
+            "pixels": 2.5
+          },
+          "flip": {
+            "horizontal": true,
+            "vertical": true
+          }
+        },
+        "exports": [
+          "coco",
+          "yolov5pytorch",
+          "yolov8"
+        ]
+      },
+      {
+        "id": "solar-panel-defects-ax0gw/solar-panel-defect-w1dfi/4",
+        "name": "2024-05-21 8:14pm",
+        "created": 1716302663.602,
+        "images": 1368,
+        "splits": {
+          "valid": 114,
+          "test": 57,
+          "train": 1197
+        },
+        "generating": false,
+        "progress": 1,
+        "preprocessing": {
+          "auto-orient": true,
+          "resize": {
+            "width": 640,
+            "format": "Stretch to",
+            "height": 640
+          }
+        },
+        "augmentation": {
+          "image": {
+            "versions": 3
+          },
+          "rotate": {
+            "degrees": 15
+          },
+          "brightness": {
+            "brighten": true,
+            "percent": 15,
+            "darken": true
+          },
+          "bbexposure": {
+            "percent": 10
+          },
+          "noise": {
+            "percent": 0.1
+          },
+          "bbblur": {
+            "pixels": 2.5
+          },
+          "flip": {
+            "horizontal": true,
+            "vertical": true
+          }
+        },
+        "exports": [
+          "coco",
+          "yolov8"
+        ]
+      },
+      {
+        "id": "solar-panel-defects-ax0gw/solar-panel-defect-w1dfi/3",
+        "name": "2024-05-20 6:49pm",
+        "created": 1716211262.699,
+        "images": 1368,
+        "splits": {
+          "valid": 114,
+          "test": 57,
+          "train": 1197
+        },
+        "generating": false,
+        "progress": 1,
+        "model": {
+          "id": "solar-panel-defect-w1dfi/3",
+          "endpoint": "https://serverless.roboflow.com/solar-panel-defect-w1dfi/3",
+          "start": 1716253760.705,
+          "end": 1716258004.203,
+          "fromScratch": false,
+          "tfjs": true,
+          "oak": true,
+          "map": "29.39",
+          "recall": "34.04",
+          "precision": "34.84"
+        },
+        "preprocessing": {
+          "auto-orient": true,
+          "resize": {
+            "width": 640,
+            "format": "Stretch to",
+            "height": 640
+          }
+        },
+        "augmentation": {
+          "image": {
+            "versions": 3
+          },
+          "rotate": {
+            "degrees": 15
+          },
+          "brightness": {
+            "brighten": true,
+            "percent": 15,
+            "darken": true
+          },
+          "bbexposure": {
+            "percent": 10
+          },
+          "noise": {
+            "percent": 0.1
+          },
+          "bbblur": {
+            "pixels": 2.5
+          },
+          "flip": {
+            "horizontal": true,
+            "vertical": true
+          }
+        },
+        "exports": [
+          "coco",
+          "darknet",
+          "tensorflow",
+          "voc",
+          "yolo26",
+          "yolokeras",
+          "yolov11",
+          "yolov4pytorch",
+          "yolov5pytorch",
+          "yolov8"
+        ]
+      }
+    ]
+  },
+  "summary": {
+    "label": "C1  SOLAR PANEL DEFECT",
+    "workspace": "solar-panel-defects-ax0gw",
+    "project": "solar-panel-defect-w1dfi",
+    "http": 200,
+    "name": "SOLAR PANEL DEFECT",
+    "type": "object-detection",
+    "license": "CC BY 4.0",
+    "annotation": "Defective-and-Non-Defective",
+    "base_images": 570,
+    "class_instance_counts": {
+      "Dusty": 577,
+      "Snow": 346,
+      "Non-Defective": 1294,
+      "Defective": 440,
+      "Physical-Damage": 622,
+      "Bird-drop": 1091,
+      "Electrical-Damage": 123
+    },
+    "project_splits": {
+      "valid": 114,
+      "test": 57,
+      "export": 0,
+      "train": 399
+    },
+    "created": 1716048063.74,
+    "updated": 1716798986.303,
+    "public": true,
+    "n_versions": 6,
+    "latest_version": {
+      "id": "solar-panel-defects-ax0gw/solar-panel-defect-w1dfi/8",
+      "name": "2024-05-27 2:06pm",
+      "created": 1716798986.244,
+      "images": 1368,
+      "splits": {
+        "valid": 114,
+        "test": 57,
+        "train": 1197
+      },
+      "preprocessing": {
+        "auto-orient": true,
+        "resize": {
+          "width": 640,
+          "format": "Stretch to",
+          "height": 640
+        }
+      },
+      "augmentation": {
+        "rotate": {
+          "degrees": 15
+        },
+        "image": {
+          "versions": 3
+        },
+        "brightness": {
+          "brighten": true,
+          "percent": 15,
+          "darken": true
+        },
+        "bbexposure": {
+          "percent": 10
+        },
+        "noise": {
+          "percent": 0.1
+        },
+        "bbblur": {
+          "pixels": 2.5
+        },
+        "flip": {
+          "horizontal": true,
+          "vertical": true
+        }
+      },
+      "exports": [
+        "coco",
+        "multiclass",
+        "openai",
+        "paligemma",
+        "tensorflow",
+        "voc",
+        "yolo26",
+        "yolov11",
+        "yolov12",
+        "yolov7pytorch",
+        "yolov8",
+        "yolov8-obb",
+        "yolov9"
+      ]
+    },
+    "all_versions": [
+      {
+        "id": "solar-panel-defects-ax0gw/solar-panel-defect-w1dfi/8",
+        "name": "2024-05-27 2:06pm",
+        "images": 1368,
+        "splits": {
+          "valid": 114,
+          "test": 57,
+          "train": 1197
+        },
+        "created": 1716798986.244,
+        "aug": true,
+        "exports": [
+          "coco",
+          "multiclass",
+          "openai",
+          "paligemma",
+          "tensorflow",
+          "voc",
+          "yolo26",
+          "yolov11",
+          "yolov12",
+          "yolov7pytorch",
+          "yolov8",
+          "yolov8-obb",
+          "yolov9"
+        ]
+      },
+      {
+        "id": "solar-panel-defects-ax0gw/solar-panel-defect-w1dfi/7",
+        "name": "2024-05-23 1:48pm",
+        "images": 1368,
+        "splits": {
+          "valid": 87,
+          "test": 51,
+          "train": 915
+        },
+        "created": 1716452338.934,
+        "aug": true,
+        "exports": [
+          "coco",
+          "yolov5pytorch",
+          "yolov8"
+        ]
+      },
+      {
+        "id": "solar-panel-defects-ax0gw/solar-panel-defect-w1dfi/6",
+        "name": "2024-05-23 1:48pm",
+        "images": 1368,
+        "splits": {
+          "valid": 87,
+          "test": 51,
+          "train": 915
+        },
+        "created": 1716452329.675,
+        "aug": true,
+        "exports": [
+          "coco",
+          "yolov8"
+        ]
+      },
+      {
+        "id": "solar-panel-defects-ax0gw/solar-panel-defect-w1dfi/5",
+        "name": "2024-05-23 12:53pm",
+        "images": 1368,
+        "splits": {
+          "valid": 87,
+          "test": 51,
+          "train": 915
+        },
+        "created": 1716449019.568,
+        "aug": true,
+        "exports": [
+          "coco",
+          "yolov5pytorch",
+          "yolov8"
+        ]
+      },
+      {
+        "id": "solar-panel-defects-ax0gw/solar-panel-defect-w1dfi/4",
+        "name": "2024-05-21 8:14pm",
+        "images": 1368,
+        "splits": {
+          "valid": 114,
+          "test": 57,
+          "train": 1197
+        },
+        "created": 1716302663.602,
+        "aug": true,
+        "exports": [
+          "coco",
+          "yolov8"
+        ]
+      },
+      {
+        "id": "solar-panel-defects-ax0gw/solar-panel-defect-w1dfi/3",
+        "name": "2024-05-20 6:49pm",
+        "images": 1368,
+        "splits": {
+          "valid": 114,
+          "test": 57,
+          "train": 1197
+        },
+        "created": 1716211262.699,
+        "aug": true,
+        "exports": [
+          "coco",
+          "darknet",
+          "tensorflow",
+          "voc",
+          "yolo26",
+          "yolokeras",
+          "yolov11",
+          "yolov4pytorch",
+          "yolov5pytorch",
+          "yolov8"
+        ]
+      }
+    ]
+  }
+}

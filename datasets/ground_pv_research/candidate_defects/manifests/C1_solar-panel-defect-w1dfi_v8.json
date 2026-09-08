@@ -1,0 +1,25 @@
+{
+  "key": "C1_solar-panel-defect-w1dfi_v8",
+  "workspace": "solar-panel-defects-ax0gw",
+  "project": "solar-panel-defect-w1dfi",
+  "version": 8,
+  "export_format": "yolov8",
+  "license_shown_on_roboflow": "CC BY 4.0",
+  "downloaded_at_utc": "2026-09-08T06:03:31.760498+00:00",
+  "roboflow_url": "https://universe.roboflow.com/solar-panel-defects-ax0gw/solar-panel-defect-w1dfi/dataset/8",
+  "image_count": 1368,
+  "label_txt_count": 1370,
+  "top_level_files": [
+    "README.dataset.txt",
+    "README.roboflow.txt",
+    "data.yaml"
+  ],
+  "top_level_dirs": [
+    "test",
+    "train",
+    "valid"
+  ],
+  "notes": [
+    "Raw immutable Roboflow export. Do not edit in place."
+  ]
+}

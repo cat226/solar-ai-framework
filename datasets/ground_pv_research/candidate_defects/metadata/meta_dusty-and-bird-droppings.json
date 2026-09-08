@@ -1,0 +1,175 @@
+{
+  "raw": {
+    "workspace": {
+      "name": "Solar Panel",
+      "url": "solar-panel-a5cyn"
+    },
+    "project": {
+      "id": "solar-panel-a5cyn/dusty-and-bird-droppings",
+      "type": "object-detection",
+      "name": "dusty and bird-droppings",
+      "created": 1675222329.724,
+      "updated": 1675311068.651,
+      "images": 710,
+      "unannotated": 0,
+      "annotation": "dusdusty-bird-droppings",
+      "versions": 1,
+      "public": true,
+      "license": "CC BY 4.0",
+      "splits": {
+        "valid": 60,
+        "test": 50,
+        "train": 600
+      },
+      "colors": {
+        "dusdusty": "#C7FC00",
+        "bird-droppings": "#FF00FF"
+      },
+      "classes": {
+        "bird-droppings": 916,
+        "dusdusty": 2914
+      },
+      "icon": {
+        "original": "https://source.roboflow.com/eIbYwDd6V3bCKs31zQjGxYXARUS2/b7AV39FXyPEcfKLoFdWP/original.jpg",
+        "thumb": "https://source.roboflow.com/eIbYwDd6V3bCKs31zQjGxYXARUS2/b7AV39FXyPEcfKLoFdWP/thumb.jpg",
+        "annotation": "https://source.roboflow.com/eIbYwDd6V3bCKs31zQjGxYXARUS2/b7AV39FXyPEcfKLoFdWP/annotation-dusdusty-bird-droppings.png"
+      },
+      "preprocessing": {
+        "auto-orient": true,
+        "resize": {
+          "format": "Stretch to",
+          "width": 640,
+          "height": 640
+        }
+      },
+      "augmentation": {}
+    },
+    "versions": [
+      {
+        "id": "solar-panel-a5cyn/dusty-and-bird-droppings/1",
+        "name": "2023-02-02 12:11pm",
+        "created": 1675311068.698,
+        "images": 710,
+        "splits": {
+          "valid": 60,
+          "test": 50,
+          "train": 600
+        },
+        "generating": false,
+        "progress": 1,
+        "preprocessing": {
+          "auto-orient": true,
+          "resize": {
+            "format": "Stretch to",
+            "width": 640,
+            "height": 640
+          }
+        },
+        "augmentation": {},
+        "exports": [
+          "clip",
+          "coco",
+          "darknet",
+          "multiclass",
+          "tensorflow",
+          "voc",
+          "yolo26",
+          "yolov11",
+          "yolov5pytorch",
+          "yolov7pytorch",
+          "yolov8",
+          "yolov8-obb",
+          "yolov9"
+        ]
+      }
+    ]
+  },
+  "summary": {
+    "label": "S3  dusty-and-bird-droppings",
+    "workspace": "solar-panel-a5cyn",
+    "project": "dusty-and-bird-droppings",
+    "http": 200,
+    "name": "dusty and bird-droppings",
+    "type": "object-detection",
+    "license": "CC BY 4.0",
+    "annotation": "dusdusty-bird-droppings",
+    "base_images": 710,
+    "class_instance_counts": {
+      "bird-droppings": 916,
+      "dusdusty": 2914
+    },
+    "project_splits": {
+      "valid": 60,
+      "test": 50,
+      "train": 600
+    },
+    "created": 1675222329.724,
+    "updated": 1675311068.651,
+    "public": true,
+    "n_versions": 1,
+    "latest_version": {
+      "id": "solar-panel-a5cyn/dusty-and-bird-droppings/1",
+      "name": "2023-02-02 12:11pm",
+      "created": 1675311068.698,
+      "images": 710,
+      "splits": {
+        "valid": 60,
+        "test": 50,
+        "train": 600
+      },
+      "preprocessing": {
+        "auto-orient": true,
+        "resize": {
+          "format": "Stretch to",
+          "width": 640,
+          "height": 640
+        }
+      },
+      "augmentation": {},
+      "exports": [
+        "clip",
+        "coco",
+        "darknet",
+        "multiclass",
+        "tensorflow",
+        "voc",
+        "yolo26",
+        "yolov11",
+        "yolov5pytorch",
+        "yolov7pytorch",
+        "yolov8",
+        "yolov8-obb",
+        "yolov9"
+      ]
+    },
+    "all_versions": [
+      {
+        "id": "solar-panel-a5cyn/dusty-and-bird-droppings/1",
+        "name": "2023-02-02 12:11pm",
+        "images": 710,
+        "splits": {
+          "valid": 60,
+          "test": 50,
+          "train": 600
+        },
+        "created": 1675311068.698,
+        "aug": false,
+        "exports": [
+          "clip",
+          "coco",
+          "darknet",
+          "multiclass",
+          "tensorflow",
+          "voc",
+          "yolo26",
+          "yolov11",
+          "yolov5pytorch",
+          "yolov7pytorch",
+          "yolov8",
+          "yolov8-obb",
+          "yolov9"
+        ]
+      }
+    ]
+  }
+}
