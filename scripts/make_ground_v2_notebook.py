@@ -1,0 +1,302 @@
+"""Generate kaggle/ground_pv_v2_train.ipynb — Kaggle GPU notebook that trains
+the ground PANEL detector v2 (failure-targeted, Phase 11).
+
+v2 keeps v1's architecture (YOLO11n), COCO init, optimizer strategy, LR
+schedule, epochs, patience, seed, imgsz and the EXACT same leakage-clean
+dataset + split. The ONLY intervention is a **scale / domain-robustness
+augmentation bundle** aimed at the Phase 10 failures (image 4: a panel filling
+the frame; image 6: a wide multi-panel array):
+
+    v1 -> v2
+    scale        0.3  -> 0.9      (RandomResize object-scale jitter, much wider)
+    mosaic       0.5  -> 1.0      (always tile 4 images: shrinks objects + makes
+                                   multi-panel scenes, directly targets img 4 & 6)
+    close_mosaic  -   -> 10       (disable mosaic for the last 10 epochs -> clean
+                                   final convergence on real-scale images)
+    multi_scale  off  -> on       (per-batch imgsz jitter +/-50%)
+
+Everything else is identical to v1. Regenerable: `python scripts/make_ground_v2_notebook.py`.
+"""
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+NB = Path(__file__).resolve().parents[1] / "kaggle" / "ground_pv_v2_train.ipynb"
+
+
+def md(*lines: str) -> dict:
+    return {"cell_type": "markdown", "metadata": {}, "source": [l + "\n" for l in lines]}
+
+
+def code(src: str) -> dict:
+    return {"cell_type": "code", "metadata": {}, "execution_count": None, "outputs": [],
+            "source": [l + "\n" for l in src.strip("\n").splitlines()]}
+
+
+CELLS = [
+    md(
+        "# Solar AI - ground PANEL detector v2 (YOLO11n, failure-targeted)",
+        "",
+        "`ground_yolo11n_v2`. **3-class panel detector:** `0=panel 1=cracked 2=dusty` -"
+        " same taxonomy as v1. This is NOT the condition/defect model.",
+        "",
+        "- **Research only.** Does NOT touch / replace the production aerial detector"
+        " `weights/yolo_solar.pt`, the ground panel detector v1"
+        " `weights/yolo_solar_ground_research_v1.pt`, or the condition model.",
+        "- Base model: pretrained **YOLO11n** COCO checkpoint (never a Solar AI model).",
+        "- Dataset: the EXACT same audited + remediated leakage-clean 3-class Roboflow"
+        " *panel solar* v1 dataset used for v1 (`edithstark/solar-ai-ground-pv-research-v1`)."
+        " Same 6,492 images, same leakage-isolated family split"
+        " (train 4,546 / valid 1,297 / test 649).",
+        "- `bird_drop` EXCLUDED (data availability) - do not report bird_drop.",
+        "- Hotspot out of scope for RGB.",
+        "",
+        "## v1 -> v2 (single intervention family: scale / domain robustness)",
+        "| arg | v1 | v2 | why |",
+        "|---|---|---|---|",
+        "| `scale` | 0.3 | **0.9** | expose panels at far more scales (tiny .. frame-filling) |",
+        "| `mosaic` | 0.5 | **1.0** | always 4-image mosaic -> shrinks objects + synthesises multi-panel scenes (img 4 & 6) |",
+        "| `close_mosaic` | - | **10** | last 10 epochs mosaic-off -> clean real-scale convergence |",
+        "| `multi_scale` | off | **on** | per-batch imgsz jitter +/-50% |",
+        "",
+        "Architecture, COCO init, optimizer (`auto`), `cos_lr`, epochs 100, patience 20,"
+        " seed 42, imgsz 640, hsv/degrees/translate/fliplr, no mixup/copy_paste/perspective"
+        " - all IDENTICAL to v1.",
+        "",
+        "Attach `edithstark/solar-ai-ground-pv-research-v1` in the sidebar, Accelerator = GPU, Run All.",
+    ),
+    md("## 1. Environment"),
+    code(
+        "import sys, platform, subprocess, json, os, time, hashlib, shutil\n"
+        "from pathlib import Path\n"
+        "print('Python :', platform.python_version())"
+    ),
+    md("### CUDA - fail closed if unavailable\n"
+       "Pin `torch==2.7.1` / `torchvision==0.22.1` / `ultralytics==8.4.138` - the exact"
+       " versions v1 trained under, so the v1 vs v2 comparison isolates the augmentation change."),
+    code(
+        "PINNED = ['torch==2.7.1', 'torchvision==0.22.1', 'ultralytics==8.4.138', 'PyYAML>=6.0.1']\n"
+        "subprocess.run([sys.executable, '-m', 'pip', 'install', '-q', *PINNED], check=True)\n"
+        "\n"
+        "import torch\n"
+        "assert torch.cuda.is_available(), 'CUDA unavailable - Settings -> Accelerator -> GPU.'\n"
+        "import torchvision, ultralytics\n"
+        "ENV = dict(python=platform.python_version(), torch=torch.__version__,\n"
+        "           torchvision=torchvision.__version__, cuda=torch.version.cuda,\n"
+        "           ultralytics=ultralytics.__version__, gpu=torch.cuda.get_device_name(0),\n"
+        "           gpu_capability='.'.join(map(str, torch.cuda.get_device_capability(0))),\n"
+        "           gpu_memory_gb=round(torch.cuda.get_device_properties(0).total_memory / 1e9, 1))\n"
+        "print(json.dumps(ENV, indent=2))"
+    ),
+    md("## 2. Locate the attached dataset + verify it is the v1 dataset (same split)"),
+    code(
+        "candidates = list(Path('/kaggle/input').rglob('data.yaml'))\n"
+        "assert candidates, 'No data.yaml under /kaggle/input - attach the dataset first.'\n"
+        "SRC = None\n"
+        "for c in candidates:\n"
+        "    if 'ground-pv-research' in str(c) or 'ground_pv' in str(c).lower():\n"
+        "        SRC = c; break\n"
+        "SRC = SRC or candidates[0]\n"
+        "DATA_ROOT = SRC.parent\n"
+        "print('mounted:', SRC); print(SRC.read_text())\n"
+        "\n"
+        "import yaml as _yaml\n"
+        "_cfg = _yaml.safe_load(SRC.read_text())\n"
+        "_cfg['path'] = str(DATA_ROOT.resolve())\n"
+        "_cfg['train'], _cfg['val'], _cfg['test'] = 'images/train', 'images/valid', 'images/test'\n"
+        "DATA_YAML = Path('/kaggle/working/ground_pv_data.yaml')\n"
+        "DATA_YAML.write_text(_yaml.safe_dump(_cfg, sort_keys=False))\n"
+        "print(DATA_YAML.read_text())\n"
+        "for _s in ('images/train','images/valid','images/test','labels/train','labels/valid','labels/test'):\n"
+        "    assert (DATA_ROOT / _s).is_dir(), f'missing {_s}'\n"
+        "\n"
+        "def _count(rel):\n"
+        "    d = DATA_ROOT / rel\n"
+        "    return sum(1 for p in d.glob('*') if p.suffix.lower() in {'.jpg','.jpeg','.png','.webp'})\n"
+        "COUNTS = {s: _count(f'images/{s}') for s in ('train','valid','test')}\n"
+        "print('split counts:', COUNTS)\n"
+        "assert COUNTS == {'train': 4546, 'valid': 1297, 'test': 649}, f'split mismatch: {COUNTS} - not the v1 dataset!'\n"
+        "\n"
+        "prov = DATA_ROOT / 'provenance'\n"
+        "if (prov / 'remediation_report.json').is_file():\n"
+        "    r = json.loads((prov / 'remediation_report.json').read_text())\n"
+        "    assert r.get('no_group_crosses_splits') is True\n"
+        "    assert r.get('residual_cross_split_near_dup_pairs') == 0\n"
+        "    print('leakage-clean split verified:', r.get('final_split_counts'))"
+    ),
+    md("## 3. Validate taxonomy + per-split stats (no training yet)"),
+    code(
+        "import yaml\n"
+        "from collections import Counter\n"
+        "cfg = yaml.safe_load(DATA_YAML.read_text())\n"
+        "names = cfg['names']\n"
+        "if isinstance(names, list): names = {i: n for i, n in enumerate(names)}\n"
+        "names = {int(k): v for k, v in names.items()}\n"
+        "EXPECTED = {0: 'panel', 1: 'cracked', 2: 'dusty'}\n"
+        "assert names == EXPECTED, f'taxonomy mismatch: {names}'\n"
+        "assert 'bird_drop' not in names.values()\n"
+        "print('taxonomy OK:', names)\n"
+        "STATS = {}\n"
+        "for sk in ('train', 'val', 'test'):\n"
+        "    rel = cfg[sk]; sn = {'train':'train','val':'valid','test':'test'}[sk]\n"
+        "    img_dir = DATA_ROOT / rel; lbl_dir = Path(str(img_dir).replace('/images', '/labels'))\n"
+        "    imgs = [p for p in img_dir.glob('*') if p.suffix.lower() in {'.jpg','.jpeg','.png','.webp'}]\n"
+        "    inst, iw = Counter(), Counter()\n"
+        "    for im in imgs:\n"
+        "        lp = lbl_dir / (im.stem + '.txt')\n"
+        "        if not lp.is_file(): continue\n"
+        "        seen = set()\n"
+        "        for line in lp.read_text().splitlines():\n"
+        "            p = line.split()\n"
+        "            if len(p) == 5:\n"
+        "                c = EXPECTED[int(p[0])]; inst[c] += 1; seen.add(c)\n"
+        "        for c in seen: iw[c] += 1\n"
+        "    STATS[sn] = dict(images=len(imgs), instances=dict(inst), images_with_class=dict(iw))\n"
+        "    print(f'  {sn:5s} images={len(imgs):5d} instances={dict(inst)}')"
+    ),
+    md(
+        "## 4. Train `ground_yolo11n_v2`",
+        "Base `yolo11n.pt` (COCO). Single intervention family vs v1: scale / domain-robustness"
+        " augmentation. Resolved args printed first, with an explicit v1 vs v2 diff.",
+    ),
+    code(
+        "from ultralytics import YOLO\n"
+        "PROJECT = '/kaggle/working/research_runs/ground_pv'\n"
+        "RUN_NAME = 'ground_yolo11n_v2'\n"
+        "BASE_MODEL = 'yolo11n.pt'\n"
+        "SEED = 42\n"
+        "\n"
+        "V1_ARGS = dict(scale=0.3, mosaic=0.5)  # (close_mosaic default, multi_scale off)\n"
+        "train_args = dict(\n"
+        "    data=str(DATA_YAML), epochs=100, imgsz=640, patience=20, seed=SEED,\n"
+        "    batch=-1, device=0, project=PROJECT, name=RUN_NAME, exist_ok=True,\n"
+        "    pretrained=True, cos_lr=True, optimizer='auto', verbose=True, val=True,\n"
+        "    # --- unchanged from v1 ---\n"
+        "    hsv_h=0.015, hsv_s=0.4, hsv_v=0.4, degrees=5.0, translate=0.1,\n"
+        "    shear=0.0, perspective=0.0, flipud=0.0, fliplr=0.5, mixup=0.0, copy_paste=0.0,\n"
+        "    # --- v2 scale / domain-robustness intervention ---\n"
+        "    scale=0.9, mosaic=1.0, close_mosaic=10, multi_scale=True,\n"
+        ")\n"
+        "print('v1 -> v2 delta:', {'scale': (0.3, 0.9), 'mosaic': (0.5, 1.0),\n"
+        "                          'close_mosaic': ('default', 10), 'multi_scale': (False, True)})\n"
+        "print(json.dumps({k: str(v) for k, v in train_args.items()}, indent=2))\n"
+        "\n"
+        "t0 = time.time()\n"
+        "model = YOLO(BASE_MODEL)\n"
+        "results = model.train(**train_args)\n"
+        "train_seconds = time.time() - t0\n"
+        "RUN_DIR = Path(results.save_dir)\n"
+        "print('run dir:', RUN_DIR, ' elapsed(s):', round(train_seconds))"
+    ),
+    md("## 5. Evaluate - validation and the HELD-OUT leakage-clean test set, per class\n"
+       "Same protocol as v1: `YOLO.val()` imgsz 640 iou 0.50."),
+    code(
+        "best = RUN_DIR / 'weights' / 'best.pt'\n"
+        "assert best.is_file(), best\n"
+        "eval_model = YOLO(str(best))\n"
+        "\n"
+        "def evaluate(split):\n"
+        "    m = eval_model.val(data=str(DATA_YAML), split=split, imgsz=640, iou=0.5, plots=True, verbose=False)\n"
+        "    box = m.box\n"
+        "    per_class = {}\n"
+        "    for pos, cidx in enumerate(list(box.ap_class_index)):\n"
+        "        p, r, ap50, ap = box.class_result(pos)\n"
+        "        per_class[EXPECTED[int(cidx)]] = dict(precision=float(p), recall=float(r),\n"
+        "                                              AP50=float(ap50), AP50_95=float(ap))\n"
+        "    return dict(overall=dict(precision=float(box.mp), recall=float(box.mr),\n"
+        "                             mAP50=float(box.map50), mAP50_95=float(box.map)),\n"
+        "                per_class=per_class, save_dir=str(m.save_dir))\n"
+        "\n"
+        "evaluation = {}\n"
+        "for split in ('val', 'test'):\n"
+        "    evaluation[split] = evaluate(split)\n"
+        "    print('\\n==', split, '=='); print(json.dumps(evaluation[split], indent=2))\n"
+        "\n"
+        "V1_TEST = {'overall': {'precision': 0.8756, 'recall': 0.8014, 'mAP50': 0.8647, 'mAP50_95': 0.6775},\n"
+        "           'per_class': {'panel': {'precision': 0.9465, 'recall': 0.9250, 'AP50': 0.9628, 'AP50_95': 0.8427},\n"
+        "                         'cracked': {'precision': 0.8090, 'recall': 0.6531, 'AP50': 0.7495, 'AP50_95': 0.5296},\n"
+        "                         'dusty': {'precision': 0.8712, 'recall': 0.8261, 'AP50': 0.8819, 'AP50_95': 0.6601}}}\n"
+        "print('\\n--- v2 test vs v1 test (delta) ---')\n"
+        "for k, v in evaluation['test']['overall'].items():\n"
+        "    print(f'  {k:10s} v1={V1_TEST[\"overall\"][k]:.4f}  v2={v:.4f}  delta={v - V1_TEST[\"overall\"][k]:+.4f}')"
+    ),
+    md("## 6. Package artifacts + training manifest + SHA-256"),
+    code(
+        "OUT = Path('/kaggle/working/output'); OUT.mkdir(exist_ok=True)\n"
+        "for name in ('best.pt', 'last.pt'):\n"
+        "    src = RUN_DIR / 'weights' / name\n"
+        "    if src.is_file(): shutil.copy2(src, OUT / name)\n"
+        "for pat in ('results.csv','results.png','args.yaml',\n"
+        "            'confusion_matrix.png','confusion_matrix_normalized.png',\n"
+        "            'BoxPR_curve.png','BoxF1_curve.png','BoxP_curve.png','BoxR_curve.png',\n"
+        "            'labels.jpg','labels_correlogram.jpg','train_batch*.jpg','val_batch*.jpg'):\n"
+        "    for f in RUN_DIR.rglob(pat): shutil.copy2(f, OUT / f.name)\n"
+        "for sd in {e['save_dir'] for e in evaluation.values()}:\n"
+        "    sd = Path(sd)\n"
+        "    if sd.is_dir(): shutil.copytree(sd, OUT / ('eval_' + sd.name), dirs_exist_ok=True)\n"
+        "pred_dir = OUT / 'predictions'; pred_dir.mkdir(exist_ok=True)\n"
+        "test_imgs = sorted((DATA_ROOT / 'images/test').glob('*'))[:24]\n"
+        "if test_imgs:\n"
+        "    YOLO(str(best)).predict(source=[str(p) for p in test_imgs], conf=0.25, save=True,\n"
+        "                            project=str(pred_dir), name='test_examples', exist_ok=True)\n"
+        "\n"
+        "sha = hashlib.sha256((OUT / 'best.pt').read_bytes()).hexdigest()\n"
+        "last_sha = hashlib.sha256((OUT / 'last.pt').read_bytes()).hexdigest() if (OUT/'last.pt').is_file() else None\n"
+        "import csv as _csv\n"
+        "rows = list(_csv.DictReader(open(RUN_DIR / 'results.csv')))\n"
+        "best_epoch = None\n"
+        "if rows:\n"
+        "    key = next((k for k in rows[0] if 'mAP50-95' in k and 'B' in k), None)\n"
+        "    if key: best_epoch = max(range(len(rows)), key=lambda i: float(rows[i][key])) + 1\n"
+        "\n"
+        "manifest = dict(\n"
+        "    experiment_name=RUN_NAME,\n"
+        "    model_role='RESEARCH ground PANEL detector v2 - NOT production, NOT a condition model',\n"
+        "    predecessor='ground_yolo11n_baseline_v1 (weights/yolo_solar_ground_research_v1.pt)',\n"
+        "    intervention='scale / domain-robustness augmentation ONLY',\n"
+        "    v1_to_v2_delta={'scale': [0.3, 0.9], 'mosaic': [0.5, 1.0],\n"
+        "                    'close_mosaic': ['default', 10], 'multi_scale': [False, True]},\n"
+        "    unchanged_from_v1=['architecture=YOLO11n', 'coco_pretrained', 'optimizer=auto', 'cos_lr',\n"
+        "                       'epochs=100', 'patience=20', 'seed=42', 'imgsz=640', 'batch=-1',\n"
+        "                       'dataset', 'split', 'hsv', 'degrees=5', 'translate=0.1', 'fliplr=0.5',\n"
+        "                       'no mixup/copy_paste/perspective/flipud/shear'],\n"
+        "    dataset_kaggle='edithstark/solar-ai-ground-pv-research-v1',\n"
+        "    classes=EXPECTED, bird_drop='EXCLUDED (data availability)',\n"
+        "    base_model=BASE_MODEL, full_train_args={k: str(v) for k, v in train_args.items()},\n"
+        "    device='cuda:0', env=ENV, split_counts=COUNTS, dataset_stats=STATS,\n"
+        "    train_seconds=train_seconds, best_epoch=best_epoch, total_epochs=train_args['epochs'],\n"
+        "    run_dir=str(RUN_DIR),\n"
+        "    val_metrics=evaluation['val']['overall'], test_metrics=evaluation['test']['overall'],\n"
+        "    per_class=dict(val=evaluation['val']['per_class'], test=evaluation['test']['per_class']),\n"
+        "    v1_test_metrics=V1_TEST,\n"
+        "    checkpoint_sha256=sha, last_checkpoint_sha256=last_sha,\n"
+        ")\n"
+        "(OUT / 'training_manifest.json').write_text(json.dumps(manifest, indent=2, default=str))\n"
+        "(OUT / 'evaluation.json').write_text(json.dumps(evaluation, indent=2, default=str))\n"
+        "print('best.pt sha256:', sha)\n"
+        "print(json.dumps(manifest, indent=2, default=str))\n"
+        "print('\\nArtifacts:', sorted(p.name for p in OUT.iterdir()))"
+    ),
+    md("## 7. Retrieve\n"
+       "Download `/kaggle/working/output/`. Locally save `best.pt` as"
+       " `weights/yolo_solar_ground_research_v2.pt` (gitignored) - **never** overwrite v1 or"
+       " `weights/yolo_solar.pt`. Then run the v1-vs-v2 test eval + the six-photo real-world"
+       " comparison locally. Research artifact only."),
+]
+
+
+def main() -> int:
+    nb = {
+        "cells": CELLS,
+        "metadata": {"kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
+                     "language_info": {"name": "python"}},
+        "nbformat": 4, "nbformat_minor": 5,
+    }
+    NB.write_text(json.dumps(nb, indent=1), encoding="utf-8")
+    print("wrote", NB, "-", len(CELLS), "cells")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
