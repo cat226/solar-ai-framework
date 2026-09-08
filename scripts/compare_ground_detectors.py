@@ -75,7 +75,7 @@ def _localization_notes(panels, W, H):
     # fragmentation: >=2 same-ish-x boxes stacked vertically covering one column
     xs = [(p["bbox"][0], p["bbox"][2]) for p in panels]
     stacked = sum(1 for i in range(len(xs)) for j in range(i + 1, len(xs))
-                  if abs(xs[i][0] - xs[j][0]) < 0.15 * W and abs(xs[i][2] - xs[j][2]) < 0.15 * W)
+                  if abs(xs[i][0] - xs[j][0]) < 0.15 * W and abs(xs[i][1] - xs[j][1]) < 0.15 * W)
     if stacked:
         notes.append(f"{stacked} vertically-stacked same-column box pair(s) (possible fragmentation)")
     # overlap groups
