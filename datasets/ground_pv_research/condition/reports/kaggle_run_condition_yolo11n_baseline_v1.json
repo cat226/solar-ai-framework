@@ -1,0 +1,75 @@
+{
+  "experiment": "condition_yolo11n_baseline_v1",
+  "status": "launched",
+  "model_role": "EXPERIMENTAL RESEARCH condition/defect detector (second stage, runs on panel crops). NOT a panel detector. NOT production. Does not replace weights/yolo_solar.pt or weights/yolo_solar_ground_research_v1.pt.",
+  "kaggle": {
+    "kernel": "edithstark/condition-yolo11n-baseline-v1",
+    "kernel_url": "https://www.kaggle.com/code/edithstark/condition-yolo11n-baseline-v1",
+    "kernel_version": 1,
+    "kernel_id": 133535799,
+    "dataset": "edithstark/solar-ai-ground-condition-research-v1",
+    "dataset_url": "https://www.kaggle.com/datasets/edithstark/solar-ai-ground-condition-research-v1",
+    "dataset_is_private": true,
+    "enable_gpu": true,
+    "enable_internet": true,
+    "account": "edithstark",
+    "launched_at_utc": "2026-09-08T00:00:00Z"
+  },
+  "dataset_package": {
+    "source": "datasets/ground_pv_research/condition/ (S1 + S3, 5-class, leakage-safe)",
+    "staging_zip": "solar_ai_ground_condition_v1.zip",
+    "staging_zip_sha256": "49cef902a26886108af62fbd620ebb9b23f5f8977ac78ec00c91ba1cc2a36274",
+    "dataset_content_sha256": "dcebb5e7705305176845adc4e215c92c16a3b666a8d04148f3cd0b142dba2a74",
+    "data_yaml_sha256": "5fb557b8dcbd2e4e83b3016080dbbfc6f19923012eefd429e15e4d640c860d8b",
+    "split_manifest_sha256": "9eb47dd2ec418114e74d8f9a233b3e82b72066cb2b5a500c96fa9107388488db",
+    "taxonomy_sha256": "4be303ba82cd12ac097810f75dc758d5c8c89c2ac0a83433e3f05dbe8274623f",
+    "source_condition_manifest_sha256": "dc3774d9e03f02d87e2d1bc78761a1ad1cb80e50c46ce4eadce5ace4fd24411d",
+    "total_images": 2509,
+    "split_counts": {"train": 1757, "valid": 502, "test": 250},
+    "leakage_families": {"total_over_all_source_images": 1244, "families_with_images_in_dataset": 1195, "train": 835, "valid": 240, "test": 120},
+    "no_family_crosses_splits": true
+  },
+  "provenance": {
+    "grade": "C",
+    "tag": "personal-experimental-unverified-provenance",
+    "underlying_source": "Kaggle pythonafroz/solar-panel-images (licence: Unknown)",
+    "do_not": ["redistribute", "publish", "use commercially", "claim verified CC BY image rights"]
+  },
+  "electrical_damage_semantic_risk": {
+    "flag": "HIGH",
+    "reason": "S1 electrical-damage boxes visually correspond to cell cracks, not confirmed electrical failure; source class preserved, NOT relabelled; a high score is NOT electrical-fault diagnosis",
+    "test_images_with_class": 44,
+    "test_instances": null,
+    "note": "per-class test metrics filled in after retrieval"
+  },
+  "training_config": {
+    "model": "yolo11n.pt (COCO-pretrained, Ultralytics)",
+    "classes": {"0": "CLEAN", "1": "DUSTY", "2": "BIRD_DROP", "3": "PHYSICAL_DAMAGE", "4": "ELECTRICAL_DAMAGE"},
+    "panel_class": "NOT included - this is a second-stage condition model, not a panel detector",
+    "imgsz": 640,
+    "epochs": 100,
+    "patience": 20,
+    "batch": "-1 (auto)",
+    "optimizer": "auto",
+    "cos_lr": true,
+    "pretrained": true,
+    "seed": 42,
+    "device": "cuda:0 (Kaggle GPU)",
+    "augmentation": {
+      "hsv_h": 0.015, "hsv_s": 0.4, "hsv_v": 0.4,
+      "degrees": 5.0, "translate": 0.1, "scale": 0.3,
+      "shear": 0.0, "perspective": 0.0, "flipud": 0.0, "fliplr": 0.5,
+      "mosaic": 0.5, "mixup": 0.0, "copy_paste": 0.0
+    },
+    "pinned_deps": ["torch==2.7.1", "torchvision==0.22.1", "ultralytics==8.4.138", "PyYAML>=6.0.1"]
+  },
+  "clean_semantic_limitation": "CLEAN is trained only where the source carried explicit clean-region annotations. Absence of a defect detection is NOT proof of Clean. No CLEAN boxes were fabricated.",
+  "git_commit_at_launch": "b30c81b9330772d215d418f0ba1efc5351d46b8a",
+  "notes": [
+    "Experimental research artifact only. Does NOT replace weights/yolo_solar.pt (aerial) or weights/yolo_solar_ground_research_v1.pt (ground panel detector).",
+    "No RGB hotspot claim - hotspot requires a separate thermal/IR model.",
+    "Real-world 6-image evaluation is QUALITATIVE ONLY (no ground truth, no accuracy/precision/recall/F1/mAP).",
+    "Metrics / best-checkpoint hash / training duration / resolved GPU are filled in after retrieval."
+  ],
+  "results": null
+}

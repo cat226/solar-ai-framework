@@ -1,0 +1,11 @@
+{
+  "title": "Solar AI ground PV condition research v1",
+  "id": "edithstark/solar-ai-ground-condition-research-v1",
+  "licenses": [
+    {
+      "name": "other"
+    }
+  ],
+  "subtitle": "Experimental 5-class PV condition/defect set - unverified provenance (grade C)",
+  "description": "Solar AI ground-level PV CONDITION/DEFECT research dataset (experimental).\n\nPERSONAL, NON-COMMERCIAL RESEARCH ONLY. Provenance grade C, tagged `personal-experimental-unverified-provenance`. This is a de-duplicated, leakage-safe repackaging of two Roboflow Universe object-detection datasets (defects-kgig6/detection-for-defects-in-solar-panels v2 and solar-panel-a5cyn/dusty-and-bird-droppings v1). The underlying photographs ultimately trace to Kaggle `pythonafroz/solar-panel-images`, whose Kaggle licence is UNKNOWN. Do NOT redistribute, publish, use commercially, or claim verified CC BY image rights for the underlying images.\n\nClasses (contiguous): 0=CLEAN 1=DUSTY 2=BIRD_DROP 3=PHYSICAL_DAMAGE 4=ELECTRICAL_DAMAGE. snow/snow-covered and the ambiguous 'Defective' are excluded. PANEL is not a class here \u2014 this feeds a SECOND-STAGE condition model that runs on panel crops from the separate ground panel detector.\n\n*** ELECTRICAL_DAMAGE \u2014 HIGH SEMANTIC RISK ***\nEvery ELECTRICAL_DAMAGE annotation comes from S1's 'electrical-damage' class. The provenance audit found these boxes visually correspond to CELL CRACKS, not confirmed electrical failure. The label is preserved unchanged (not relabelled) but a high score on this class must NOT be read as electrical-fault diagnosis. See provenance/electrical_damage_annotations.csv.\n\n2509 images: train 1757 / valid 502 / test 250. Leakage-safe: whole near-duplicate families (exact SHA-256 u source basename u 16x16 dHash) assigned to one split each; no family crosses splits. Detection format, bounding boxes preserved verbatim (no fabricated boxes). provenance/ carries the full build report, per-image manifest, split manifest, taxonomy, overlap report and source references.\n\nNot a validated engineering or safety diagnosis."
+}
