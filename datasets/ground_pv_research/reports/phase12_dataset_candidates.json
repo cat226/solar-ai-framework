@@ -1,0 +1,265 @@
+{
+  "generated_utc": "2026-09-09",
+  "phase": "12 - representative ground-PV data acquisition + provenance audit (DISCOVERY ONLY, no training)",
+  "target_domain_profile": {
+    "primary_objective": "PANEL DETECTION (bounding boxes) on ground-level / rooftop RGB imagery",
+    "reference_set": "six owner photos at D:/solar_ai_training_scratch/Solar Real Images (NOT training data; qualitative reference only)",
+    "reference_characteristics": {
+      "count": 6,
+      "dimensions": "5x 573x1280 (portrait, aspect 0.448), 1x 1280x573 (landscape, aspect 2.234)",
+      "capture": "smartphone, WhatsApp-compressed JPEG",
+      "content": "close-up + oblique rooftop PV; large frame-filling panels; one wide multi-panel array; bird droppings / soiling; black roofing membrane in frame; varied daylight"
+    },
+    "priority_HIGH": ["RGB ground-level PV", "genuine panel bounding boxes", "smartphone/consumer-camera capture", "rooftop installations", "non-square native aspect ratios", "large panels / close-ups", "multi-panel arrays", "partial / image-boundary panels", "oblique viewpoints"],
+    "priority_MEDIUM": ["varied weather / illumination", "different module manufacturers", "different roof/background materials", "different countries"],
+    "priority_LOW": ["aerial / satellite / drone-nadir imagery", "thermal / IR / electroluminescence", "synthetic imagery", "pure classification datasets", "datasets with no panel localisation annotation"]
+  },
+  "existing_datasets_for_overlap": {
+    "datasets/ground_pv_research/yolo/": "Susan-derived leakage-clean 3-class (panel/cracked/dusty), 6,492 images, ALL 640x640 (Roboflow stretch-resized). Source susan-ifblr/panel-solar-bw945; 'CC BY 4.0' displayed, image-level provenance unverified.",
+    "datasets/ground_pv_research/condition/": "S1 + S3 unified 5-class condition set, 2,509 images, ALL 640x640. Traces to Kaggle pythonafroz/solar-panel-images (licence Unknown), provenance grade C.",
+    "datasets/ground_pv_research/candidate_defects/raw/": "S1, S3, C1, C3, S4, S6 - all Roboflow defect datasets, all ~640x640, all trace to the pythonafroz family (Phase 7 audit)."
+  },
+  "search_methodology": {
+    "hosts_searched": ["Roboflow Universe (API + web search)", "Kaggle (API dataset search)", "Zenodo (API + web)", "Mendeley Data (web)", "GitHub (web)", "Nature Scientific Data / ESSD / MDPI Data (web)", "arXiv (web)", "Dataset Ninja (web)"],
+    "query_families": ["'solar panel' detection dataset ground level RGB smartphone bounding boxes", "rooftop solar panel detection dataset consumer camera annotated YOLO", "photovoltaic panel dataset Zenodo/Mendeley ground-based field images", "solar panel detection 'in the wild' / 'handheld' / 'phone camera' individual module annotation", "roboflow universe solar panel object detection ground handheld", "solar photovoltaic panel detection dataset 2025 ground level rooftop oblique"],
+    "api_used": ["Kaggle API (dataset_list, dataset_list_files, dataset_download_files)", "Roboflow API (project metadata, small-sample downloads) via project-root .env ROBOFLOW_API_KEY"]
+  },
+  "candidates": [
+    {
+      "id": "P12-01", "name": "solar-panel-detection-ubwtz (bwpkx)", "host": "Roboflow Universe",
+      "url": "https://universe.roboflow.com/solar-panel-detection-bwpkx/solar-panel-detection-ubwtz",
+      "images": 674, "versions": 8, "largest_version_images": 3710,
+      "native_resolution": "640x640 (Roboflow export - native aspect ratio destroyed)",
+      "modality": "RGB", "viewpoint": "GROUND-LEVEL OBLIQUE (best domain match of any candidate)",
+      "consumer_camera_evidence": "plausible - handheld oblique frames",
+      "annotation": "YOLO-segmentation polygons (convertible to bbox) - 505/508 sampled images", "classes": {"solarpanel": 1699, "damaged_physical": 68, "DUSTY": 257},
+      "panel_meaning": "individual module in a ground-mounted array; ~3 polygons/image",
+      "license_shown": "CC BY 4.0", "license_source": "Roboflow re-uploader dataset-level claim",
+      "underlying_provenance": "UNRESOLVED - no original source stated; damaged_physical/DUSTY taxonomy matches the pythonafroz defect family",
+      "independent_physical_scenes": "VERY FEW - strict 16x16 dHash counts 563 distinct frames, but visual inspection shows walk-around video of ~1 ground-mounted installation (frame-distinct, scene-redundant).",
+      "overlap_vs_existing_ground_yolo": "0% exact / 0% perceptual",
+      "watermark_evidence": "none seen in sample", "augmentation_evidence": "yes - largest version 3710 from 674 base",
+      "download_status": "v13 sampled (508 train imgs) for audit; NOT retained",
+      "provenance_status": "UNRESOLVED",
+      "research_suitability": "LOW - right viewpoint but near-zero physical-scene diversity (video frames of one site); ground-mounted not rooftop; provenance unresolved",
+      "tier": "C"
+    },
+    {
+      "id": "P12-02", "name": "solar-panel-bounding-boxes-621 (fxmikf)", "host": "Kaggle",
+      "url": "https://www.kaggle.com/datasets/fxmikf/solar-panel-bounding-boxes-621",
+      "images": 621, "native_resolution": "229 DISTINCT dimensions, aspect 0.47-3.55 (11 portrait / 277 landscape / 333 ~square); 294 are 480x480 '_rgb_resized' crops",
+      "modality": "RGB", "viewpoint": "MIXED - genuine ground-level / rooftop / oblique / people-next-to-panels / close-ups / arrays / snow / varied lighting (the ~327 non-'_rgb_resized' images ARE the target domain)",
+      "consumer_camera_evidence": "strong for the scraped subset - phone/DSLR field photos",
+      "independent_physical_scenes": "619 distinct (most domain-diverse pool found: aspect 0.47-3.55, 40% of boxes boundary-touching, 155 boxes cover >50% of frame)",
+      "annotation": "YOLO bbox + classes.txt", "panel_annotations": 1099, "boxes_per_image": "mean 1.8, max 17",
+      "panel_meaning": "mixed - some whole-panel, some module; 155 boxes cover >50% of frame (close-ups)",
+      "license_shown": "not clearly stated on the Kaggle card",
+      "underlying_provenance": "CATASTROPHIC - filenames reveal Getty Images ('Getty_Lourdes-Balduque-1200x800.jpg'), YouTube thumbnails ('sddefault.jpg','hqdefault'), stock sites (shutterstock/istock), company marketing pages ('Frey Energy'), utility press photos ('DTE_Cap'), and 294 pythonafroz-style '_rgb_resized' crops. Visible watermarks (Getty, dreamchina.com, Frey Energy).",
+      "watermark_evidence": "YES - multiple", "augmentation_evidence": "re-hosted crops",
+      "overlap_vs_existing_ground_yolo": "0%",
+      "download_status": "fully sampled (621 imgs) for audit; NOT retained",
+      "provenance_status": "UNRESOLVED / UNUSABLE (scraped copyrighted stock + YouTube)",
+      "research_suitability": "REJECT for any use beyond a visual domain reference - cannot be redistributed, published, or used commercially; large fraction is copyrighted stock imagery",
+      "tier": "D"
+    },
+    {
+      "id": "P12-03", "name": "solar-panels-rgb (earthbook-zdvbx)", "host": "Roboflow Universe",
+      "url": "https://universe.roboflow.com/earthbook-zdvbx/solar-panels-rgb",
+      "images": 374, "largest_version_images": 37400,
+      "modality": "RGB", "viewpoint": "UNKNOWN (not sampled)",
+      "annotation": "bbox", "classes": {"dirty": 3412},
+      "panel_meaning": "n/a - the only class is 'dirty' (soiling regions), not 'panel'. Not a panel detector dataset.",
+      "license_shown": "CC BY 4.0", "underlying_provenance": "unresolved",
+      "provenance_status": "UNRESOLVED",
+      "research_suitability": "REJECT - no 'panel' class; soiling-region detector; massively augmented (100x)",
+      "tier": "D"
+    },
+    {
+      "id": "P12-04", "name": "panel-detection-nfzzu (yolo-2uwb2)", "host": "Roboflow Universe",
+      "url": "https://universe.roboflow.com/yolo-2uwb2/panel-detection-nfzzu",
+      "images": 158, "native_resolution": "640x640",
+      "modality": "RGB", "viewpoint": "AERIAL / SATELLITE (residential rooftops, near-nadir - same Google/Bing tile style as P12-05)",
+      "annotation": "bbox", "classes": {"Solar-Panels": 67}, "boxes_per_image": "mean 0.4 (MOSTLY UNANNOTATED)",
+      "license_shown": "CC BY 4.0", "underlying_provenance": "unresolved (satellite basemap tiles)",
+      "overlap_vs_existing_ground_yolo": "0%",
+      "download_status": "fully sampled for audit; NOT retained",
+      "provenance_status": "UNRESOLVED",
+      "research_suitability": "REJECT - aerial viewpoint, tiny, mostly unlabelled",
+      "tier": "D"
+    },
+    {
+      "id": "P12-05", "name": "solar-panels-r4trk (every)", "host": "Roboflow Universe",
+      "url": "https://universe.roboflow.com/every/solar-panels-r4trk",
+      "images": 402, "native_resolution": "416x416",
+      "modality": "RGB", "viewpoint": "AERIAL / DRONE-NADIR (residential rooftops, pools, palm trees - California)",
+      "annotation": "bbox", "classes": {"solar-panels": 809}, "boxes_per_image": "mean 2.0; median box area 0.19 (aerial rooftop crops)",
+      "license_shown": "CC BY 4.0", "underlying_provenance": "unresolved (aerial basemap)",
+      "overlap_vs_existing_ground_yolo": "0%",
+      "download_status": "fully sampled for audit; NOT retained",
+      "provenance_status": "UNRESOLVED",
+      "research_suitability": "REJECT - aerial viewpoint (wrong domain)",
+      "tier": "D"
+    },
+    {
+      "id": "P12-06", "name": "solar-panel-zitzr (tensrai)", "host": "Roboflow Universe",
+      "url": "https://universe.roboflow.com/tensrai/solar-panel-zitzr",
+      "images": 471, "native_resolution": "640x512",
+      "modality": "GRAYSCALE (not RGB)", "viewpoint": "AERIAL / DRONE-NADIR orthomosaic of a UTILITY-SCALE GROUND-MOUNTED SOLAR FARM",
+      "annotation": "bbox", "classes": {"solar-panel": 4371}, "boxes_per_image": "mean 9.5 (individual farm panel rows)",
+      "license_shown": "CC BY 4.0",
+      "overlap_vs_existing_ground_yolo": "0%",
+      "download_status": "fully sampled for audit; NOT retained",
+      "provenance_status": "UNRESOLVED",
+      "research_suitability": "REJECT - grayscale, aerial, utility farm (wrong modality + viewpoint + installation type)",
+      "tier": "D"
+    },
+    {
+      "id": "P12-07", "name": "panel-solar-yolo (javier-aparicio-gonzlez)", "host": "Roboflow Universe",
+      "url": "https://universe.roboflow.com/javier-aparicio-gonzlez/panel-solar-yolo",
+      "images": 102, "native_resolution": "640x640",
+      "modality": "GRAYSCALE", "viewpoint": "AERIAL / DRONE-NADIR orthomosaic of a ground-mounted solar farm",
+      "annotation": "bbox", "classes": {"Panel_solar": 1571}, "boxes_per_image": "mean 15.6, max 33 (module-level)",
+      "license_shown": "CC BY 4.0",
+      "overlap_vs_existing_ground_yolo": "0%",
+      "download_status": "fully sampled for audit; NOT retained",
+      "provenance_status": "UNRESOLVED",
+      "research_suitability": "REJECT - grayscale, aerial, ground-mounted farm",
+      "tier": "D"
+    },
+    {
+      "id": "P12-08", "name": "solar-panels-taxvb (roboflow-100)", "host": "Roboflow Universe",
+      "url": "https://universe.roboflow.com/roboflow-100/solar-panels-taxvb",
+      "images": 161, "modality": "thermal/EL-style",
+      "annotation": "bbox", "classes": {"No-Anomaly": 6865, "Shadowing": 1054, "Cell": 513, "Cell-Multi": 282, "Unclassified": 333},
+      "license_shown": "CC BY 4.0",
+      "provenance_status": "n/a",
+      "research_suitability": "REJECT - thermal cell-anomaly taxonomy, not RGB panel detection",
+      "tier": "D"
+    },
+    {
+      "id": "P12-09", "name": "solar-x0bfa (marius-lee)", "host": "Roboflow Universe",
+      "url": "https://universe.roboflow.com/marius-lee/solar-x0bfa",
+      "images": 2234, "modality": "thermal / IR",
+      "annotation": "bbox", "classes": {"Hotspot": 3213, "Cell Fault": 3053, "Bypass Diode": 1460},
+      "license_shown": "CC BY 4.0",
+      "research_suitability": "REJECT - thermal/IR (hotspot is explicitly out of the RGB scope)",
+      "tier": "D"
+    },
+    {
+      "id": "P12-10", "name": "labeled-solar-panels-rwanda-rooftops (kusanagi31415 / 'SDH')", "host": "Kaggle",
+      "url": "https://www.kaggle.com/datasets/kusanagi31415/labeled-solar-panels-rwanda-rooftops",
+      "modality": "RGB", "viewpoint": "AERIAL / SATELLITE tile crops (hash-named PNG crops with bbox coords in the filename; tiny boxes ~30x30 px)",
+      "annotation": "crops named by bbox", "panel_meaning": "small rooftop-scale panel patches from overhead imagery of Rwanda",
+      "license_shown": "not clearly stated",
+      "research_suitability": "REJECT - aerial/satellite-derived crops, wrong viewpoint",
+      "tier": "D"
+    },
+    {
+      "id": "P12-11", "name": "solar-panel-detection-and-identification (salimhammadi07)", "host": "Kaggle",
+      "url": "https://www.kaggle.com/datasets/salimhammadi07/solar-panel-detection-and-identification",
+      "modality": "RGB", "viewpoint": "AERIAL / SATELLITE - this is the PV03 subset of Jiang et al. (Zenodo 5171712), 0.3 m aerial, semantic-segmentation masks (.bmp)",
+      "annotation": "segmentation masks", "license_shown": "CC BY 4.0 (inherited from Jiang et al.)",
+      "provenance_status": "RESOLVED (Jiang et al. 2021, CC BY 4.0) but wrong domain",
+      "research_suitability": "REJECT - aerial segmentation, not ground-level detection",
+      "tier": "D"
+    },
+    {
+      "id": "P12-12", "name": "zzzpai/solar-panel-od-yolov8", "host": "Kaggle",
+      "url": "https://www.kaggle.com/datasets/zzzpai/solar-panel-od-yolov8",
+      "modality": "RGB", "viewpoint": "ground-level stock defect photos",
+      "annotation": "YOLO bbox (Roboflow export)",
+      "underlying_provenance": "DUPLICATE of the pythonafroz defect family (filenames Bird_drop_/Clean_ = the S1 / detection-for-defects taxonomy we already hold)",
+      "overlap": "high overlap with datasets/ground_pv_research/condition/ (S1)",
+      "research_suitability": "REJECT - duplicate of data we already have; adds no new physical scenes",
+      "tier": "D"
+    },
+    {
+      "id": "P12-13", "name": "aparitosh/solar-panel-dataset", "host": "Kaggle",
+      "url": "https://www.kaggle.com/datasets/aparitosh/solar-panel-dataset",
+      "underlying_provenance": "DUPLICATE of S3 (solar-panel-a5cyn/dusty-and-bird-droppings) - filenames Imgclean_/Imgdirty_",
+      "research_suitability": "REJECT - duplicate of data we already have",
+      "tier": "D"
+    },
+    {
+      "id": "P12-14", "name": "rooftop-solar-panel-thailand (johnsullivan66)", "host": "Kaggle",
+      "url": "https://www.kaggle.com/datasets/johnsullivan66/rooftop-solar-panel-thailand",
+      "modality": "RGB", "viewpoint": "AERIAL / SATELLITE orthomosaic tiles ('tile_0_0-*.png') + segmentation masks",
+      "annotation": "segmentation masks",
+      "research_suitability": "REJECT - aerial tiled segmentation",
+      "tier": "D"
+    },
+    {
+      "id": "P12-15", "name": "ghandinagar-rooftop-segmentation-dataset (rameezakther)", "host": "Kaggle",
+      "url": "https://www.kaggle.com/datasets/rameezakther/ghandinagar-rooftop-segmentation-dataset",
+      "modality": "RGB", "viewpoint": "AERIAL / SATELLITE rooftop tiles (India) + segmentation masks (Roboflow export)",
+      "annotation": "segmentation masks",
+      "research_suitability": "REJECT - aerial rooftop segmentation",
+      "tier": "D"
+    },
+    {
+      "id": "P12-16", "name": "Villegas-Ceballos et al. - RGB electrical behavior of PV panels", "host": "Zenodo / MDPI Data 2022",
+      "url": "https://zenodo.org/records/6386767",
+      "images": 5211, "modality": "RGB", "viewpoint": "ONE fixed camera pointed at ONE panel (I-V estimation experiment, Colombia)",
+      "annotation": "NONE (no bounding boxes / masks) - images paired with electrical I-V/P-V data",
+      "license_shown": "CC BY 4.0 (peer-reviewed data descriptor - provenance RESOLVED)",
+      "provenance_status": "RESOLVED (CC BY 4.0, real authorship)",
+      "research_suitability": "REJECT for panel detection - no localisation annotation, 1 physical panel / 1 viewpoint repeated 5211x",
+      "tier": "D"
+    },
+    {
+      "id": "P12-17", "name": "Jiang et al. PV01 / PV03 / PV08 multi-resolution segmentation", "host": "Zenodo 5171712 / ESSD 2021",
+      "url": "https://doi.org/10.5281/zenodo.5171712",
+      "images": 3716, "modality": "RGB", "viewpoint": "SATELLITE (0.8 m) + AERIAL (0.3 m) + UAV nadir (0.1 m)",
+      "annotation": "semantic-segmentation masks (.bmp)", "classes": {"photovoltaic_panel": 1},
+      "license_shown": "CC BY 4.0 (peer-reviewed - provenance RESOLVED)",
+      "provenance_status": "RESOLVED (CC BY 4.0)",
+      "research_suitability": "REJECT for this objective - overhead viewpoint; already have an aerial detector (weights/yolo_solar.pt) trained on BDAPPV for that domain",
+      "tier": "D"
+    },
+    {
+      "id": "P12-18", "name": "BDAPPV crowdsourced aerial PV arrays", "host": "Zenodo 7358126 / Nature Sci Data 2023",
+      "url": "https://zenodo.org/record/7358126",
+      "modality": "RGB", "viewpoint": "AERIAL (IGN) + SATELLITE (Google) - already the training source for weights/yolo_solar.pt (production aerial detector)",
+      "annotation": "segmentation masks",
+      "provenance_status": "RESOLVED",
+      "research_suitability": "REJECT for this objective - aerial; already in use for the aerial detector",
+      "tier": "D"
+    }
+  ],
+  "scoring_rubric": {
+    "dimensions": {
+      "domain_relevance": "0-5 (ground-level RGB rooftop oblique)",
+      "panel_bbox_quality": "0-5",
+      "native_image_diversity": "0-5 (aspect ratios, resolutions, sources)",
+      "large_panel_coverage": "0-5 (image-4-like frame-filling panels)",
+      "wide_array_coverage": "0-5 (image-6-like distant multi-panel arrays)",
+      "portrait_phone_coverage": "0-5",
+      "provenance_confidence": "0-5",
+      "annotation_consistency": "0-5",
+      "independent_physical_scene_diversity": "0-5",
+      "overlap_penalty": "0 to -5",
+      "watermark_stock_penalty": "0 to -5"
+    },
+    "note": "Provenance and licence problems are reported as explicit PROVENANCE STATUS + RESEARCH SUITABILITY fields, NOT buried in the numeric score."
+  },
+  "scores": {
+    "P12-01_bwpkx": {"domain_relevance": 4, "panel_bbox_quality": 3, "native_image_diversity": 1, "large_panel_coverage": 3, "wide_array_coverage": 2, "portrait_phone_coverage": 0, "provenance_confidence": 1, "annotation_consistency": 3, "independent_physical_scene_diversity": 1, "overlap_penalty": 0, "watermark_stock_penalty": 0, "total": 21, "provenance_status": "UNRESOLVED", "research_suitability": "LOW (Tier C)"},
+    "P12-02_fxmikf621": {"domain_relevance": 4, "panel_bbox_quality": 2, "native_image_diversity": 5, "large_panel_coverage": 4, "wide_array_coverage": 2, "portrait_phone_coverage": 2, "provenance_confidence": 0, "annotation_consistency": 2, "independent_physical_scene_diversity": 3, "overlap_penalty": -1, "watermark_stock_penalty": -5, "total": 20, "provenance_status": "UNUSABLE (scraped Getty/stock/YouTube)", "research_suitability": "REJECT (Tier D)"},
+    "all_others": {"total": "<= 12", "reason": "aerial/thermal/grayscale/segmentation-only/duplicate/no-annotation", "research_suitability": "REJECT (Tier D)"}
+  },
+  "ranking": {
+    "TIER_A_strong_acquisition_target": [],
+    "TIER_B_useful_with_caveats": [],
+    "TIER_C_research_only": ["P12-01 solar-panel-detection-ubwtz (right viewpoint, but ~1 physical scene / video frames, provenance unresolved)"],
+    "TIER_D_reject": ["P12-02 fxmikf-621 (unusable provenance)", "P12-03 solar-panels-rgb (no panel class)", "P12-04 panel-detection-nfzzu (aerial, unlabelled)", "P12-05 solar-panels-r4trk (aerial)", "P12-06 solar-panel-zitzr (grayscale aerial farm)", "P12-07 panel-solar-yolo (grayscale aerial farm)", "P12-08 solar-panels-taxvb (thermal)", "P12-09 solar-x0bfa (thermal)", "P12-10 rwanda-rooftops (aerial crops)", "P12-11 salimhammadi07/PV03 (aerial segmentation)", "P12-12 zzzpai (duplicate)", "P12-13 aparitosh (duplicate)", "P12-14 thailand-rooftop (aerial)", "P12-15 ghandinagar (aerial)", "P12-16 Villegas-Ceballos RGB electrical (no annotation, 1 scene)", "P12-17 Jiang PV01/03/08 (aerial/satellite)", "P12-18 BDAPPV (aerial, already used)"]
+  },
+  "acquisition_recommendation": "C - No suitable public dataset found. Pursue direct / permissioned data collection: capture a small owner/partner set of ground-level rooftop PV photos (portrait + landscape phone, oblique, close-up + array), with explicit permission, and hand-annotate panel bounding boxes. Optionally augment with the frame-diverse subset of P12-01 (bwpkx) as a RESEARCH-ONLY supplement once its provenance is resolved, treating its ~1-scene redundancy honestly.",
+  "training_performed": "NONE",
+  "integrity": {
+    "weights/yolo_solar.pt": "0b58609905b8ffe41465751cb842b6ed0368ca2555927e31fb5cd587af37e8ea",
+    "weights/yolo_solar_ground_research_v1.pt": "2b26334dc4023ba4c89a80e2350ddc9012358a48cdef713aee86c8e79a1bbb50",
+    "weights/yolo_solar_ground_research_v2.pt": "26e4d603de0718b9b20c6bf5c9761ef1b114b6954f280925ea6c08e469357aa3",
+    "weights/yolo_solar_condition_research_v1.pt": "b077251a514424481d51b6a57ebcc30f4a607ea7559053cbb3ef7d0de88f9578",
+    "weights/mobilenet_solar_v1.pth": "afccaccfcc309952f7a94d754aaafc22e7e3391416b9518c5f4a8635b1c2682b"
+  }
+}

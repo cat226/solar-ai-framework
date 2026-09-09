@@ -49,6 +49,11 @@ datasets/ground_pv_research/splits/**/labels/
 datasets/ground_pv_research/candidate_defects/raw/
 datasets/ground_pv_research/candidate_defects/overlap/_fingerprints/
 
+# Phase 12 dataset-acquisition audit: sampled candidate downloads are bulky and
+# regenerable; only the reports/JSON/CSV under phase12_audit/ are committed.
+datasets/ground_pv_research/phase12_audit/samples/
+datasets/ground_pv_research/phase12_audit/_fingerprints/
+
 # Unified condition/defect research dataset (S1 + S3 -> 5 condition classes):
 # the materialized image/label tree is bulky and regenerable via
 # `python scripts/build_condition_dataset.py --overwrite`. The manifests,
