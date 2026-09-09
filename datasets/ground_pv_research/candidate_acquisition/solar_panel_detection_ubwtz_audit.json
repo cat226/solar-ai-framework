@@ -1,0 +1,117 @@
+{
+  "source": {
+    "roboflow_workspace": "solar-panel-detection-bwpkx",
+    "roboflow_project": "solar-panel-detection-ubwtz",
+    "roboflow_version": 2,
+    "roboflow_url": "https://universe.roboflow.com/solar-panel-detection-bwpkx/solar-panel-detection-ubwtz/dataset/2",
+    "license_shown": "CC BY 4.0",
+    "license_source": "Roboflow re-uploader dataset-level claim - NO original image source stated",
+    "export_format": "yolov8 (segmentation polygons)",
+    "export_resize": "none (native resolution preserved)"
+  },
+  "provenance_status": "UNRESOLVED - personal-experimental-unverified-provenance, research-only. NOT publication/redistribution/commercial/production cleared.",
+  "counts": {
+    "images": 563,
+    "per_split": {
+      "train": 395,
+      "valid": 113,
+      "test": 55
+    },
+    "empty_label_images": 58,
+    "polygon_annotations": 1537,
+    "valid_annotations_to_bbox": 1537,
+    "zero_area": 0,
+    "scene_spanning_gt92pct": 0,
+    "malformed": 0,
+    "odd_coord_count": 0,
+    "exact_duplicate_images": 0,
+    "total_image_bytes": 104389748
+  },
+  "geometry": {
+    "distinct_dimensions": 4,
+    "top_dimensions": [
+      [
+        [
+          605,
+          1056
+        ],
+        371
+      ],
+      [
+        [
+          1681,
+          2200
+        ],
+        155
+      ],
+      [
+        [
+          1075,
+          594
+        ],
+        34
+      ],
+      [
+        [
+          2241,
+          1650
+        ],
+        3
+      ]
+    ],
+    "aspect_ratio_range": [
+      0.573,
+      1.81
+    ],
+    "portrait_images": 526,
+    "landscape_images": 37,
+    "square_images": 0,
+    "native_aspect_preserved": true,
+    "boxes_per_image": {
+      "mean": 2.73,
+      "median": 3,
+      "max": 6
+    },
+    "bbox_area_fraction": {
+      "median": 0.16,
+      "p10": 0.071,
+      "p90": 0.424,
+      "gt_0_25": 428,
+      "gt_0_5": 79
+    },
+    "boundary_touching_boxes": 1220
+  },
+  "scene_analysis": {
+    "capture_dates": {
+      "20240430": 98
+    },
+    "distinct_capture_events": 98,
+    "video_sequences": {
+      "count": 2,
+      "frames": 405,
+      "sequences": {
+        "20240430_133008_mp4": 34,
+        "20240430_133150_mp4": 371
+      }
+    },
+    "photo_events": {
+      "count": 96,
+      "images": 158
+    },
+    "largest_capture_event": [
+      "20240430_133150_mp4",
+      371
+    ],
+    "perceptual_clusters_dhash16": {
+      "hamming_le_4": 563,
+      "hamming_le_6": 563,
+      "hamming_le_8": 563,
+      "hamming_le_12": 563
+    },
+    "verdict": "ONE physical installation, ONE capture session (all frames dated 20240430, timestamps within a few minutes). 2 video sequences (405 frames) + burst photos. Strict dHash counts every frame distinct, but INDEPENDENT PHYSICAL SCENES ~= 1. Frames must NOT be treated as independent examples; the whole candidate belongs in ONE split (train only)."
+  },
+  "domain_fit_vs_owner_photos": {
+    "owner_photos": "6x phone (5 portrait 573x1280 ar 0.448, 1 landscape 1280x573 ar 2.234)",
+    "candidate": "526 portrait / 37 landscape, ar 0.573-1.81, native (non-square) - the FIRST ground-level non-square PV panel data we have; but a single installation, so it broadens aspect-ratio coverage, not scene coverage"
+  }
+}
