@@ -1,6 +1,6 @@
 {
   "phase": "13B beast ground PANEL detector training",
-  "status": "launched",
+  "status": "BLOCKED (compute)",
   "model_role": "RESEARCH ground PANEL detector experiments (0=panel 1=cracked 2=dusty). NOT production. NOT a condition model. Does not replace weights/yolo_solar.pt or weights/yolo_solar_ground_research_v1.pt.",
   "baseline": {
     "name": "ground_yolo11n_baseline_v1",
@@ -57,7 +57,24 @@
   "model_selection_rule": "NOT highest mAP. Hierarchy: (1) no catastrophic real-world regression (2) better real-world panel localization on the 6 owner photos (3) better held-out test (4) better recall w/o unacceptable FPs (5) better mAP50-95 (6) reasonable cost. A model that improves test mAP but fails the OOD holdout like v2 -> REJECT.",
   "owner_photos": "NOT training data. NOT pseudo-labelled. NOT in validation. NOT used for threshold tuning. Qualitative OOD holdout only.",
   "git_commit_at_launch": "ee0240ae83129fae9f8c3ed148aa1a446289d3c2",
-  "results": null,
+  "results": {
+    "v1_notebook": "HUNG >17h no output (over-scoped: A/B/C + 27-pass threshold sweep). Cancelled.",
+    "v2_notebook": "ran >9h no output on the Kaggle accelerator (status RUNNING, lastRunTime null); far beyond ~2-4h expected. No retrievable checkpoint.",
+    "experiment_A_local": {
+      "protocol": "local re-eval of weights/yolo_solar_ground_research_v1.pt on Susan test",
+      "test": {
+        "precision": 0.8756,
+        "recall": 0.8014,
+        "mAP50": 0.8647,
+        "mAP50_95": 0.6775
+      },
+      "reproduces_v1": true
+    },
+    "experiment_B": "BLOCKED (compute)",
+    "experiment_C": "BLOCKED (compute)",
+    "model_decision": "C - keep v1 (no completed challenger; candidate adds ~1 scene = 2.7% of training, cannot re-shape the square-image manifold)",
+    "production_disposition": "v1 remains the ground panel detector"
+  },
   "v1_run_note": "v1 of the notebook (3 experiments A/B/C + 27-pass threshold sweep) HUNG on Kaggle GPU for >17h with no output. Over-scoped for one session. Cancelled by pushing v2.",
   "threshold_sweep": "done locally on the downloaded checkpoints (Susan val), not in the notebook"
 }
