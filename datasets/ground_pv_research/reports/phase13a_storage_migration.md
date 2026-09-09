@@ -1,11 +1,20 @@
 # Phase 13A — dataset storage migration to F: + Phase 12 candidate download
 
-**Status: BLOCKED at gate 1 (§1 "verify F: is available").**
+**Status: BLOCKED.** Two attempts.
 
-**There is no F: drive on this machine.** No files were copied, moved, deleted,
-re-encoded or modified. No candidate was downloaded. No production artifact was
-touched. No commit of code/config was made (none was warranted — nothing
-migrated).
+- **Attempt 1 (2026-09-09, first pass):** F: not present at all.
+- **Attempt 2 (2026-09-09, "retry migration"):** F: appeared briefly as a
+  **Removable** volume (238.3 GB, 183.5 GB free) but **vanished mid-operation**
+  and the Windows System event log shows **active disk I/O errors** on it
+  (`disk` event **ID 11** — controller error ×6, `disk` event **ID 51** —
+  paging I/O error). The drive is **hardware-unstable**: it enumerates
+  intermittently and disconnects under sustained access. A dataset copy +
+  verification cannot complete on it safely, so **no D: source can ever reach a
+  verified state and be deleted.**
+
+**No files were copied, moved, deleted, re-encoded or modified in either
+attempt.** No candidate was downloaded. No production artifact was touched. The
+only commit is this status report.
 
 ---
 
@@ -20,7 +29,35 @@ migrated).
 | free (before) | **26.2 GB** |
 | free (after) | **26.2 GB** (unchanged — nothing was written or deleted) |
 
-### F: — **NOT PRESENT**
+### F: — **PRESENT INTERMITTENTLY, HARDWARE-UNSTABLE** (attempt 2)
+
+On the retry, F: enumerated as **`New Volume`, DriveType Removable, HealthStatus
+Healthy, 238.3 GB, 183.5 GB free**, with pre-existing sibling content under
+`F:\SolarAI_Datasets\` from earlier work (`6rainstorm/`, `acquisition_manifest/`,
+`domain_adaptation_v1/` 2.3 GB, `p-pose/`, `quarantine/` 2.7 GB — **not touched**).
+`F:\SolarAI_Datasets\ground_pv_research\` and `…\training_scratch\` did **not**
+exist (clean destination).
+
+But within the same session F: **dropped out mid-command** — `Get-FileHash` on
+`F:\Solar Real Images\*.jpeg` failed with *"Cannot find drive. A drive with the
+name 'F' does not exist."* partway through, and **5 subsequent probes over ~10 s
+all failed**, then 3 more over 12 s. The System event log (last 20 min):
+
+| time | source | id | level | meaning |
+|---|---|---:|---|---|
+| 08:24:05 (×6) | `disk` | **11** | Error | *"The driver detected a controller error on \Device\Harddisk…"* |
+| 08:24:05 | `disk` | 51 | Warning | I/O warning |
+| 08:39:26 | `disk` | 51 | Warning | *"An error was detected on device … during a paging operation"* |
+
+This is the same removable-drive instability documented in
+`e_drive_storage_policy` and Phases 2 / 5 / 6 (that drive appeared as `E:` then
+`M:`, went read-only, vanished mid-operation, and left a `FOUND.000` chkdsk
+folder = filesystem corruption). **Writing ~1.8 GB / 47 k files to it and then
+hash-verifying them cannot complete before it disconnects**, and per §13 no D:
+source may be deleted without a completed, verified F: copy. Proceeding would
+risk a partial/corrupt copy and filesystem damage on the removable media.
+
+### F: — **NOT PRESENT** (attempt 1)
 
 Checked via five independent mechanisms, all consistent:
 
@@ -119,15 +156,28 @@ failures; no dataset-path resolution problems (everything still resolves against
 
 ## 8. To unblock
 
-1. Attach / mount the intended stable dataset drive so it appears as a real
-   volume (`Get-Volume` must list it with real free space).
-2. Confirm the drive letter (it may not be `F:` — Windows assigns the next free
-   letter; earlier phases saw the same removable drive appear as `E:` then `M:`).
-3. Re-run this phase: `robocopy` copy-first → count/size/SHA verify → sample-open
-   → delete D: source only on full match → download the Phase 12 candidate to the
-   new drive → write its download manifest.
+The blocker is **hardware**: the F: removable drive throws controller/paging I/O
+errors and disconnects under access. Code cannot work around a failing disk.
 
-Given the history of this removable drive vanishing mid-operation (Phases 2, 5,
-6), a copy-and-verify pass should be treated as non-atomic and re-verifiable, and
-**no D: source should be deleted until a second independent verification run
-passes.**
+1. **Fix the drive at the OS/hardware level first** — reseat / re-cable it, try a
+   different USB port or a powered hub, and run `chkdsk F: /f` (or `/scan`) once
+   it holds a connection. It must stay mounted through a sustained read of
+   thousands of files without a `disk` ID 11/51 event before it can be trusted.
+2. Confirm the drive letter (Windows assigns the next free one; earlier phases
+   saw the same removable drive as `E:` then `M:`).
+3. Only then re-run: `robocopy` copy-first (`/E /COPY:DAT /DCOPY:DAT /R:3 /W:5
+   /Z /XO /TEE /LOG`) → complete file-count + byte-total + relative-path compare
+   → SHA-256 of all manifests / `data.yaml` / taxonomy / split-manifest /
+   annotation files + full SHA-256 of the six owner photos + a sampled image
+   hash pass → open a representative sample of images from F: → **delete the D:
+   gitignored bulk image directories only on a full match, and only after a
+   second independent verification run** (given this drive's history) →
+   `SOLAR_AI_DATA_ROOT` config change → download the Phase 12 candidate to
+   `F:\SolarAI_Datasets\ground_pv_research\candidate_acquisition\` → write its
+   download manifest.
+4. **Do not delete the git-tracked text** under `datasets/ground_pv_research/`
+   (`reports/`, `manifests/*.json`, `splits/*.csv`, `*.md`, `condition/data.yaml`,
+   `metadata/*.json`, `raw_refs/`) — that is version-controlled source and must
+   stay in the repo on D:. Only the **gitignored** bulk image pools (`raw/`,
+   `yolo/`, `condition/images/`, `candidate_defects/raw/`,
+   `phase12_audit/samples/`) are candidates for deletion after a verified F: copy.
