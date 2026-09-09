@@ -16,7 +16,7 @@
   "kaggle": {
     "kernel": "edithstark/ground-beast-train",
     "kernel_url": "https://www.kaggle.com/code/edithstark/ground-beast-train",
-    "kernel_version": 1,
+    "kernel_version": 2,
     "kernel_id": 133672402,
     "datasets": [
       "edithstark/solar-ai-ground-pv-research-v1",
@@ -39,9 +39,9 @@
   },
   "derived_dataset": "datasets/ground_pv_research/yolo_beast_v1/ (Susan 6,492 immutable + 125 candidate frames; data_A = Susan only, data_BC = Susan train + candidate train, Susan valid/test)",
   "experiments": {
-    "A": "Susan-only baseline reproduction, YOLO11n, imgsz 640, v1 conservative aug",
-    "B": "Susan + 125 scene-capped candidate (train only), YOLO11n, imgsz 640, v1 conservative aug",
-    "C": "Susan + candidate (train only), YOLO11n, imgsz 640, moderate scale/aspect aug (scale 0.5, translate 0.15, degrees 7, mosaic 0.4, close_mosaic 15) - NO multi_scale (v2 lesson: 6x cost, worse OOD)"
+    "B": "Susan + 125 scene-capped candidate (train only), YOLO11n, imgsz 640, 90 epochs, patience 20, batch 16, v1 conservative aug",
+    "C": "Susan + candidate (train only), YOLO11n, imgsz 640, 90 epochs, patience 20, batch 16, moderate scale/aspect aug (scale 0.5, translate 0.15, degrees 7, mosaic 0.4, close_mosaic 15) - NO multi_scale",
+    "A": "NOT trained on Kaggle - Susan-only baseline done by re-evaluating the existing v1 checkpoint locally on the identical Susan test set"
   },
   "frozen_across_ABC": [
     "YOLO11n architecture",
@@ -57,5 +57,7 @@
   "model_selection_rule": "NOT highest mAP. Hierarchy: (1) no catastrophic real-world regression (2) better real-world panel localization on the 6 owner photos (3) better held-out test (4) better recall w/o unacceptable FPs (5) better mAP50-95 (6) reasonable cost. A model that improves test mAP but fails the OOD holdout like v2 -> REJECT.",
   "owner_photos": "NOT training data. NOT pseudo-labelled. NOT in validation. NOT used for threshold tuning. Qualitative OOD holdout only.",
   "git_commit_at_launch": "ee0240ae83129fae9f8c3ed148aa1a446289d3c2",
-  "results": null
+  "results": null,
+  "v1_run_note": "v1 of the notebook (3 experiments A/B/C + 27-pass threshold sweep) HUNG on Kaggle GPU for >17h with no output. Over-scoped for one session. Cancelled by pushing v2.",
+  "threshold_sweep": "done locally on the downloaded checkpoints (Susan val), not in the notebook"
 }
