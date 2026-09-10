@@ -1,11 +1,11 @@
 {
   "schema_version": "1.0",
-  "phase": "14B \u2014 representative panel dataset audit",
+  "phase": "14B/14B.1 \u2014 representative panel dataset audit",
   "inventory": {
     "num_images": 6,
     "num_scenes": 6,
     "num_corrupt": 0,
-    "capture_source_counts": {
+    "source_type_counts": {
       "first_party": 6
     },
     "provenance_status_counts": {
@@ -44,6 +44,7 @@
       8
     ]
   },
+  "panel_count_gt_disagreements": [],
   "duplicate_report": {
     "exact_duplicate_groups": 0,
     "exact_duplicate_images": 0,
@@ -87,6 +88,10 @@
   },
   "readiness_checklist": {
     "individual_panel_annotations_available": false,
+    "verified_scene_count": 0,
+    "has_verified_4_panel_scene": false,
+    "has_verified_6_panel_scene": false,
+    "has_verified_8_panel_scene": false,
     "source_families_tracked": true,
     "train_valid_test_scene_isolated": true,
     "cross_split_exact_duplicates_zero": true,
@@ -94,20 +99,23 @@
     "annotation_audit_passes": true,
     "genuine_independent_holdout": false,
     "target_4_6_8_panel_scenes_represented": false,
-    "large_foreground_panels_represented": "unknown_needs_manual_tagging",
-    "touching_grouped_panels_represented": "unknown_needs_manual_tagging",
+    "large_foreground_panels_represented": false,
+    "touching_grouped_panels_represented": false,
     "native_aspect_ratios_preserved": true,
     "provenance_documented": true,
     "num_images": 6,
     "num_images_annotated_human_verified": 0,
     "ready_for_phase_14c": false,
     "blocking_reasons": [
-      "only 6 image(s) registered \u2014 spec minimum is 100 independent scenes",
+      "only 0 verified independent scene(s) (annotated_human_verified, scene_status != needs_review, not in the reference split) \u2014 spec minimum is 100",
       "no human-verified individual-panel annotations exist yet",
+      "no verified 4-panel scene yet",
+      "no verified 6-panel scene yet",
+      "no verified 8-panel scene yet",
       "no test-split scenes exist yet \u2014 no genuine independent holdout",
       "4/6/8-panel scenes are not all represented (with known panel counts)",
-      "large-foreground-panel coverage not yet confirmed by a human reviewer",
-      "touching/grouped-panel coverage not yet confirmed by a human reviewer"
+      "large-foreground-panel coverage not yet confirmed by a human reviewer's tags",
+      "touching/grouped-panel coverage not yet confirmed by a human reviewer's tags"
     ]
   },
   "six_image_reference": {

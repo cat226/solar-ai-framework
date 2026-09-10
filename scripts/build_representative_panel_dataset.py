@@ -44,7 +44,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--raw-images-dir", type=Path, required=True,
                         help="Directory of source images to register (recursed). Read-only.")
-    parser.add_argument("--capture-source", choices=["first_party", "public_supplemental", "unknown"],
+    parser.add_argument("--source-type", choices=["first_party", "public_supplemental", "unknown"],
                         required=True)
     parser.add_argument("--provenance-status", default="first_party")
     parser.add_argument("--id-prefix", default="img")
@@ -78,7 +78,7 @@ def main(argv: list[str] | None = None) -> int:
 
     print(f"Scanning {args.raw_images_dir} ...")
     entries, corrupt = build_source_manifest(
-        args.raw_images_dir, capture_source=args.capture_source,
+        args.raw_images_dir, source_type=args.source_type,
         provenance_status=args.provenance_status, id_prefix=args.id_prefix,
     )
     if corrupt:
