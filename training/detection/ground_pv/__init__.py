@@ -20,9 +20,15 @@ from training.detection.ground_pv.class_map import (
     RESEARCH_CLASS_ORDER,
     build_class_id_remap,
 )
+from training.detection.ground_pv.dynamic_panel_detection import (
+    DynamicPanelConfig,
+    detect_dynamic_panels,
+)
 
 __all__ = [
     "RESEARCH_CLASS_NAMES",
     "RESEARCH_CLASS_ORDER",
     "build_class_id_remap",
+    "DynamicPanelConfig",
+    "detect_dynamic_panels",
 ]
