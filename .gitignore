@@ -71,6 +71,17 @@ kaggle/ground_beast_dataset/
 # so every derived image stays traceable and the split is reproducible.
 datasets/ground_pv_research/condition/images/
 
+# Phase 14B representative panel dataset: raw source images, annotation label
+# files, and any derived/materialized image trees are bulky, first-party, and
+# regenerable/reproducible from the source manifest. The manifests/, splits/,
+# and reports/ subdirectories (small JSON/CSV/MD — source manifest, split
+# manifest, near-duplicate pairs, failure case registry, dataset report,
+# evaluation protocol) ARE committed so provenance and the audit verdict
+# stay traceable without the underlying bulk imagery.
+datasets/ground_pv_research/representative_panel_v1/raw/
+datasets/ground_pv_research/representative_panel_v1/annotations/
+datasets/ground_pv_research/representative_panel_v1/derived/
+
 # Ultralytics YOLO training runs and pretrained-checkpoint downloads
 runs/
 training/detection/runs/
