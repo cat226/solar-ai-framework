@@ -1,0 +1,544 @@
+{
+  "experiment_name": "condition_yolo11n_4class_aug_v1",
+  "ablation_of": "condition_yolo11n_4class_baseline_v1 (weights/yolo_solar_condition_4class_research_v2.pt) \u2014 AUGMENTATION ONLY (mosaic 0.5->1.0, copy_paste 0.0->0.5); epochs/patience/imgsz/dataset/architecture/optimizer unchanged; trained from the same pretrained yolo11n.pt starting point as v2, NOT fine-tuned from v2/v3/v3_960",
+  "augmentation_intervention": {
+    "changed": {
+      "mosaic": [
+        0.5,
+        1.0
+      ],
+      "copy_paste": [
+        0.0,
+        0.5
+      ]
+    },
+    "rationale": "Ultralytics hyperparameter documentation associates mosaic and copy_paste specifically with improved small/occluded-object detection"
+  },
+  "model_role": "EXPERIMENTAL RESEARCH condition detector, ACTIVE 4-CLASS taxonomy (second stage, on panel crops) \u2014 NOT a panel detector, NOT production, NOT validated for field use",
+  "active_taxonomy": {
+    "0": "CLEAN",
+    "1": "DUSTY",
+    "2": "BIRD_DROP",
+    "3": "PHYSICAL_DAMAGE"
+  },
+  "electrical_damage_status": "REMOVED from the active taxonomy entirely \u2014 not present in this dataset, never relabelled",
+  "hotspot_status": "OUT OF SCOPE \u2014 requires thermal/IR data, never inferred from RGB",
+  "dataset_kaggle": "edithstark/solar-ai-ground-condition-4class-research-v1",
+  "dataset_derived_from": "the existing 5-class condition dataset, ELECTRICAL_DAMAGE removed",
+  "provenance_grade": "C",
+  "provenance_tag": "personal-experimental-unverified-provenance",
+  "provenance_warning": "underlying images trace to Kaggle pythonafroz/solar-panel-images (licence Unknown); do NOT redistribute/publish/use commercially/claim verified CC BY",
+  "rare_class_warning": "PHYSICAL_DAMAGE is the rarest active class (314 train+val+test images / 725 instances) \u2014 see per_class[\"test_operating\"][\"PHYSICAL_DAMAGE\"] before trusting aggregate mAP",
+  "base_model": "yolo11n.pt",
+  "pretrained_source": "YOLO11n COCO-pretrained (Ultralytics)",
+  "epochs": 100,
+  "imgsz": 640,
+  "batch": -1,
+  "patience": 20,
+  "optimizer": "auto",
+  "cos_lr": true,
+  "seed": 42,
+  "augmentation": {
+    "hsv_h": 0.015,
+    "hsv_s": 0.4,
+    "hsv_v": 0.4,
+    "degrees": 5.0,
+    "translate": 0.1,
+    "scale": 0.3,
+    "shear": 0.0,
+    "perspective": 0.0,
+    "flipud": 0.0,
+    "fliplr": 0.5,
+    "mosaic": 1.0,
+    "mixup": 0.0,
+    "copy_paste": 0.5
+  },
+  "full_train_args": {
+    "data": "/kaggle/working/ground_condition_4class_data.yaml",
+    "epochs": "100",
+    "imgsz": "640",
+    "patience": "20",
+    "seed": "42",
+    "batch": "-1",
+    "device": "0",
+    "project": "/kaggle/working/research_runs/ground_condition_4class",
+    "name": "condition_yolo11n_4class_aug_v1",
+    "exist_ok": "True",
+    "pretrained": "True",
+    "cos_lr": "True",
+    "optimizer": "auto",
+    "verbose": "True",
+    "val": "True",
+    "hsv_h": "0.015",
+    "hsv_s": "0.4",
+    "hsv_v": "0.4",
+    "degrees": "5.0",
+    "translate": "0.1",
+    "scale": "0.3",
+    "shear": "0.0",
+    "perspective": "0.0",
+    "flipud": "0.0",
+    "fliplr": "0.5",
+    "mosaic": "1.0",
+    "mixup": "0.0",
+    "copy_paste": "0.5"
+  },
+  "device": "cuda:0",
+  "env": {
+    "python": "3.12.13",
+    "torch": "2.7.1+cu126",
+    "torchvision": "0.22.1+cu126",
+    "cuda": "12.6",
+    "ultralytics": "8.4.138",
+    "gpu": "Tesla P100-PCIE-16GB",
+    "gpu_capability": "6.0",
+    "gpu_memory_gb": 17.1
+  },
+  "dataset_hashes": {
+    "split_manifest_sha256": "600752137a4cbf8b24f506339b662ea0d0dbb67d1fc897f52fef83d6eb1d893e",
+    "package_dataset_content_sha256": "6637e6361343e7bb17d1703e705bffc0cb733a5428f48ce681fa28bc8826bf92",
+    "package_data_yaml_sha256": "0731819484bb3b07c87a2ced8e79997d380fa5a34a4701fdb3845c8fa03cffe4"
+  },
+  "dataset_stats": {
+    "train": {
+      "images": 1686,
+      "instances": {
+        "DUSTY": 6050,
+        "BIRD_DROP": 5500,
+        "CLEAN": 4209,
+        "PHYSICAL_DAMAGE": 481
+      },
+      "images_with_class": {
+        "BIRD_DROP": 737,
+        "DUSTY": 959,
+        "CLEAN": 639,
+        "PHYSICAL_DAMAGE": 205
+      },
+      "unique_families_per_class": {
+        "BIRD_DROP": 411,
+        "DUSTY": 597,
+        "CLEAN": 349,
+        "PHYSICAL_DAMAGE": 142
+      }
+    },
+    "valid": {
+      "images": 483,
+      "instances": {
+        "CLEAN": 1246,
+        "DUSTY": 1637,
+        "PHYSICAL_DAMAGE": 166,
+        "BIRD_DROP": 1516
+      },
+      "images_with_class": {
+        "DUSTY": 261,
+        "CLEAN": 184,
+        "PHYSICAL_DAMAGE": 79,
+        "BIRD_DROP": 194
+      },
+      "unique_families_per_class": {
+        "BIRD_DROP": 118,
+        "CLEAN": 106,
+        "DUSTY": 163,
+        "PHYSICAL_DAMAGE": 52
+      }
+    },
+    "test": {
+      "images": 242,
+      "instances": {
+        "DUSTY": 863,
+        "BIRD_DROP": 726,
+        "CLEAN": 545,
+        "PHYSICAL_DAMAGE": 78
+      },
+      "images_with_class": {
+        "DUSTY": 144,
+        "BIRD_DROP": 100,
+        "CLEAN": 95,
+        "PHYSICAL_DAMAGE": 30
+      },
+      "unique_families_per_class": {
+        "BIRD_DROP": 56,
+        "CLEAN": 53,
+        "DUSTY": 90,
+        "PHYSICAL_DAMAGE": 18
+      }
+    }
+  },
+  "train_seconds": 2832.1423597335815,
+  "best_epoch": 100,
+  "total_epochs": 100,
+  "run_dir": "/kaggle/working/research_runs/ground_condition_4class/condition_yolo11n_4class_aug_v1",
+  "threshold_analysis": [
+    {
+      "conf": 0.2,
+      "precision": 0.5639158123344377,
+      "recall": 0.45996251390814147,
+      "mAP50": 0.397083174948039,
+      "mAP50_95": 0.22106720520963502,
+      "per_class": {
+        "CLEAN": {
+          "precision": 0.6092289579717064,
+          "recall": 0.5358004827031375
+        },
+        "DUSTY": {
+          "precision": 0.5119841832809399,
+          "recall": 0.34941967012828345
+        },
+        "BIRD_DROP": {
+          "precision": 0.47950829214133067,
+          "recall": 0.34017207147584383
+        },
+        "PHYSICAL_DAMAGE": {
+          "precision": 0.6549418159437738,
+          "recall": 0.6144578313253012
+        }
+      }
+    },
+    {
+      "conf": 0.25,
+      "precision": 0.6129333317108319,
+      "recall": 0.436643147528353,
+      "mAP50": 0.3812722108761469,
+      "mAP50_95": 0.21533297323213413,
+      "per_class": {
+        "CLEAN": {
+          "precision": 0.6480162767039674,
+          "recall": 0.5124698310539019
+        },
+        "DUSTY": {
+          "precision": 0.5681818181818182,
+          "recall": 0.32070861331704337
+        },
+        "BIRD_DROP": {
+          "precision": 0.5334075723830735,
+          "recall": 0.3170086035737922
+        },
+        "PHYSICAL_DAMAGE": {
+          "precision": 0.7021276595744681,
+          "recall": 0.5963855421686747
+        }
+      }
+    },
+    {
+      "conf": 0.3,
+      "precision": 0.6527909099621224,
+      "recall": 0.4028419347675402,
+      "mAP50": 0.35944046583910044,
+      "mAP50_95": 0.2066755569747627,
+      "per_class": {
+        "CLEAN": {
+          "precision": 0.6848837209302325,
+          "recall": 0.47385358004827033
+        },
+        "DUSTY": {
+          "precision": 0.6112565445026178,
+          "recall": 0.2852779474648748
+        },
+        "BIRD_DROP": {
+          "precision": 0.5842541436464088,
+          "recall": 0.2799470549305096
+        },
+        "PHYSICAL_DAMAGE": {
+          "precision": 0.7307692307692307,
+          "recall": 0.572289156626506
+        }
+      }
+    },
+    {
+      "conf": 0.35,
+      "precision": 0.693779634105484,
+      "recall": 0.3791092579809227,
+      "mAP50": 0.3429401047879449,
+      "mAP50_95": 0.20093960827892773,
+      "per_class": {
+        "CLEAN": {
+          "precision": 0.720360824742268,
+          "recall": 0.4497184231697506
+        },
+        "DUSTY": {
+          "precision": 0.6371814092953523,
+          "recall": 0.2596212583995113
+        },
+        "BIRD_DROP": {
+          "precision": 0.6227045075125208,
+          "recall": 0.2468563864990073
+        },
+        "PHYSICAL_DAMAGE": {
+          "precision": 0.7948717948717948,
+          "recall": 0.5602409638554217
+        }
+      }
+    },
+    {
+      "conf": 0.4,
+      "precision": 0.7299898349861236,
+      "recall": 0.35293747928598507,
+      "mAP50": 0.32506884519753865,
+      "mAP50_95": 0.19363840171289629,
+      "per_class": {
+        "CLEAN": {
+          "precision": 0.7531734837799718,
+          "recall": 0.42960579243765085
+        },
+        "DUSTY": {
+          "precision": 0.6690265486725664,
+          "recall": 0.23091020158827122
+        },
+        "BIRD_DROP": {
+          "precision": 0.6659836065573771,
+          "recall": 0.21508934480476505
+        },
+        "PHYSICAL_DAMAGE": {
+          "precision": 0.8317757009345794,
+          "recall": 0.536144578313253
+        }
+      }
+    },
+    {
+      "conf": 0.45,
+      "precision": 0.7737100562530952,
+      "recall": 0.33252136396973014,
+      "mAP50": 0.31040719390491345,
+      "mAP50_95": 0.1873265350204819,
+      "per_class": {
+        "CLEAN": {
+          "precision": 0.7902208201892744,
+          "recall": 0.4030571198712792
+        },
+        "DUSTY": {
+          "precision": 0.7098121085594989,
+          "recall": 0.20769700671960903
+        },
+        "BIRD_DROP": {
+          "precision": 0.7160194174757282,
+          "recall": 0.19523494374586367
+        },
+        "PHYSICAL_DAMAGE": {
+          "precision": 0.8787878787878788,
+          "recall": 0.5240963855421686
+        }
+      }
+    },
+    {
+      "conf": 0.5,
+      "precision": 0.8009412999267054,
+      "recall": 0.3096294425144444,
+      "mAP50": 0.2925941898998705,
+      "mAP50_95": 0.17849815719073608,
+      "per_class": {
+        "CLEAN": {
+          "precision": 0.8213660245183888,
+          "recall": 0.37731295253419145
+        },
+        "DUSTY": {
+          "precision": 0.7481481481481481,
+          "recall": 0.18509468540012217
+        },
+        "BIRD_DROP": {
+          "precision": 0.7406340057636888,
+          "recall": 0.17008603573792191
+        },
+        "PHYSICAL_DAMAGE": {
+          "precision": 0.8936170212765957,
+          "recall": 0.5060240963855421
+        }
+      }
+    },
+    {
+      "conf": 0.55,
+      "precision": 0.8233658827079822,
+      "recall": 0.2877990551430032,
+      "mAP50": 0.2744950738516965,
+      "mAP50_95": 0.17087974163210087,
+      "per_class": {
+        "CLEAN": {
+          "precision": 0.831758034026465,
+          "recall": 0.35398230088495575
+        },
+        "DUSTY": {
+          "precision": 0.7911764705882353,
+          "recall": 0.16432498472816126
+        },
+        "BIRD_DROP": {
+          "precision": 0.7604166666666666,
+          "recall": 0.14493712772998016
+        },
+        "PHYSICAL_DAMAGE": {
+          "precision": 0.9101123595505618,
+          "recall": 0.4879518072289157
+        }
+      }
+    },
+    {
+      "conf": 0.6,
+      "precision": 0.8478434348836248,
+      "recall": 0.2691691073167904,
+      "mAP50": 0.2604481899180934,
+      "mAP50_95": 0.16443078590679985,
+      "per_class": {
+        "CLEAN": {
+          "precision": 0.869198312236287,
+          "recall": 0.33145615446500404
+        },
+        "DUSTY": {
+          "precision": 0.8166089965397924,
+          "recall": 0.14416615760537568
+        },
+        "BIRD_DROP": {
+          "precision": 0.7860262008733624,
+          "recall": 0.11912640635340833
+        },
+        "PHYSICAL_DAMAGE": {
+          "precision": 0.9195402298850575,
+          "recall": 0.4819277108433735
+        }
+      }
+    }
+  ],
+  "operating_threshold": 0.2,
+  "val_default_metrics": {
+    "precision": 0.5742579648560832,
+    "recall": 0.45539238181167485,
+    "mAP50": 0.48679537081056223,
+    "mAP50_95": 0.2518053797208502
+  },
+  "val_operating_metrics": {
+    "precision": 0.5639158123344377,
+    "recall": 0.45996251390814147,
+    "mAP50": 0.397083174948039,
+    "mAP50_95": 0.22106720520963502
+  },
+  "test_default_metrics": {
+    "precision": 0.5591934849409593,
+    "recall": 0.441796607060882,
+    "mAP50": 0.44265497353313327,
+    "mAP50_95": 0.22461683641383381
+  },
+  "test_operating_metrics": {
+    "precision": 0.5388929886682954,
+    "recall": 0.4556972894091063,
+    "mAP50": 0.3659290876784724,
+    "mAP50_95": 0.19993393814867602
+  },
+  "per_class": {
+    "val_default": {
+      "CLEAN": {
+        "precision": 0.614459159401891,
+        "recall": 0.5282613833894346,
+        "AP50": 0.5673484088209013,
+        "AP50_95": 0.3547037513529253
+      },
+      "DUSTY": {
+        "precision": 0.5264477816479571,
+        "recall": 0.34331093463653023,
+        "AP50": 0.37949704882776625,
+        "AP50_95": 0.16702099415018973
+      },
+      "BIRD_DROP": {
+        "precision": 0.49489037419935095,
+        "recall": 0.3355393778954335,
+        "AP50": 0.33056752002650114,
+        "AP50_95": 0.13385537310144296
+      },
+      "PHYSICAL_DAMAGE": {
+        "precision": 0.6612345441751338,
+        "recall": 0.6144578313253012,
+        "AP50": 0.6697685055670801,
+        "AP50_95": 0.3516414002788427
+      }
+    },
+    "val_operating": {
+      "CLEAN": {
+        "precision": 0.6092289579717064,
+        "recall": 0.5358004827031375,
+        "AP50": 0.47865304080645804,
+        "AP50_95": 0.317995649560482
+      },
+      "DUSTY": {
+        "precision": 0.5119841832809399,
+        "recall": 0.34941967012828345,
+        "AP50": 0.2703042362695299,
+        "AP50_95": 0.13167740199078273
+      },
+      "BIRD_DROP": {
+        "precision": 0.47950829214133067,
+        "recall": 0.34017207147584383,
+        "AP50": 0.2516081180576705,
+        "AP50_95": 0.11175942999006087
+      },
+      "PHYSICAL_DAMAGE": {
+        "precision": 0.6549418159437738,
+        "recall": 0.6144578313253012,
+        "AP50": 0.5877673046584978,
+        "AP50_95": 0.32283633929721456
+      }
+    },
+    "test_default": {
+      "CLEAN": {
+        "precision": 0.5646151940525199,
+        "recall": 0.5275735294117647,
+        "AP50": 0.5316131357298342,
+        "AP50_95": 0.3349285526868345
+      },
+      "DUSTY": {
+        "precision": 0.4996166698565463,
+        "recall": 0.3494063775747333,
+        "AP50": 0.36536735066472625,
+        "AP50_95": 0.15413408630298503
+      },
+      "BIRD_DROP": {
+        "precision": 0.5356457976669763,
+        "recall": 0.35048678720445064,
+        "AP50": 0.3629919747999811,
+        "AP50_95": 0.13930550746972029
+      },
+      "PHYSICAL_DAMAGE": {
+        "precision": 0.6368962781877947,
+        "recall": 0.5397197340525791,
+        "AP50": 0.5106474329379915,
+        "AP50_95": 0.2700991991957955
+      }
+    },
+    "test_operating": {
+      "CLEAN": {
+        "precision": 0.5558587179337672,
+        "recall": 0.5477941176470589,
+        "AP50": 0.44214952909143407,
+        "AP50_95": 0.3011691150037893,
+        "test_images_with_class": 95,
+        "test_instances": 545,
+        "test_unique_families": 53
+      },
+      "DUSTY": {
+        "precision": 0.481345864372995,
+        "recall": 0.36152954808806487,
+        "AP50": 0.2676835484412899,
+        "AP50_95": 0.12519045372096027,
+        "test_images_with_class": 144,
+        "test_instances": 863,
+        "test_unique_families": 90
+      },
+      "BIRD_DROP": {
+        "precision": 0.5142270422624335,
+        "recall": 0.36218344061925,
+        "AP50": 0.27549699541931405,
+        "AP50_95": 0.11407238538256059,
+        "test_images_with_class": 100,
+        "test_instances": 726,
+        "test_unique_families": 56
+      },
+      "PHYSICAL_DAMAGE": {
+        "precision": 0.6041403301039857,
+        "recall": 0.5512820512820513,
+        "AP50": 0.4783862777618515,
+        "AP50_95": 0.2593037984873938,
+        "test_images_with_class": 30,
+        "test_instances": 78,
+        "test_unique_families": 18
+      }
+    }
+  },
+  "checkpoint_sha256": "eb4d6151a53ded76049f7469946e3016384b48ba5bdbcbda2845efca7fdf618b",
+  "last_checkpoint_sha256": "08c633e276ab29e7be3ef32f534012c2fb3458187c8e09cde90e9d2c8d620940",
+  "not_production_validated": true
+}
