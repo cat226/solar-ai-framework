@@ -42,6 +42,10 @@ _FROZEN_ARTIFACTS: dict[str, str] = {
     # Phase 15B's 100-epoch baseline — frozen the moment Phase 15B.1 created
     # a NEW, separately-named checkpoint (_v3) rather than overwriting it.
     "yolo_solar_condition_4class_research_v2.pt": "2dcf6122c18590f33f3b44ad88e054d409509274193977046ad2076d368de28e",
+    # Phase 15B.1's 200-epoch/imgsz640 duration ablation — frozen the moment
+    # Phase 15D-A created a NEW, separately-named checkpoint (_v3_960)
+    # rather than overwriting it.
+    "yolo_solar_condition_4class_research_v3.pt": "2e26b6afefffff79f43e75c80996f5fcd2aed435df56a33a1bdc5882d3a53c05",
 }
 
 
@@ -75,8 +79,8 @@ def test_frozen_artifact_unchanged(filename: str, expected_sha256: str) -> None:
 
 
 def test_new_research_checkpoint_never_reuses_a_frozen_filename():
-    """Phase 15B's own rule, reapplied in Phase 15B.1: a new checkpoint must
-    get a NEW, clearly versioned filename (e.g. _v3), never landing on one
-    of the names already declared frozen above."""
-    candidate = "yolo_solar_condition_4class_research_v3.pt"
+    """Phase 15B's own rule, reapplied in Phase 15B.1 and Phase 15D-A: a new
+    checkpoint must get a NEW, clearly versioned filename (e.g. _v3_960),
+    never landing on one of the names already declared frozen above."""
+    candidate = "yolo_solar_condition_4class_research_v3_960.pt"
     assert candidate not in _FROZEN_ARTIFACTS

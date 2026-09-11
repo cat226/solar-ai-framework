@@ -89,33 +89,51 @@ def _load_family_lookup(splits_csv: Path, split: str) -> dict[str, dict[str, str
     return lookup
 
 
-def _run_inference(weights_path: Path, image_paths: list[Path], conf_floor: float) -> dict[str, list[tuple[int, tuple[float, float, float, float], float]]]:
-    """Returns {image_filename: [(class_id, xyxy_box, confidence), ...]}."""
+def _run_inference(weights_path: Path, image_paths: list[Path], conf_floor: float, imgsz: int = 640,
+                    infer_batch: int = 4) -> dict[str, list[tuple[int, tuple[float, float, float, float], float]]]:
+    """Returns {image_filename: [(class_id, xyxy_box, confidence), ...]}.
+
+    `imgsz` MUST match the checkpoint's own training resolution — evaluating
+    at a mismatched resolution confounds any cross-checkpoint comparison
+    (e.g. the Phase 15D-A imgsz=960 experiment must be evaluated at 960,
+    not the imgsz=640 default used for v2/v3)."""
     from ultralytics import YOLO  # local import — keeps the analysis module torch-free
 
     model = YOLO(str(weights_path))
     assert_active_taxonomy(model.names)
 
     out: dict[str, list[tuple[int, tuple[float, float, float, float], float]]] = {}
-    # CPU-only local inference: a large single batch of 640x640 images can
-    # exhaust available RAM during conv2d (same OOM class as Phase 15A's
-    # first smoke-training attempt). batch=4 + stream=True keeps memory flat
-    # regardless of test-set size — a runtime-only choice, no effect on
-    # model outputs.
-    results = model.predict(
-        source=[str(p) for p in image_paths], conf=conf_floor, imgsz=640, verbose=False,
-        batch=4, stream=True,
-    )
-    for path, res in zip(image_paths, results):
-        preds = []
-        boxes = res.boxes
-        if boxes is not None:
-            for i in range(len(boxes)):
-                cls_id = int(boxes.cls[i].item())
-                conf = float(boxes.conf[i].item())
-                xyxy = tuple(float(v) for v in boxes.xyxy[i].tolist())
-                preds.append((cls_id, xyxy, conf))
-        out[path.name] = preds
+    # CPU-only local inference on this machine (8GB available RAM): a
+    # single model.predict() call streaming over the FULL 242-image list
+    # was observed to reliably CPU-OOM on one specific conv2d allocation
+    # (~3.6GB) at imgsz=960 — identical failure regardless of infer_batch
+    # (4, 2, or 1) or rect=True/False, and never on a small subset (10
+    # images). All 242 test images are uniformly 640x640 (checked directly,
+    # no oversized outlier), so this is memory fragmentation building up
+    # across many sequential predict() calls inside one long-lived
+    # generator/process, not a genuine per-image memory requirement.
+    # Fix: predict in small CHUNKS via separate predict() calls, running gc
+    # between chunks — a runtime-only workaround, no effect on outputs.
+    import gc
+    chunk_size = infer_batch if imgsz <= 640 else max(1, min(infer_batch, 8))
+    for start in range(0, len(image_paths), chunk_size):
+        chunk = image_paths[start:start + chunk_size]
+        results = model.predict(
+            source=[str(p) for p in chunk], conf=conf_floor, imgsz=imgsz, verbose=False,
+            batch=infer_batch, rect=False,
+        )
+        for path, res in zip(chunk, results):
+            preds = []
+            boxes = res.boxes
+            if boxes is not None:
+                for i in range(len(boxes)):
+                    cls_id = int(boxes.cls[i].item())
+                    conf = float(boxes.conf[i].item())
+                    xyxy = tuple(float(v) for v in boxes.xyxy[i].tolist())
+                    preds.append((cls_id, xyxy, conf))
+            out[path.name] = preds
+        del results
+        gc.collect()
     return out, str(model.ckpt_path) if hasattr(model, "ckpt_path") else str(weights_path)
 
 
@@ -145,6 +163,8 @@ def analyze(
     conf_floor: float,
     gallery_limit: int,
     limit: int | None = None,
+    imgsz: int = 640,
+    infer_batch: int = 4,
 ) -> dict[str, Any]:
     images_dir = dataset_root / "images" / "test" / "images"
     labels_dir = dataset_root / "images" / "test" / "labels"
@@ -158,7 +178,7 @@ def analyze(
 
     checkpoint_sha256 = _sha256_file(weights_path)
 
-    preds_by_image, ckpt_path_used = _run_inference(weights_path, image_paths, conf_floor=conf_floor)
+    preds_by_image, ckpt_path_used = _run_inference(weights_path, image_paths, conf_floor=conf_floor, imgsz=imgsz, infer_batch=infer_batch)
 
     from PIL import Image as _PILImage
 
@@ -373,6 +393,7 @@ def analyze(
         "match_confidence_threshold": match_conf,
         "match_iou_threshold": match_iou,
         "inference_conf_floor": conf_floor,
+        "inference_imgsz": imgsz,
         "note_on_thresholds": (
             "match_confidence_threshold reuses the existing v3 operating threshold (0.20) "
             "purely as a fixed, already-documented point for INSTANCE-LEVEL TP/FP/FN counting "
@@ -453,6 +474,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--conf-floor", type=float, default=0.001, help="inference confidence floor (captures near-miss signal)")
     parser.add_argument("--gallery-limit", type=int, default=12, help="max gallery images per class/fp-or-fn category")
     parser.add_argument("--limit", type=int, default=None, help="debug: cap number of test images processed")
+    parser.add_argument("--imgsz", type=int, default=640,
+                         help="inference resolution — MUST match the checkpoint's own training imgsz "
+                              "(e.g. 960 for the Phase 15D-A resolution-ablation checkpoint)")
+    parser.add_argument("--infer-batch", type=int, default=4,
+                         help="CPU inference batch size — lower for higher imgsz to avoid OOM (e.g. 2 for imgsz=960)")
     args = parser.parse_args(argv)
 
     if not args.weights.is_file():
@@ -465,7 +491,7 @@ def main(argv: list[str] | None = None) -> int:
     summary = analyze(
         args.weights, args.dataset_root, args.output_dir, args.committed_summary_dir,
         match_conf=args.match_conf, match_iou=args.match_iou, conf_floor=args.conf_floor,
-        gallery_limit=args.gallery_limit, limit=args.limit,
+        gallery_limit=args.gallery_limit, limit=args.limit, imgsz=args.imgsz, infer_batch=args.infer_batch,
     )
 
     print(f"checkpoint sha256: {summary['checkpoint_sha256']}")
