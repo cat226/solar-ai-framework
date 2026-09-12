@@ -8,6 +8,7 @@ live model-missing condition checked directly against the weight files.
 """
 from __future__ import annotations
 
+import html
 from pathlib import Path
 
 import streamlit as st
@@ -56,11 +57,24 @@ if not galerts:
     )
 else:
     for row in galerts:
+        # worst_label/camera_name are stored data — worst_label ultimately
+        # traces back to a value an authenticated-but-not-fully-trusted
+        # camera device supplied (services/ground_pipeline.py's ingestion
+        # path validates it against the fixed 4-class taxonomy, but this
+        # page renders with unsafe_allow_html=True for the severity pill,
+        # so both are HTML-escaped here too as defense in depth — never
+        # interpolate untrusted/stored strings into an unsafe_allow_html
+        # block unescaped).
+        worst_label = html.escape(str(row["worst_label"]))
         severity = "CRITICAL" if row["worst_label"] == "PHYSICAL_DAMAGE" else "WARNING"
+        source = (
+            f"📷 Camera #{row['camera_number']} ({html.escape(str(row['camera_name']))})"
+            if row["camera_number"] is not None else "🖼️ Manual upload"
+        )
         st.markdown(
-            f"{severity_pill(severity)} &nbsp; **{row['worst_label']}** *(classifier, primary signal)* "
+            f"{severity_pill(severity)} &nbsp; **{worst_label}** *(classifier, primary signal)* "
             f"— {row['created_at']}  \n"
-            f"Panels: {row['panel_count']} · Flagged: {row['flagged_count']} · "
+            f"**{source}** · Panels: {row['panel_count']} · Flagged: {row['flagged_count']} · "
             f"Unread: {row['unread_count']} · [View in History →](/📜_History)",
             unsafe_allow_html=True,
         )

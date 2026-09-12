@@ -165,6 +165,10 @@ coverage.xml
 .env
 .streamlit/secrets.toml
 
+# Pi camera agent's real config (holds its per-camera API token) — only
+# pi_agent/config.example.yaml (no real token) is committed.
+pi_agent/config.yaml
+
 # Environments
 .venv/
 venv/

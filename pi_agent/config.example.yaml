@@ -1,0 +1,27 @@
+# pi_agent/config.example.yaml — copy to pi_agent/config.yaml on the Pi and
+# fill in real values. config.yaml is git-ignored (see .gitignore) since it
+# holds a real per-camera API token issued by the Camera Configuration
+# admin page — never commit the filled-in version.
+
+# Base URL of the ingestion API (api/main.py), reachable from this Pi over
+# the local network — e.g. http://192.168.1.50:8008
+api_base_url: "http://CHANGE_ME:8008"
+
+# The one-time token shown when you registered this camera on the
+# Camera Configuration admin page (pages/13). Treat it like a password.
+api_token: "CHANGE_ME"
+
+# A human label for this Pi's own local log lines only — the camera's real
+# identity (number/name) lives server-side, assigned at registration, and
+# is what the admin panel actually shows.
+camera_label: "unlabeled-pi"
+
+# How often to capture + analyze + send, in seconds, when run in loop mode
+# (`python -m pi_agent.capture_and_send --config pi_agent/config.yaml`).
+# Ignored by --once (used by the cron/systemd-oneshot deployment style —
+# see docs/RASPBERRY_PI_DEPLOYMENT.md for which style to pick).
+capture_interval_seconds: 300
+
+# Same "detection sensitivity" slider app.py exposes in the UI — the panel
+# detector's confidence threshold. 0.25 matches app.py's own default.
+detection_confidence: 0.25

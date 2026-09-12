@@ -69,6 +69,7 @@ from typing import Any
 import streamlit as st
 from PIL import Image, ImageDraw, ImageOps, UnidentifiedImageError
 
+from services import ground_pipeline
 from utils.auth import require_access
 from utils.exceptions import ModelLoadError
 from utils.logger import get_logger
@@ -79,9 +80,9 @@ logger = get_logger(__name__)
 apply_page_chrome("Ground Inspection", page_icon="🔬")
 require_access()
 
-_PANEL_WEIGHTS = Path("weights/yolo_solar_ground_research_v1.pt")
-_CONDITION_WEIGHTS = Path("weights/yolo_solar_condition_4class_research_v2.pt")
-_CLASSIFIER_WEIGHTS = Path("weights/mobilenet_condition_4class_research_v1.pth")
+_PANEL_WEIGHTS = ground_pipeline.PANEL_WEIGHTS
+_CONDITION_WEIGHTS = ground_pipeline.CONDITION_WEIGHTS
+_CLASSIFIER_WEIGHTS = ground_pipeline.CLASSIFIER_WEIGHTS
 _DEMO_DIR = Path("assets/demo/ground_pv_real")
 
 # Soft cap on captures per run. Each capture runs a real panel detector +
@@ -90,14 +91,7 @@ _DEMO_DIR = Path("assets/demo/ground_pv_real")
 # one run silently take many minutes with only a single spinner for
 # feedback. Enforced as a clear, honest truncation (never a crash, never a
 # silent partial run) — see the truncation message where this is used.
-_MAX_CAPTURES_PER_RUN = 20
-
-# Alphabetical — matches torchvision.datasets.ImageFolder's class-index order,
-# which is how weights/mobilenet_condition_4class_research_v1.pth was trained
-# (scripts/train_condition_4class_classifier.py / the Kaggle notebook).
-_CLASSIFIER_CLASSES = ["BIRD_DROP", "CLEAN", "DUSTY", "PHYSICAL_DAMAGE"]
-_CLASSIFIER_INPUT_SIZE = 224
-_CLASSIFIER_PREDICTED_THRESHOLD = 0.45  # same "trustworthy" convention used elsewhere in this project
+_MAX_CAPTURES_PER_RUN = ground_pipeline.MAX_CAPTURES_PER_RUN
 
 _CLASS_COLOR = {
     "CLEAN": (46, 160, 67),
@@ -116,186 +110,17 @@ _STATUS_BADGE = {"predicted": "✅", "uncertain": "🟡", "no_prediction": "⚪"
 
 @st.cache_resource(show_spinner="Loading ground-domain research models…")
 def _load_ground_models():
-    """Load the ground panel detector + 4-class condition model. Fails
-    closed (raises) rather than silently substituting a different
-    checkpoint — mirrors models/model_manager.py's discipline."""
-    from ultralytics import YOLO  # noqa: PLC0415 — deferred like model_manager._load_detector
-
-    from training.detection.ground_pv.condition_taxonomy import assert_active_taxonomy
-
-    if not _PANEL_WEIGHTS.is_file():
-        raise ModelLoadError(
-            "ground panel detector",
-            f"weights not found at {_PANEL_WEIGHTS}. This research checkpoint is not "
-            "part of the v1 production artifact set and must be present locally.",
-        )
-    if not _CONDITION_WEIGHTS.is_file():
-        raise ModelLoadError(
-            "4-class condition model",
-            f"weights not found at {_CONDITION_WEIGHTS}.",
-        )
-
-    panel_model = YOLO(str(_PANEL_WEIGHTS))
-    condition_model = YOLO(str(_CONDITION_WEIGHTS))
-
-    cond_names = (
-        condition_model.names
-        if isinstance(condition_model.names, dict)
-        else dict(enumerate(condition_model.names))
-    )
-    # Fails closed: refuses to run if this checkpoint isn't EXACTLY the
-    # active 4-class taxonomy (e.g. the older 5-class research checkpoint).
-    assert_active_taxonomy(cond_names)
-
-    return panel_model, condition_model
+    return ground_pipeline.load_ground_models()
 
 
 @st.cache_resource(show_spinner="Loading condition classifier (Phase 16-B)…")
 def _load_condition_classifier():
-    """Load the panel-crop condition CLASSIFIER (MobileNetV2, Phase 16-B) —
-    a SEPARATE research checkpoint from the box-detector condition model
-    above, evaluated on the same held-out test set at the image level:
-    0.752 accuracy vs. the box-detector's 0.727 image-level agreement (real,
-    modest win overall), and specifically 0.794 vs. 0.359 recall on DUSTY
-    (the class Phase 16-A.1 flagged as most likely to benefit from dropping
-    the box-localization requirement) — see
-    docs/CONDITION_MODEL_4CLASS_CLASSIFIER_V1.md. Fails closed like every
-    other model loader on this page."""
-    import torch
-    from torchvision import models
-
-    if not _CLASSIFIER_WEIGHTS.is_file():
-        raise ModelLoadError(
-            "condition classifier",
-            f"weights not found at {_CLASSIFIER_WEIGHTS}. Train via "
-            "scripts/train_condition_4class_classifier.py or the Kaggle notebook first.",
-        )
-
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = models.mobilenet_v2(weights=None)
-    model.classifier[1] = torch.nn.Linear(model.classifier[1].in_features, len(_CLASSIFIER_CLASSES))
-    try:
-        state_dict = torch.load(str(_CLASSIFIER_WEIGHTS), map_location=device, weights_only=True)
-        model.load_state_dict(state_dict)
-    except Exception as exc:  # noqa: BLE001 — surfaced as a typed, actionable error
-        raise ModelLoadError(
-            "condition classifier",
-            f"weights exist but failed to load as a {len(_CLASSIFIER_CLASSES)}-class "
-            f"MobileNetV2: {type(exc).__name__}: {exc}",
-        ) from exc
-    model.to(device)
-    model.eval()
-    return model, device
+    return ground_pipeline.load_condition_classifier()
 
 
-def _classify_crop(classifier_model: Any, device: Any, crop_image: Image.Image) -> dict[str, Any]:
-    """Run the condition classifier on ONE panel crop. Unlike the box
-    detector, a classifier always outputs a full probability distribution
-    (never zero detections) — so "no_prediction" cannot occur here, but a
-    low-confidence top class still gets marked "uncertain", never silently
-    treated as a confident read. Preprocessing (resize 224 + center-crop +
-    ImageNet normalize) matches training exactly."""
-    import torch
-    import torch.nn.functional as F
-    from torchvision import transforms
-
-    transform = transforms.Compose([
-        transforms.Resize(_CLASSIFIER_INPUT_SIZE),
-        transforms.CenterCrop(_CLASSIFIER_INPUT_SIZE),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    ])
-    tensor = transform(crop_image.convert("RGB")).unsqueeze(0).to(device)
-    with torch.no_grad():
-        probs = F.softmax(classifier_model(tensor), dim=1).squeeze(0).cpu().tolist()
-    class_id = max(range(len(probs)), key=lambda i: probs[i])
-    label = _CLASSIFIER_CLASSES[class_id]
-    confidence = probs[class_id]
-    status = "predicted" if confidence >= _CLASSIFIER_PREDICTED_THRESHOLD else "uncertain"
-    return {
-        "status": status, "label": label, "confidence": confidence,
-        "probabilities": dict(zip(_CLASSIFIER_CLASSES, probs)),
-    }
-
-
-def _run_capture(
-    panel_model: Any, condition_model: Any, classifier_model: Any, classifier_device: Any,
-    image: Image.Image, label: str, detection_conf: float,
-) -> dict[str, Any]:
-    """Run the detect -> crop -> [box-detector condition + classifier condition]
-    pipeline on ONE capture. Both condition engines run on the IDENTICAL crop
-    the panel detector produced — a real, apples-to-apples cross-check per
-    panel, not two different views of the image."""
-    from training.detection.ground_pv.dynamic_panel_detection import DynamicPanelConfig
-    from training.detection.ground_pv.panel_condition_pipeline import (
-        ConditionInferenceConfig,
-        run_panel_condition_pipeline,
-    )
-
-    report = run_panel_condition_pipeline(
-        panel_model,
-        condition_model,
-        image,
-        image_name=label,
-        panel_model_name=_PANEL_WEIGHTS.name,
-        condition_model_name=_CONDITION_WEIGHTS.name,
-        panel_config=DynamicPanelConfig(confidence_threshold=detection_conf),
-        condition_config=ConditionInferenceConfig(),
-    )
-    for p in report.get("panels", []):
-        crop_box = tuple(p["crop"]["bbox"])
-        crop = image.crop(crop_box)
-        p["classifier_condition"] = _classify_crop(classifier_model, classifier_device, crop)
-    return report
-
-
-def _display_id(capture_idx: int, panel_id: str, multi: bool) -> str:
-    """Panel ids are only capture-prefixed when there's more than one capture
-    — avoids implying cross-capture identity that this prototype doesn't
-    compute, while keeping single-capture display exactly as before."""
-    return f"C{capture_idx}-{panel_id}" if multi else panel_id
-
-
-def _summarize_panels(captures: list[dict[str, Any]]) -> dict[str, Any]:
-    """Flatten every capture's panels into flagged/unread/confirmed_clean
-    lists (CLASSIFIER read = primary condition signal) plus zero-panel
-    capture labels and whether any geometry warning fired.
-
-    Shared by the live results display AND history persistence so the two
-    can never silently drift apart — the number a user sees on screen is
-    exactly the number written to history."""
-    multi = len(captures) > 1
-    all_panels: list[dict[str, Any]] = []
-    zero_panel_captures: list[str] = []
-    any_geometry_warning = False
-
-    for idx, cap in enumerate(captures, start=1):
-        report = cap["report"]
-        if report["panel_count"] == 0:
-            zero_panel_captures.append(cap["label"])
-            continue
-        if report["analysis_status"] == "warning":
-            any_geometry_warning = True
-        for p in report["panels"]:
-            all_panels.append({
-                "display_id": _display_id(idx, p["panel_id"], multi),
-                "condition": p["classifier_condition"],
-                "detector_condition": p["condition"],
-            })
-
-    flagged = [p for p in all_panels if p["condition"]["status"] == "predicted" and p["condition"]["label"] != "CLEAN"]
-    unread = [p for p in all_panels if p["condition"]["status"] in ("uncertain", "no_prediction")]
-    confirmed_clean = [p for p in all_panels if p["condition"]["status"] == "predicted" and p["condition"]["label"] == "CLEAN"]
-
-    return {
-        "multi": multi,
-        "all_panels": all_panels,
-        "zero_panel_captures": zero_panel_captures,
-        "any_geometry_warning": any_geometry_warning,
-        "flagged": flagged,
-        "unread": unread,
-        "confirmed_clean": confirmed_clean,
-    }
+_run_capture = ground_pipeline.run_capture
+_display_id = ground_pipeline.display_id
+_summarize_panels = ground_pipeline.summarize_panels
 
 
 # ---------------------------------------------------------------------------

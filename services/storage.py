@@ -30,10 +30,11 @@ module is the seam to replace, not app.py or the individual pages.
 from __future__ import annotations
 
 import json
+import secrets
 import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterator, Optional
+from typing import Any, Iterator, Optional
 
 from utils.logger import get_logger
 
@@ -113,7 +114,44 @@ CREATE TABLE IF NOT EXISTS panel_condition_changes (
     new_confidence REAL
 );
 CREATE INDEX IF NOT EXISTS idx_panel_condition_changes_created_at ON panel_condition_changes (created_at);
+
+-- Phase 18: registered camera/Pi devices. A run/panel with camera_id NULL
+-- means it came from a manual upload in the Streamlit UI, not a registered
+-- device — that path is deliberately kept working without requiring a
+-- camera registration.
+CREATE TABLE IF NOT EXISTS cameras (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    camera_number INTEGER UNIQUE NOT NULL,
+    name TEXT NOT NULL DEFAULT '',
+    location TEXT NOT NULL DEFAULT '',
+    api_token TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'active',
+    created_at TEXT NOT NULL,
+    last_seen_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_cameras_camera_number ON cameras (camera_number);
+CREATE INDEX IF NOT EXISTS idx_cameras_api_token ON cameras (api_token);
 """
+
+# Columns added to already-existing tables after their original CREATE TABLE
+# above (idempotent ALTER TABLE, not a migration framework — appropriate for
+# this module's own stated single-user-local-SQLite scope; duplicate-column
+# errors are swallowed, any other error is not).
+_SCHEMA_MIGRATIONS: list[str] = [
+    "ALTER TABLE ground_inspections ADD COLUMN camera_id INTEGER",
+    "ALTER TABLE panel_identities ADD COLUMN camera_id INTEGER",
+    "ALTER TABLE panel_observations ADD COLUMN camera_id INTEGER",
+    "ALTER TABLE panel_condition_changes ADD COLUMN camera_id INTEGER",
+]
+
+
+def _apply_migrations(conn: sqlite3.Connection) -> None:
+    for statement in _SCHEMA_MIGRATIONS:
+        try:
+            conn.execute(statement)
+        except sqlite3.OperationalError as exc:
+            if "duplicate column name" not in str(exc).lower():
+                raise
 
 
 @contextmanager
@@ -123,6 +161,7 @@ def _connect() -> Iterator[sqlite3.Connection]:
     conn.row_factory = sqlite3.Row
     try:
         conn.executescript(_SCHEMA)
+        _apply_migrations(conn)
         yield conn
         conn.commit()
     finally:
@@ -139,6 +178,7 @@ _GROUND_SEVERITY_ORDER = {"PHYSICAL_DAMAGE": 3, "BIRD_DROP": 2, "DUSTY": 1, "CLE
 def record_ground_inspection(
     captures: list[dict],
     *, flagged: list[dict], unread: list[dict], confirmed_clean: list[dict],
+    camera_id: int | None = None,
 ) -> int:
     """Persist one Ground Inspection run to local history.
 
@@ -151,6 +191,9 @@ def record_ground_inspection(
             confidently-predicted non-CLEAN condition.
         unread: Panels whose classifier read is uncertain.
         confirmed_clean: Panels whose classifier read is confidently CLEAN.
+        camera_id: The registered camera (services.storage.cameras) this run
+            came from, or None for a manual upload in the Streamlit UI —
+            manual uploads are never required to belong to a camera.
 
     Returns:
         The new row's integer id.
@@ -182,30 +225,44 @@ def record_ground_inspection(
             INSERT INTO ground_inspections (
                 created_at, capture_count, panel_count, clean_count, dusty_count,
                 bird_drop_count, physical_damage_count, unread_count, flagged_count,
-                worst_label, worst_confidence, result_json
-            ) VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                worst_label, worst_confidence, result_json, camera_id
+            ) VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 len(captures), panel_count, clean_count, dusty_count,
                 bird_drop_count, physical_damage_count, len(unread), len(flagged),
-                worst_label, worst_confidence, json.dumps(result_dict),
+                worst_label, worst_confidence, json.dumps(result_dict), camera_id,
             ),
         )
         row_id = int(cur.lastrowid)
     logger.info(
-        "Recorded ground inspection id=%d panels=%d flagged=%d unread=%d",
-        row_id, panel_count, len(flagged), len(unread),
+        "Recorded ground inspection id=%d camera_id=%s panels=%d flagged=%d unread=%d",
+        row_id, camera_id, panel_count, len(flagged), len(unread),
     )
     return row_id
 
 
-def get_recent_ground_inspections(limit: int = 50) -> list[dict]:
-    """Return the most recent Ground Inspection runs, newest first."""
+_UNSET: Any = object()
+
+
+def get_recent_ground_inspections(limit: int = 50, camera_id: Any = _UNSET) -> list[dict]:
+    """Return the most recent Ground Inspection runs, newest first.
+
+    camera_id: omit for all runs (any camera or manual upload). Pass an int
+    to filter to one camera, or explicitly pass None to see only manual
+    (non-camera) uploads.
+    """
     with _connect() as conn:
-        rows = conn.execute(
-            "SELECT * FROM ground_inspections ORDER BY created_at DESC, id DESC LIMIT ?",
-            (limit,),
-        ).fetchall()
+        if camera_id is _UNSET:
+            rows = conn.execute(
+                "SELECT * FROM ground_inspections ORDER BY created_at DESC, id DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT * FROM ground_inspections WHERE camera_id IS ? ORDER BY created_at DESC, id DESC LIMIT ?",
+                (camera_id, limit),
+            ).fetchall()
     return [dict(r) for r in rows]
 
 
@@ -220,13 +277,19 @@ def get_ground_inspection(inspection_id: int) -> Optional[dict]:
 
 def get_ground_alerts(limit: int = 50) -> list[dict]:
     """Return recent Ground Inspection runs that flagged at least one
-    confidently-non-CLEAN panel, newest first."""
+    confidently-non-CLEAN panel, newest first. Each row carries
+    `camera_number`/`camera_name` (NULL for a manual upload, or for a run
+    whose camera has since been deleted — see delete_camera()'s orphaned-
+    reference note) so an alert can always say WHICH camera saw the
+    problem, per the admin panel's "notify with camera number" requirement."""
     with _connect() as conn:
         rows = conn.execute(
             """
-            SELECT * FROM ground_inspections
-            WHERE flagged_count > 0
-            ORDER BY created_at DESC, id DESC LIMIT ?
+            SELECT gi.*, c.camera_number AS camera_number, c.name AS camera_name
+            FROM ground_inspections gi
+            LEFT JOIN cameras c ON c.id = gi.camera_id
+            WHERE gi.flagged_count > 0
+            ORDER BY gi.created_at DESC, gi.id DESC LIMIT ?
             """,
             (limit,),
         ).fetchall()
@@ -293,9 +356,9 @@ def _next_persistent_id(conn: sqlite3.Connection) -> str:
     return f"{_PERSISTENT_ID_PREFIX}{n + 1:03d}"
 
 
-def record_panel_identities(run_id: int, captures: list[dict]) -> dict:
+def record_panel_identities(run_id: int, captures: list[dict], *, camera_id: int | None = None) -> dict:
     """Match this run's panels against the most recently known position of
-    every tracked panel (per capture slot — see
+    every tracked panel FROM THE SAME CAMERA (per capture slot — see
     training.detection.ground_pv.panel_identity.match_run_to_previous for
     exactly what that assumes), assign/reuse persistent ids, and record
     each observation plus any detected condition change.
@@ -307,6 +370,11 @@ def record_panel_identities(run_id: int, captures: list[dict]) -> dict:
         run_id: The ground_inspections row id this batch of panels belongs to.
         captures: The same [{"label", "image", "report"}, ...] list passed
             to record_ground_inspection (only "label" and "report" are read).
+        camera_id: Must match the camera_id passed to record_ground_inspection
+            for this run (or None for both, for a manual upload). Matching is
+            STRICTLY scoped to this camera_id — a panel from one camera can
+            never match a panel from a different camera (or from a manual
+            upload), since they are, or may be, different physical arrays.
 
     Returns:
         A dict with new_panel_ids/matched/changes lists — enough detail for
@@ -342,7 +410,9 @@ def record_panel_identities(run_id: int, captures: list[dict]) -> dict:
     changes: list[dict] = []
 
     with _connect() as conn:
-        prev_rows = conn.execute("SELECT * FROM panel_identities").fetchall()
+        prev_rows = conn.execute(
+            "SELECT * FROM panel_identities WHERE camera_id IS ?", (camera_id,)
+        ).fetchall()
         previous_by_slot: dict[int, list] = {}
         prev_state: dict[str, sqlite3.Row] = {}
         for row in prev_rows:
@@ -374,9 +444,9 @@ def record_panel_identities(run_id: int, captures: list[dict]) -> dict:
                     # the same call never collide on the same COUNT(*)-derived id.
                     conn.execute(
                         "INSERT INTO panel_identities (persistent_id, capture_slot, first_seen_run_id, "
-                        "last_seen_run_id, last_center_x, last_center_y, observation_count) "
-                        "VALUES (?, ?, ?, ?, ?, ?, 0)",
-                        (persistent_id, slot_idx, run_id, run_id, info["center_x"], info["center_y"]),
+                        "last_seen_run_id, last_center_x, last_center_y, observation_count, camera_id) "
+                        "VALUES (?, ?, ?, ?, ?, ?, 0, ?)",
+                        (persistent_id, slot_idx, run_id, run_id, info["center_x"], info["center_y"], camera_id),
                     )
 
                 # A real condition change requires BOTH the previous and the
@@ -398,19 +468,19 @@ def record_panel_identities(run_id: int, captures: list[dict]) -> dict:
                     })
                     conn.execute(
                         "INSERT INTO panel_condition_changes (persistent_id, run_id, created_at, "
-                        "previous_label, previous_confidence, new_label, new_confidence) "
-                        "VALUES (?, ?, datetime('now'), ?, ?, ?, ?)",
+                        "previous_label, previous_confidence, new_label, new_confidence, camera_id) "
+                        "VALUES (?, ?, datetime('now'), ?, ?, ?, ?, ?)",
                         (persistent_id, run_id, prev_row["last_condition_label"],
-                         prev_row["last_condition_confidence"], cond["label"], cond["confidence"]),
+                         prev_row["last_condition_confidence"], cond["label"], cond["confidence"], camera_id),
                     )
 
                 conn.execute(
                     "INSERT INTO panel_observations (persistent_id, run_id, created_at, capture_slot, "
                     "display_id, condition_status, condition_label, condition_confidence, "
-                    "center_x, center_y, match_distance) "
-                    "VALUES (?, ?, datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "center_x, center_y, match_distance, camera_id) "
+                    "VALUES (?, ?, datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (persistent_id, run_id, slot_idx, info["display_id"], cond["status"],
-                     cond["label"], cond["confidence"], info["center_x"], info["center_y"], r.distance),
+                     cond["label"], cond["confidence"], info["center_x"], info["center_y"], r.distance, camera_id),
                 )
                 conn.execute(
                     "UPDATE panel_identities SET last_seen_run_id = ?, last_center_x = ?, last_center_y = ?, "
@@ -421,8 +491,8 @@ def record_panel_identities(run_id: int, captures: list[dict]) -> dict:
                 )
 
     logger.info(
-        "Panel identity matching for run %d: %d new, %d matched, %d condition change(s)",
-        run_id, len(new_panel_ids), len(matched), len(changes),
+        "Panel identity matching for run %d (camera_id=%s): %d new, %d matched, %d condition change(s)",
+        run_id, camera_id, len(new_panel_ids), len(matched), len(changes),
     )
     return {"new_panel_ids": new_panel_ids, "matched": matched, "changes": changes}
 
@@ -456,3 +526,128 @@ def get_recent_condition_changes(limit: int = 50) -> list[dict]:
             (limit,),
         ).fetchall()
     return [dict(r) for r in rows]
+
+
+# ---------------------------------------------------------------------------
+# Phase 18 — registered camera/Pi devices. A camera reports captures to the
+# ingestion API (see api/main.py), authenticated with its own api_token.
+# Deleting a camera does NOT cascade-delete its historical runs/panels —
+# their camera_id becomes an orphaned reference on purpose (never silently
+# destroy real recorded history); callers should handle a camera_id with no
+# matching row gracefully (e.g. "deleted camera").
+# ---------------------------------------------------------------------------
+
+
+def register_camera(name: str, location: str = "") -> dict:
+    """Register a new camera and issue it an API token.
+
+    The token is only ever returned HERE, at creation time — list_cameras()
+    deliberately never re-exposes it (show/copy it to configure the Pi
+    immediately, matching how e.g. GitHub only shows a new access token once).
+
+    Returns the full new row, including the one-time api_token.
+    """
+    token = secrets.token_urlsafe(32)
+    with _connect() as conn:
+        next_number = conn.execute(
+            "SELECT COALESCE(MAX(camera_number), 0) + 1 AS n FROM cameras"
+        ).fetchone()["n"]
+        cur = conn.execute(
+            "INSERT INTO cameras (camera_number, name, location, api_token, status, created_at) "
+            "VALUES (?, ?, ?, ?, 'active', datetime('now'))",
+            (next_number, name.strip(), location.strip(), token),
+        )
+        camera_id = int(cur.lastrowid)
+        row = conn.execute("SELECT * FROM cameras WHERE id = ?", (camera_id,)).fetchone()
+    logger.info("Registered camera id=%d camera_number=%d name=%r", camera_id, next_number, name)
+    return dict(row)
+
+
+def list_cameras(*, include_token: bool = False) -> list[dict]:
+    """All registered cameras, ordered by camera_number. api_token is
+    redacted by default — pass include_token=True only for the
+    configuration page's own "show token again for re-setup" action, never
+    for a general listing/overview page."""
+    with _connect() as conn:
+        rows = [dict(r) for r in conn.execute("SELECT * FROM cameras ORDER BY camera_number ASC").fetchall()]
+    if not include_token:
+        for r in rows:
+            r["api_token"] = None
+    return rows
+
+
+def get_camera(camera_id: int) -> Optional[dict]:
+    """One camera by internal id (api_token redacted)."""
+    with _connect() as conn:
+        row = conn.execute("SELECT * FROM cameras WHERE id = ?", (camera_id,)).fetchone()
+    if row is None:
+        return None
+    d = dict(row)
+    d["api_token"] = None
+    return d
+
+
+def authenticate_camera(api_token: str) -> Optional[dict]:
+    """Used by the ingestion API to identify+authenticate a request. Returns
+    the FULL row (including the token, since the caller already has it and
+    this is the one legitimate internal use) only for an 'active' camera —
+    a disabled camera's token stops working without deleting its history."""
+    if not api_token:
+        return None
+    with _connect() as conn:
+        rows = conn.execute("SELECT * FROM cameras WHERE status = 'active'").fetchall()
+    for row in rows:
+        if secrets.compare_digest(row["api_token"], api_token):
+            return dict(row)
+    return None
+
+
+def touch_camera_last_seen(camera_id: int) -> None:
+    """Record that a camera successfully reported in — called on every
+    successful ingestion so the Cameras page can show real last-seen times."""
+    with _connect() as conn:
+        conn.execute(
+            "UPDATE cameras SET last_seen_at = datetime('now') WHERE id = ?", (camera_id,)
+        )
+
+
+def set_camera_status(camera_id: int, status: str) -> None:
+    """status: 'active' or 'disabled'. Disabling stops the camera's token
+    from authenticating without deleting any of its history — the
+    reversible option, preferred over delete_camera() for "pause this
+    camera" rather than "remove it permanently"."""
+    if status not in ("active", "disabled"):
+        raise ValueError(f"status must be 'active' or 'disabled', got {status!r}")
+    with _connect() as conn:
+        conn.execute("UPDATE cameras SET status = ? WHERE id = ?", (status, camera_id))
+    logger.info("Camera id=%d status set to %s", camera_id, status)
+
+
+def delete_camera(camera_id: int) -> None:
+    """Permanently remove a camera registration (its token stops working
+    immediately). Historical ground_inspections/panel rows are NOT deleted
+    or reassigned — they keep their camera_id as an orphaned reference,
+    never silently destroying real recorded history."""
+    with _connect() as conn:
+        conn.execute("DELETE FROM cameras WHERE id = ?", (camera_id,))
+    logger.info("Deleted camera id=%d", camera_id)
+
+
+def get_cameras_with_latest_status() -> list[dict]:
+    """Every registered camera plus a summary of its most recent run (or
+    None if it has never reported in) — the single query the Cameras
+    overview page needs."""
+    with _connect() as conn:
+        cameras = conn.execute("SELECT * FROM cameras ORDER BY camera_number ASC").fetchall()
+        result = []
+        for cam in cameras:
+            latest = conn.execute(
+                "SELECT id, created_at, panel_count, flagged_count, unread_count, worst_label "
+                "FROM ground_inspections WHERE camera_id = ? ORDER BY created_at DESC, id DESC LIMIT 1",
+                (cam["id"],),
+            ).fetchone()
+            row = dict(cam)
+            row["api_token"] = None
+            row["latest_run"] = dict(latest) if latest else None
+            result.append(row)
+    return result
