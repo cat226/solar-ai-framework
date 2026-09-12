@@ -11,8 +11,7 @@ efficiency/output concept.
 Every number here is either aggregated from
 st.session_state["ground_inspection_captures"] (the most recent live run)
 or from services.storage's recorded ground-inspection history — never
-fabricated. The original aerial "Site Health" (efficiency loss / output)
-is kept, unchanged, in a collapsed legacy section.
+fabricated.
 """
 from __future__ import annotations
 
@@ -100,41 +99,3 @@ else:
     c1.metric("Total runs", gstats["total_runs"])
     c2.metric("Total panels analyzed", total_panels)
     c3.metric("Overall clean %", f"{clean_pct:.1f}%")
-
-st.divider()
-
-with st.expander("Aerial Inspect site health (legacy production pipeline)"):
-    result = st.session_state.get("last_result")
-    if result is None or not getattr(result, "panels", None):
-        empty_state(
-            "No site-level summary yet. Run an inspection on the **Aerial Inspect** page "
-            "with at least one detected panel."
-        )
-    else:
-        summary = result.site_summary
-        c1, c2, c3, c4 = st.columns(4)
-        c1.metric("Total detected panels", summary.total_panels)
-        c2.metric("Clean %", f"{summary.clean_pct:.1f}%")
-        c3.metric("Hotspot count", summary.class_counts.get("Hotspot", 0))
-        c4.metric("Dusty %", f"{100.0 * summary.class_counts.get('Dusty', 0) / summary.total_panels:.1f}%" if summary.total_panels else "—")
-
-        if summary.panels_with_prediction > 0:
-            c5, c6 = st.columns(2)
-            c5.metric("Avg. estimated efficiency loss", f"{summary.average_efficiency_loss_pct:.1f}%")
-            c6.metric("Avg. estimated output", f"{summary.average_estimated_output_w:.0f} W")
-        else:
-            st.info("🚫 No efficiency/output estimates available for this inspection (XGBoost artifact unavailable).")
-
-        if summary.class_counts:
-            st.subheader("Class breakdown (this inspection)")
-            st.bar_chart(summary.class_counts)
-
-    st.markdown("**Aggregate (all recorded Aerial Inspect history)**")
-    stats = storage.get_summary_stats()
-    if stats["total_inspections"] == 0:
-        empty_state("No recorded history yet.")
-    else:
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Total inspections", stats["total_inspections"])
-        c2.metric("Total panels analyzed", stats["total_panels_analyzed"])
-        c3.metric("Predictions unavailable", stats["xgboost_unavailable_count"])

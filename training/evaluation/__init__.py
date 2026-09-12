@@ -1,9 +1,9 @@
-"""training/evaluation — independent evaluation tooling for released Solar AI
-model artifacts.
+"""training/evaluation — dataset/leakage evaluation tooling.
 
-Deliberately separate from production inference code (models/, services/):
-these scripts *consume* the real production wrappers (models.detector,
-models.classifier, models.model_manager) to measure real performance against
-held-out data, but must never be imported by the application itself. Nothing
-here changes model weights, training data, or the production pipeline.
+The scripts that evaluated the legacy aerial pipeline's production wrappers
+(models.detector, models.classifier, models.model_manager) were removed
+alongside that pipeline — see docs/PHASE_16_ARCHITECTURE_REVIEW.md. What
+remains here (common.py, dataset_candidate_gate.py, leakage_audit.py) is
+generic dataset-quality tooling with no dependency on either pipeline.
+Nothing here changes model weights, training data, or any live pipeline.
 """

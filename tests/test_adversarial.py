@@ -15,100 +15,19 @@ from pathlib import Path
 import pytest
 from PIL import Image, UnidentifiedImageError
 
-from services.weather import _validate_city, fetch_weather
 from utils.security import sanitize_for_log
 from scripts.verify_model_artifacts import verify_manifest, _resolve_artifact_path
 
 
 # ===========================================================================
-# ATTACK SURFACE 2 — CITY / LOCATION INPUT
+# ATTACK SURFACE 2 — LOG INJECTION (generic, no longer weather-specific: the
+# aerial pipeline's city input path was removed alongside services/weather.py
+# — see docs/PHASE_16_ARCHITECTURE_REVIEW.md. sanitize_for_log() itself is a
+# shared, still-active utility, so its own adversarial coverage stays.)
 # ===========================================================================
 
-class TestCityAdversarialInputs:
-    """Attempt to bypass city validation or inject malicious content."""
-
-    def test_empty_string_rejected(self):
-        with pytest.raises(ValueError, match="must not be empty"):
-            _validate_city("")
-
-    def test_whitespace_only_rejected(self):
-        with pytest.raises(ValueError, match="must not be empty"):
-            _validate_city("   ")
-
-    def test_null_bytes_rejected(self):
-        with pytest.raises(ValueError, match="invalid control characters"):
-            _validate_city("Chennai\x00\x01\x02")
-
-    def test_newline_rejected(self):
-        with pytest.raises(ValueError, match="invalid control characters"):
-            _validate_city("Chennai\r\n")
-
-    def test_tab_rejected(self):
-        with pytest.raises(ValueError, match="invalid control characters"):
-            _validate_city("Chennai\there")
-
-    def test_del_character_rejected(self):
-        with pytest.raises(ValueError, match="invalid control characters"):
-            _validate_city("Chennai\x7f")
-
-    def test_shell_metacharacters_not_executed(self):
-        """Shell metacharacters in city are just text — they are not executed
-        because the value is passed as an HTTP query parameter, not to a shell."""
-        result = _validate_city("Chennai; rm -rf /")
-        assert result == "Chennai; rm -rf /"
-
-    def test_path_traversal_not_executed(self):
-        """Path traversal strings are just text — not filesystem operations."""
-        result = _validate_city("../../../etc/passwd")
-        assert result == "../../../etc/passwd"
-
-    def test_url_like_string_truncated_safely(self):
-        result = _validate_city("http://evil.com/attack" * 20)
-        assert len(result) <= 100
-
-    def test_localhost_string_truncated(self):
-        result = _validate_city("127.0.0.1" * 20)
-        assert len(result) <= 100
-
-    def test_file_url_not_executed(self):
-        """file:// URLs are just text — not executed as file operations."""
-        result = _validate_city("file:///etc/passwd")
-        assert result == "file:///etc/passwd"
-
-    def test_unicode_edge_cases_preserved(self):
-        result = _validate_city("São Paulo")
-        assert result == "São Paulo"
-
-    def test_max_length_enforced(self):
-        result = _validate_city("A" * 200)
-        assert len(result) == 100
-
-    def test_leading_trailing_whitespace_stripped(self):
-        result = _validate_city("  Chennai  ")
-        assert result == "Chennai"
-
-    def test_non_string_rejected(self):
-        with pytest.raises(ValueError, match="must be a string"):
-            _validate_city(12345)
-
-    def test_none_rejected(self):
-        with pytest.raises(ValueError, match="must be a string"):
-            _validate_city(None)
-
-
-class TestCityLogInjectionAcrossAllPaths:
-    """Verify no log injection via city input in any code path."""
-
-    def test_fetch_weather_logs_sanitized_city_on_validation_failure(self, monkeypatch, caplog):
-        monkeypatch.setattr("services.weather.get_secret", lambda key, fallback=None: "fake-key")
-        import logging
-        with caplog.at_level(logging.WARNING):
-            fetch_weather("Chennai\x00\x01INJECTED")
-        assert "\x00" not in caplog.text
-        assert "\x01" not in caplog.text
-        # The text "INJECTED" itself is not a security issue — control chars are
-        # the log-injection risk. Sanitization removes control chars, not content.
-        assert "ChennaiINJECTED" in caplog.text
+class TestLogInjectionSanitization:
+    """Verify no log injection via sanitize_for_log()."""
 
     def test_sanitize_for_log_strips_all_control_chars(self):
         malicious = "normal\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\x7ftext"
@@ -439,48 +358,6 @@ class TestModelManifestAdversarial:
 # ===========================================================================
 # ATTACK SURFACE 4 — MODEL LOADING
 # ===========================================================================
-
-class TestModelLoadingAdversarial:
-    """Verify model loading fails safely under adversarial conditions."""
-
-    def test_missing_all_artifacts_raises_typed_errors(self):
-        from models.model_manager import ModelManager
-        mm = ModelManager()
-        with pytest.raises(Exception):
-            mm.get_detector()
-        with pytest.raises(Exception):
-            mm.get_classifier()
-        with pytest.raises(Exception):
-            mm.get_predictor()
-
-    def test_artifact_status_reports_missing(self):
-        from models.model_manager import ModelManager
-        mm = ModelManager()
-        status = mm.artifact_status
-        assert status["YOLO"]["exists"] is False
-        assert status["MobileNet"]["exists"] is False
-        assert status["XGBoost"]["exists"] is False
-
-    def test_readiness_script_fails_closed_without_artifacts(self):
-        import scripts.check_runtime_readiness as readiness
-        from models.model_manager import ModelManager
-        mm = ModelManager()
-        original = readiness.model_manager
-        readiness.model_manager = mm
-        try:
-            assert readiness.main() == 2
-        finally:
-            readiness.model_manager = original
-
-    def test_model_manager_logs_no_absolute_paths_on_missing(self, caplog):
-        import logging
-        from models.model_manager import ModelManager
-        mm = ModelManager()
-        with caplog.at_level(logging.INFO):
-            with pytest.raises(Exception):
-                mm.get_detector()
-        assert str(Path(__file__).resolve()) not in caplog.text
-
 
 # ===========================================================================
 # ATTACK SURFACE 14 — CONFIGURATION TAMPERING

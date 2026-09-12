@@ -1,9 +1,9 @@
 """pages/05_🧠_Model_Status.py — Transparent model/system status.
 
-Every value here is read live from models.model_manager (real artifact
-paths/existence/hashes) — nothing aspirational, nothing fabricated. This is
-the one place the app explicitly states its current classification
-coverage and what remains pending.
+Every value here is read live from the weight files on disk (existence,
+SHA-256) — nothing aspirational, nothing fabricated. Ground Inspection is
+the only pipeline now — the legacy Aerial Inspect pipeline was fully
+removed (see docs/PHASE_16_ARCHITECTURE_REVIEW.md).
 """
 from __future__ import annotations
 
@@ -12,7 +12,6 @@ from pathlib import Path
 
 import streamlit as st
 
-from models.model_manager import model_manager
 from utils.auth import require_access
 from utils.ui_theme import apply_page_chrome
 
@@ -20,7 +19,7 @@ apply_page_chrome("Model Status")
 require_access()
 
 st.title("🧠 Model Status")
-st.caption("Dataset/model provenance detail, kept separate from the Aerial Inspect workflow so it doesn't clutter it.")
+st.caption("Dataset/model provenance detail, kept separate from the Ground Inspection workflow so it doesn't clutter it.")
 
 
 def _sha256(path: Path) -> str:
@@ -31,135 +30,60 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-status = model_manager.artifact_status
-mn_status = model_manager.mobilenet_status
+def _artifact_card(title: str, path: Path, note: str) -> None:
+    st.subheader(title)
+    if path.is_file():
+        st.success(f"Ready — `{path}`")
+        with st.spinner("Computing checkpoint hash…"):
+            st.code(f"path   = {path}\nsha256 = {_sha256(path)}", language="text")
+    else:
+        st.error(f"Missing — expected at `{path}`")
+    st.markdown(note)
+    st.divider()
 
-# ---------------------------------------------------------------------------
-# YOLO
-# ---------------------------------------------------------------------------
-st.subheader("🎯 YOLO — panel detection")
-yolo = status["YOLO"]
-if yolo["exists"]:
-    st.success("Ready — production checkpoint loaded")
-    yolo_path = Path(yolo["path"])
-    with st.spinner("Computing checkpoint hash…"):
-        st.code(f"path   = {yolo['path']}\nsha256 = {_sha256(yolo_path)}", language="text")
-    st.warning(
-        "⚠️ **Known domain limitation.** This detector was trained and validated on "
-        "aerial/satellite imagery. Real close-up/ground-level photos (the kind most "
-        "users upload) are detected unreliably — an independent 16-image real-photo "
-        "validation measured 0/16 detections, and an earlier 156-image sample measured "
-        "~2.6%. When no panel is detected, the app still runs whole-image classification "
-        "and labels it explicitly as such — it is never substituted for a panel-level "
-        "result. See **Limitations** for the full picture, including the experimental "
-        "ground-domain checkpoint under evaluation (not used in this deployment)."
-    )
-else:
-    st.error(f"Missing — expected at `{yolo['path']}`")
 
-st.divider()
-
-# ---------------------------------------------------------------------------
-# MobileNet
-# ---------------------------------------------------------------------------
-st.subheader("🏷️ MobileNet — fault classification")
-if mn_status["state"] == "six_class":
-    st.success(f"Ready — **future six-class artifact, {len(mn_status['active_labels'])}-class**")
-elif mn_status["state"] == "v1":
-    st.success(f"Ready — **v1, {len(mn_status['active_labels'])}-class**")
-    st.markdown(
-        "This is the real, frozen v1 release classifier — not a placeholder. It covers "
-        "the three classes with genuinely licensed, accessible data. Bird-Drop, "
-        "Electrical-Damage, and Physical-Damage remain a documented future expansion; "
-        "see the **Limitations** page."
-    )
-else:
-    st.error("Missing — no v1 or future six-class checkpoint present")
-
-c1, c2 = st.columns(2)
-with c1:
-    st.markdown("**Currently active classes (v1)**")
-    st.write(mn_status["active_labels"] or "—")
-with c2:
-    st.markdown("**Full future six-class order (roadmap)**")
-    st.write(mn_status["six_class_labels"])
-
-if mn_status["v1_exists"] or mn_status["six_class_exists"]:
-    active_path = Path(mn_status["six_class_path"]) if mn_status["state"] == "six_class" else Path(mn_status["v1_path"])
-    with st.spinner("Computing checkpoint hash…"):
-        st.code(f"path   = {active_path}\nsha256 = {_sha256(active_path)}", language="text")
-
-st.divider()
-
-# ---------------------------------------------------------------------------
-# XGBoost
-# ---------------------------------------------------------------------------
-st.subheader("📈 XGBoost — efficiency-loss prediction")
-xgb = status["XGBoost"]
-if xgb["exists"]:
-    st.success("Ready")
-    with st.spinner("Computing artifact hash…"):
-        st.code(f"path   = {xgb['path']}\nsha256 = {_sha256(Path(xgb['path']))}", language="text")
-else:
-    st.error(f"Missing — expected at `{xgb['path']}`")
-    st.caption(
-        "No XGBoost artifact has been trained/promoted for this deployment. Inspections "
-        "still run detection and classification; efficiency/output estimates are "
-        "reported as unavailable rather than fabricated."
-    )
-    with st.expander("Why is there no XGBoost artifact?"):
-        st.markdown(
-            "Investigated on 2026-09-04: no dataset was found that legitimately pairs a "
-            "real `fault_class_id` (this project's own six-class taxonomy) with real "
-            "environmental telemetry *and* a genuinely measured efficiency-loss target. "
-            "Rather than train on invented labels, or on this app's own physics heuristic "
-            "restated as if it were ground truth, the artifact is left unavailable. "
-            "See `training/prediction/DATASET_SOURCES.md` for the full investigation and "
-            "what would need to exist to revisit this."
-        )
-
-st.divider()
-
-# ---------------------------------------------------------------------------
-# Deep verification (opt-in — actually attempts to load every model)
-# ---------------------------------------------------------------------------
-st.subheader("Deep verification")
-st.caption(
-    "The status above only checks whether artifact *files* exist. This actually attempts "
-    "to load each one, catching a present-but-corrupt or incompatible checkpoint that file "
-    "existence alone can't detect. Opt-in (not run automatically) since it can trigger a "
-    "real model load - free if the model is already loaded this session, otherwise pays "
-    "the real load cost once."
+_artifact_card(
+    "🎯 Ground panel detector",
+    Path("weights/yolo_solar_ground_research_v1.pt"),
+    "⚠️ **Known limitations.** Can miss a single large foreground panel, or draw one "
+    "'group' box around several adjacent panels instead of separating them — see "
+    "`datasets/ground_pv_research/reports/real_world_holdout.md`. Real working range is "
+    "close-up shots of ~1-3 panels; one distant photo of a whole array does not work "
+    "reliably. See **Limitations** for the full picture.",
 )
-if st.button("Run deep verification"):
-    with st.spinner("Loading each model…"):
-        report = model_manager.verify_all()
-    state_display = {
-        "ready": ("✅", "ready"), "v1": ("✅", "v1"), "six_class": ("✅", "six_class"),
-        "missing": ("❌", "missing"), "error": ("🚫", "present but failed to load"),
-    }
-    for name, entry in report.items():
-        icon, label = state_display.get(entry["state"], ("❓", entry["state"]))
-        st.markdown(f"{icon} **{name}**: {label}")
-        if entry["detail"]:
-            st.caption(entry["detail"])
 
-st.divider()
+_artifact_card(
+    "🏷️ Condition classifier (primary signal)",
+    Path("weights/mobilenet_condition_4class_research_v1.pth"),
+    "MobileNetV2, trained on panel crops (Phase 16-B). Measured **0.752 image-level test "
+    "accuracy** — DUSTY 0.794, BIRD_DROP 0.676, CLEAN 0.764, PHYSICAL_DAMAGE 0.778 (only 9 "
+    "test images — high variance). See `docs/CONDITION_MODEL_4CLASS_CLASSIFIER_V1.md`.",
+)
+
+_artifact_card(
+    "📦 Condition detector (secondary, localized)",
+    Path("weights/yolo_solar_condition_4class_research_v2.pt"),
+    "Box-detector condition model. Measured **0.444 mAP50 / 0.441 box-level recall** — "
+    "weakness is dominated by localization noise, not misrecognition (image-level "
+    "agreement 0.727 on the same checkpoint). See "
+    "`docs/CONDITION_MODEL_IMAGE_LEVEL_AGREEMENT.md`. Kept for its localization value on "
+    "BIRD_DROP/PHYSICAL_DAMAGE, where the classifier gives up 'where on the panel.'",
+)
+
 st.subheader("Overall")
-if yolo["exists"] and mn_status["state"] != "missing" and xgb["exists"]:
-    st.success(
-        "✅ Application pipeline ready — detection, classification, and efficiency "
-        "prediction all execute without error. This describes pipeline *readiness*, not "
-        "detection *accuracy* on close-up photos — see the YOLO note above and "
-        "**Limitations**."
+_all_present = all(
+    Path(p).is_file()
+    for p in (
+        "weights/yolo_solar_ground_research_v1.pt",
+        "weights/mobilenet_condition_4class_research_v1.pth",
+        "weights/yolo_solar_condition_4class_research_v2.pt",
     )
-elif yolo["exists"] and mn_status["state"] != "missing":
+)
+if _all_present:
     st.success(
-        "✅ **Solar AI v1's pipeline runs end-to-end.** Detection and whole-image "
-        "classification (Clean, Dusty, Hotspot) execute on every valid upload; "
-        "efficiency/output prediction is unavailable — a documented v1 boundary, not a "
-        "fault (see **Limitations**). Detection reliability on close-up/ground-level "
-        "photos remains limited — see the note above."
+        "✅ Ground Inspection pipeline ready — panel detection and both condition engines "
+        "execute without error. This describes pipeline *readiness*, not *accuracy* — see "
+        "the notes above and **Limitations**."
     )
 else:
-    st.error("❌ Not ready — a required artifact (YOLO or MobileNet) is missing.")
+    st.error("❌ Not ready — at least one required artifact is missing.")

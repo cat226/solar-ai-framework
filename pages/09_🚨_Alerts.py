@@ -1,12 +1,10 @@
 """pages/09_🚨_Alerts.py — Real alerts derived from recorded Ground
 Inspection history, plus live system-availability alerts derived from
-actual model readiness. Legacy Aerial Inspect alerts are kept, unchanged,
-in a collapsed section below.
+actual model readiness.
 
 No alert on this page is synthetic — each is either a stored Ground
 Inspection run with at least one confidently-flagged non-CLEAN panel, or a
-live model-missing condition checked directly against the weight files /
-models.model_manager.
+live model-missing condition checked directly against the weight files.
 """
 from __future__ import annotations
 
@@ -14,7 +12,6 @@ from pathlib import Path
 
 import streamlit as st
 
-from models.model_manager import model_manager
 from services import storage
 from utils.auth import require_access
 from utils.ui_theme import apply_page_chrome, empty_state, severity_pill
@@ -68,51 +65,3 @@ else:
             unsafe_allow_html=True,
         )
         st.divider()
-
-st.divider()
-
-with st.expander("Aerial Inspect alerts (legacy production pipeline)"):
-    status = model_manager.artifact_status
-    mn_status = model_manager.mobilenet_status
-
-    missing = [name for name in ("YOLO",) if not status[name]["exists"]]
-    if mn_status["state"] == "missing":
-        missing.append("MobileNet")
-
-    if missing:
-        st.error(
-            f"**Model unavailable**: {', '.join(missing)} artifact(s) are not present. "
-            "Analysis requiring these models cannot run until genuine trained weights "
-            "are supplied in `weights/`."
-        )
-    else:
-        st.success(
-            "Detection and classification are fully ready — v1 supports Clean, Dusty, "
-            "and Hotspot. Bird-Drop, Electrical-Damage, and Physical-Damage remain a "
-            "documented future expansion; see the **Limitations** page."
-        )
-
-    if not status["XGBoost"]["exists"]:
-        st.info(
-            "ℹ️ Efficiency-loss/output-power prediction is unavailable in v1 — no "
-            "legitimate training dataset was found (see **Limitations**). This is an "
-            "expected v1 boundary, not a fault."
-        )
-
-    st.markdown("**Inspection alerts**")
-    alerts = storage.get_alerts(limit=100)
-    if not alerts:
-        empty_state(
-            "No CRITICAL or WARNING inspections recorded. This is a real absence of "
-            "alerts, not an unmonitored gap — every completed inspection is evaluated."
-        )
-    else:
-        for row in alerts:
-            st.markdown(
-                f"{severity_pill(row['severity'])} &nbsp; **{row['fault_label']}** *(whole-image classification)* "
-                f"— {row['city']} — {row['created_at']}  \n"
-                f"Panels: {row['panel_count']} · Efficiency loss: {row['efficiency_loss_pct']:.1f}% "
-                f"· [View in History →](/📜_History)",
-                unsafe_allow_html=True,
-            )
-            st.divider()

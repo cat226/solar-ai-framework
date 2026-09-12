@@ -1,6 +1,5 @@
 """pages/02_🔎_Panel_Results.py — Panel-level table for the most recent
-live Ground Inspection run, with the legacy Aerial Inspect table kept as a
-secondary, collapsed section.
+live Ground Inspection run.
 
 Reads st.session_state["ground_inspection_captures"], set by app.py (the
 Ground Inspection landing page) after a completed run — this is the only
@@ -83,40 +82,3 @@ else:
             "image-level test accuracy — see `docs/CONDITION_MODEL_4CLASS_CLASSIFIER_V1.md`). "
             "The detector's read is kept as a secondary, localized cross-check."
         )
-
-st.divider()
-
-with st.expander("Aerial Inspect panel results (legacy production pipeline)"):
-    result = st.session_state.get("last_result")
-    if result is None or not getattr(result, "panels", None):
-        empty_state(
-            "No panels to show yet. Run an inspection on the **Aerial Inspect** page - "
-            "each detected panel's own classification and estimate will appear here."
-        )
-    else:
-        aerial_rows = []
-        for p in result.panels:
-            aerial_rows.append({
-                "Panel ID": p.panel_index,
-                "Detection confidence": p.detection_confidence,
-                "Fault / class": p.classification.label,
-                "Classification confidence": p.classification.confidence,
-                "Efficiency loss (%)": p.prediction.efficiency_loss_pct if p.prediction.prediction_successful else None,
-                "Estimated output (W)": p.prediction.estimated_output_w if p.prediction.prediction_successful else None,
-                "Status": "estimate available" if p.prediction.prediction_successful else "Estimate unavailable",
-            })
-        adf = pd.DataFrame(aerial_rows)
-        st.dataframe(
-            adf.style.format({
-                "Detection confidence": "{:.0%}",
-                "Classification confidence": "{:.0%}",
-                "Efficiency loss (%)": lambda v: f"{v:.1f}" if pd.notna(v) else "—",
-                "Estimated output (W)": lambda v: f"{v:.0f}" if pd.notna(v) else "—",
-            }),
-            use_container_width=True, hide_index=True,
-        )
-        if not result.xgboost_available:
-            st.caption(
-                "⚠️ Efficiency/output columns show '—' because the XGBoost artifact was "
-                "unavailable for this inspection — not because the panels had zero loss."
-            )

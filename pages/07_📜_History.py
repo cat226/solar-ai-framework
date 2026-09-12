@@ -2,8 +2,7 @@
 
 All rows come from services.storage (real recorded Ground Inspection runs).
 Filters operate on that real data; an empty result set shows an explicit
-"no matches" state rather than any placeholder rows. Legacy Aerial Inspect
-history is kept, unchanged, in a collapsed section below.
+"no matches" state rather than any placeholder rows.
 """
 from __future__ import annotations
 
@@ -83,79 +82,3 @@ else:
                 result = json.loads(row["result_json"])
                 with st.expander("Full recorded result (JSON)"):
                     st.json(result)
-
-st.divider()
-
-with st.expander("Aerial Inspect history (legacy production pipeline)"):
-    aerial_rows = storage.get_recent_inspections(limit=500)
-    if not aerial_rows:
-        empty_state(
-            "No inspections recorded yet. Run an analysis from the **Aerial Inspect** page "
-            "and it will appear here."
-        )
-    else:
-        adf = pd.DataFrame(aerial_rows)
-
-        _CLASSIFIER_SOURCE_DISPLAY = {
-            "production": "six_class (legacy label)",
-            "interim": "v1 (legacy label)",
-        }
-        if "classifier_source" in adf.columns:
-            adf["classifier_source"] = adf["classifier_source"].map(
-                lambda v: _CLASSIFIER_SOURCE_DISPLAY.get(v, v)
-            )
-
-        ac1, ac2, ac3, ac4 = st.columns(4)
-        with ac1:
-            fault_options = sorted(adf["fault_label"].unique().tolist())
-            fault_filter = st.multiselect("Fault type", fault_options)
-        with ac2:
-            severity_options = sorted(adf["severity"].unique().tolist())
-            severity_filter = st.multiselect("Severity", severity_options)
-        with ac3:
-            city_filter = st.text_input("City contains")
-        with ac4:
-            source_options = sorted(adf["classifier_source"].unique().tolist()) if "classifier_source" in adf.columns else []
-            source_filter = st.multiselect("Classifier used", source_options)
-
-        afiltered = adf.copy()
-        if fault_filter:
-            afiltered = afiltered[afiltered["fault_label"].isin(fault_filter)]
-        if severity_filter:
-            afiltered = afiltered[afiltered["severity"].isin(severity_filter)]
-        if city_filter:
-            afiltered = afiltered[afiltered["city"].str.contains(city_filter, case=False, na=False, regex=False)]
-        if source_filter and "classifier_source" in afiltered.columns:
-            afiltered = afiltered[afiltered["classifier_source"].isin(source_filter)]
-
-        st.caption(f"Showing {len(afiltered)} of {len(adf)} recorded inspections.")
-
-        if afiltered.empty:
-            empty_state("No inspections match the current filters.")
-        else:
-            adisplay_cols = ["id", "created_at", "city", "fault_label", "fault_confidence", "panel_count",
-                              "efficiency_loss_pct", "severity"]
-            arename_map = {
-                "id": "ID", "created_at": "When", "city": "City", "fault_label": "Fault (whole image)",
-                "fault_confidence": "Confidence", "panel_count": "Panels",
-                "efficiency_loss_pct": "Eff. loss %", "severity": "Severity",
-            }
-            if "classifier_source" in afiltered.columns:
-                adisplay_cols.append("classifier_source")
-                arename_map["classifier_source"] = "Classifier"
-            adisplay_df = afiltered[adisplay_cols].rename(columns=arename_map)
-            st.dataframe(adisplay_df, use_container_width=True, hide_index=True)
-
-            st.markdown("**Inspection detail**")
-            aselected_id = st.selectbox("Select an inspection ID to inspect", afiltered["id"].tolist(), key="aerial_history_select")
-            if aselected_id:
-                arow = storage.get_inspection(int(aselected_id))
-                if arow:
-                    st.markdown(
-                        f"**Inspection #{arow['id']}** — {arow['created_at']} — {arow['city']} "
-                        f"{severity_pill(arow['severity'])}",
-                        unsafe_allow_html=True,
-                    )
-                    aresult = json.loads(arow["result_json"])
-                    with st.expander("Full recorded result (JSON)"):
-                        st.json(aresult)

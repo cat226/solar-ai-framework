@@ -38,14 +38,15 @@ def test_shared_fixtures_are_importable(
     project_config,
     fixed_utc_datetime,
     fixed_utc_midnight,
-    default_weather,
-    default_physics,
-    classification_clean,
-    detection_single_panel,
-    prediction_normal,
     sample_pil_image,
 ):
-    """Every shared fixture can be created from the canonical environment."""
+    """Every shared fixture can be created from the canonical environment.
+
+    The aerial-pipeline-specific domain-object fixtures this test used to
+    also exercise (default_weather, default_physics, classification_clean,
+    detection_single_panel, prediction_normal) were removed from
+    conftest.py alongside the rest of the aerial pipeline — see
+    docs/PHASE_16_ARCHITECTURE_REVIEW.md."""
     # Fixed clock
     assert fixed_utc_datetime.tzinfo is not None
     assert fixed_utc_midnight < fixed_utc_datetime
@@ -53,14 +54,6 @@ def test_shared_fixtures_are_importable(
     # Parsed configuration carries the expected top-level sections
     assert "weather" in project_config
     assert "physics" in project_config
-
-    # Domain data objects are well-formed
-    assert default_weather.fetch_successful is True
-    assert default_weather.ambient_temp_c == 25.0
-    assert default_physics.soiling_ratio == 1.0
-    assert classification_clean.label == "Clean"
-    assert detection_single_panel.panel_count == 1
-    assert prediction_normal.prediction_successful is True
 
     # Deterministic image
     assert sample_pil_image.mode == "RGB"

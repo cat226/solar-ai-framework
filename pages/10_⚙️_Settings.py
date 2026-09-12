@@ -3,15 +3,15 @@ configuration for this deployment.
 
 Detailed per-model artifact status/hashes live on the **Model Status** page;
 this page covers access control, privacy, and the raw configured thresholds.
-Nothing here is aspirational — every value is read live from
-configs/settings.yaml or models.model_manager.
+Nothing here is aspirational — every value is read live or matches the
+literal defaults in app.py's model-loading/inference code.
 """
 from __future__ import annotations
 
 import streamlit as st
 
 from utils.auth import require_access
-from utils.config import CFG, get_secret
+from utils.config import get_secret
 from utils.ui_theme import apply_page_chrome
 
 apply_page_chrome("Settings")
@@ -23,20 +23,21 @@ st.caption("Per-model artifact status, hashes, and class coverage: see the **Mod
 st.subheader("Inference configuration")
 c1, c2 = st.columns(2)
 with c1:
-    st.markdown("**YOLO detector**")
+    st.markdown("**Ground panel detector**")
     st.code(
-        f"confidence_threshold = {CFG['models']['yolo']['confidence_threshold']}\n"
-        f"iou_threshold        = {CFG['models']['yolo']['iou_threshold']}\n"
-        f"image_size            = {CFG['models']['yolo']['image_size']}",
+        "confidence_threshold = 0.25 (adjustable via the sensitivity slider, 0.10-0.60)\n"
+        "iou_threshold        = 0.50\n"
+        "image_size            = 640",
         language="text",
     )
 with c2:
-    st.markdown("**MobileNet classifier**")
+    st.markdown("**Condition engines**")
     st.code(
-        f"num_classes (future six-class) = {CFG['models']['mobilenet']['num_classes']}\n"
-        f"input_size                      = {CFG['models']['mobilenet']['input_size']}\n"
-        f"v1 classes (active)             = {', '.join(CFG['models']['mobilenet'].get('v1_labels') or [])}\n"
-        f"future six-class taxonomy       = {', '.join(CFG['classification']['labels'])}",
+        "classifier input_size        = 224\n"
+        "classifier predicted threshold = 0.45\n"
+        "detector detection floor      = 0.25\n"
+        "detector predicted threshold  = 0.45\n"
+        "active taxonomy               = CLEAN, DUSTY, BIRD_DROP, PHYSICAL_DAMAGE",
         language="text",
     )
 
@@ -55,16 +56,15 @@ else:
 
 st.subheader("Data & privacy")
 st.markdown(
-    "- Each completed inspection's **structured results** (detected faults per panel, "
-    "confidences, efficiency estimates, environmental readings) are saved locally to "
-    "`data/inspections.db` so the Overview/History/Analytics/Alerts pages have real "
-    "data to show.\n"
-    "- The **uploaded image itself is never stored** — only a SHA-256 hash of it, for "
-    "identity purposes.\n"
+    "- Each completed Ground Inspection run's **structured results** (per-panel condition "
+    "reads from both engines, confidences, detection geometry) are saved locally to "
+    "`data/inspections.db` (`ground_inspections` table) so the Overview/History/Analytics/"
+    "Alerts pages have real data to show.\n"
+    "- The **uploaded image itself is never stored**.\n"
     "- This database is local to the deployment (SQLite file), not sent to any external "
     "service.\n"
-    "- Weather lookups are sent to OpenWeatherMap using the city you enter; no other "
-    "personal data leaves this application."
+    "- No other personal data leaves this application — Ground Inspection has no weather/"
+    "location lookup."
 )
 
 st.subheader("Storage policy")
@@ -78,7 +78,8 @@ st.caption(
 
 st.subheader("About")
 st.caption(
-    "Solar AI Framework — YOLO panel detection → MobileNetV2 fault classification → "
-    "XGBoost efficiency-loss prediction. See the README for architecture, training "
-    "pipelines, and known limitations (also summarized on the **Limitations** page)."
+    "Solar AI — ground-level, dynamic multi-panel inspection. Dynamic panel detector → "
+    "per-panel crop → condition classifier (primary) + condition detector (secondary, "
+    "localized cross-check). See the README for architecture, training pipelines, and "
+    "known limitations (also summarized on the **Limitations** page)."
 )

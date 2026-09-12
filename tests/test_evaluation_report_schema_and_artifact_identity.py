@@ -28,33 +28,14 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 class TestEvaluationSummarySchema:
     """Every evaluate_*.py script's summary JSON must carry these fields -
     a static, deterministic check of the code (via inspecting the literal
-    dict keys assigned to `summary = {...}`), not a live run."""
+    dict keys assigned to `summary = {...}`), not a live run.
 
-    def test_evaluate_yolo_summary_has_required_top_level_fields(self):
-        import inspect
-        import training.evaluation.evaluate_yolo as module
-        source = inspect.getsource(module.main)
-        for key in ["weights_path", "weights_sha256", "config", "dataset_split",
-                    "production_path_metrics", "map_metrics"]:
-            assert f'"{key}"' in source, f"evaluate_yolo.py summary is missing {key!r}"
-
-    def test_evaluate_mobilenet_summary_has_required_top_level_fields(self):
-        import inspect
-        import training.evaluation.evaluate_mobilenet as module
-        source = inspect.getsource(module.main)
-        for key in ["weights_path", "weights_sha256", "classifier_source", "labels",
-                    "dataset_split", "subset_label", "accuracy", "confusion_matrix",
-                    "confidence_stats"]:
-            assert f'"{key}"' in source, f"evaluate_mobilenet.py summary is missing {key!r}"
-
-    def test_evaluate_end_to_end_summary_has_required_top_level_fields(self):
-        import inspect
-        import training.evaluation.evaluate_end_to_end as module
-        source = inspect.getsource(module.main)
-        for key in ["detector_sha256", "classifier_sha256", "whole_image_classification",
-                    "detection_rate_assumed_gt1", "end_to_end_panel_accuracy",
-                    "classification_accuracy_given_detection_succeeded"]:
-            assert f'"{key}"' in source, f"evaluate_end_to_end.py summary is missing {key!r}"
+    The aerial-pipeline evaluation scripts this class used to also cover
+    (evaluate_yolo.py, evaluate_mobilenet.py, evaluate_end_to_end.py,
+    yolo_threshold_sweep.py) were removed alongside the rest of the aerial
+    pipeline — see docs/PHASE_16_ARCHITECTURE_REVIEW.md. leakage_audit.py
+    is generic dataset-quality tooling with no dependency on either
+    pipeline, so its coverage stays."""
 
     def test_leakage_audit_summary_has_required_top_level_fields(self):
         import inspect
@@ -63,15 +44,6 @@ class TestEvaluationSummarySchema:
         for key in ["exact_duplicates", "near_duplicates", "source_signal",
                     "classification", "clean_test_subset"]:
             assert f'"{key}"' in source, f"leakage_audit.py summary is missing {key!r}"
-
-    def test_yolo_threshold_sweep_summary_has_required_top_level_fields(self):
-        import inspect
-        import training.evaluation.yolo_threshold_sweep as module
-        source = inspect.getsource(module.main)
-        for key in ["weights_sha256", "split", "fixed_iou_threshold",
-                     "deployed_production_confidence_threshold",
-                     "size_bucket_boundaries", "best_f1_threshold", "sweep"]:
-            assert f'"{key}"' in source, f"yolo_threshold_sweep.py summary is missing {key!r}"
 
 
 class TestReleaseManifestArtifactIdentity:
