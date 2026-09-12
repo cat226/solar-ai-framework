@@ -60,6 +60,59 @@ CREATE TABLE IF NOT EXISTS ground_inspections (
 );
 CREATE INDEX IF NOT EXISTS idx_ground_inspections_created_at ON ground_inspections (created_at);
 CREATE INDEX IF NOT EXISTS idx_ground_inspections_flagged ON ground_inspections (flagged_count);
+
+-- Phase 17: persistent panel identity across runs (geometry-matched, best
+-- effort — see training/detection/ground_pv/panel_identity.py). Current
+-- known state of every tracked panel — one row per persistent_id, always
+-- reflecting its MOST RECENT observation.
+CREATE TABLE IF NOT EXISTS panel_identities (
+    persistent_id TEXT PRIMARY KEY,
+    capture_slot INTEGER NOT NULL,
+    first_seen_run_id INTEGER NOT NULL,
+    last_seen_run_id INTEGER NOT NULL,
+    last_center_x REAL NOT NULL,
+    last_center_y REAL NOT NULL,
+    last_condition_status TEXT NOT NULL DEFAULT '',
+    last_condition_label TEXT,
+    last_condition_confidence REAL,
+    observation_count INTEGER NOT NULL DEFAULT 1
+);
+CREATE INDEX IF NOT EXISTS idx_panel_identities_capture_slot ON panel_identities (capture_slot);
+
+-- Full observation history — one row per (persistent panel, run) it was
+-- actually seen in. This is what a per-panel history view reads.
+CREATE TABLE IF NOT EXISTS panel_observations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    persistent_id TEXT NOT NULL,
+    run_id INTEGER NOT NULL,
+    created_at TEXT NOT NULL,
+    capture_slot INTEGER NOT NULL,
+    display_id TEXT NOT NULL,
+    condition_status TEXT NOT NULL,
+    condition_label TEXT,
+    condition_confidence REAL,
+    center_x REAL NOT NULL,
+    center_y REAL NOT NULL,
+    match_distance REAL
+);
+CREATE INDEX IF NOT EXISTS idx_panel_observations_persistent_id ON panel_observations (persistent_id);
+CREATE INDEX IF NOT EXISTS idx_panel_observations_run_id ON panel_observations (run_id);
+
+-- Detected condition transitions (e.g. CLEAN -> DUSTY) for a matched panel
+-- between two consecutive CONFIDENT ("predicted") reads. Computed once at
+-- write time (same pattern as ground_inspections' precomputed counts)
+-- rather than re-derived from panel_observations on every page load.
+CREATE TABLE IF NOT EXISTS panel_condition_changes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    persistent_id TEXT NOT NULL,
+    run_id INTEGER NOT NULL,
+    created_at TEXT NOT NULL,
+    previous_label TEXT NOT NULL,
+    previous_confidence REAL,
+    new_label TEXT NOT NULL,
+    new_confidence REAL
+);
+CREATE INDEX IF NOT EXISTS idx_panel_condition_changes_created_at ON panel_condition_changes (created_at);
 """
 
 
@@ -222,3 +275,184 @@ def get_ground_summary_stats() -> dict:
             "PHYSICAL_DAMAGE": int(totals["physical_damage"] or 0),
         },
     }
+
+
+# ---------------------------------------------------------------------------
+# Phase 17 — persistent panel identity across runs (geometry-matched, best
+# effort). See training/detection/ground_pv/panel_identity.py for the
+# matching algorithm and its documented assumptions/limitations. Matching
+# always uses the CLASSIFIER's condition read (primary signal), consistent
+# with every other display/history/alert already built on this page.
+# ---------------------------------------------------------------------------
+
+_PERSISTENT_ID_PREFIX = "PANEL-"
+
+
+def _next_persistent_id(conn: sqlite3.Connection) -> str:
+    n = conn.execute("SELECT COUNT(*) AS n FROM panel_identities").fetchone()["n"]
+    return f"{_PERSISTENT_ID_PREFIX}{n + 1:03d}"
+
+
+def record_panel_identities(run_id: int, captures: list[dict]) -> dict:
+    """Match this run's panels against the most recently known position of
+    every tracked panel (per capture slot — see
+    training.detection.ground_pv.panel_identity.match_run_to_previous for
+    exactly what that assumes), assign/reuse persistent ids, and record
+    each observation plus any detected condition change.
+
+    Must be called AFTER record_ground_inspection() for the same run_id —
+    it only attributes observations, it does not create the run row.
+
+    Args:
+        run_id: The ground_inspections row id this batch of panels belongs to.
+        captures: The same [{"label", "image", "report"}, ...] list passed
+            to record_ground_inspection (only "label" and "report" are read).
+
+    Returns:
+        A dict with new_panel_ids/matched/changes lists — enough detail for
+        a caller to show a live summary without a second query.
+    """
+    from training.detection.ground_pv.panel_identity import (
+        CaptureSlotPanels,
+        PanelRef,
+        match_run_to_previous,
+        normalized_center,
+    )
+
+    current_slots: list[CaptureSlotPanels] = []
+    panel_lookup: dict[str, dict] = {}
+    for slot_idx, cap in enumerate(captures):
+        report = cap["report"]
+        w, h = report.get("image_width"), report.get("image_height")
+        panels: list[PanelRef] = []
+        for p in report.get("panels", []):
+            temp_id = f"slot{slot_idx}-{p['panel_id']}"
+            bbox = p["detection"]["bbox"]
+            cx, cy = normalized_center([bbox["x1"], bbox["y1"], bbox["x2"], bbox["y2"]], w, h)
+            panels.append(PanelRef(temp_id, cx, cy))
+            panel_lookup[temp_id] = {
+                "display_id": p["panel_id"],
+                "center_x": cx, "center_y": cy,
+                "condition": p["classifier_condition"],
+            }
+        current_slots.append(CaptureSlotPanels(slot_idx, panels))
+
+    new_panel_ids: list[str] = []
+    matched: list[dict] = []
+    changes: list[dict] = []
+
+    with _connect() as conn:
+        prev_rows = conn.execute("SELECT * FROM panel_identities").fetchall()
+        previous_by_slot: dict[int, list] = {}
+        prev_state: dict[str, sqlite3.Row] = {}
+        for row in prev_rows:
+            previous_by_slot.setdefault(row["capture_slot"], []).append(
+                PanelRef(row["persistent_id"], row["last_center_x"], row["last_center_y"])
+            )
+            prev_state[row["persistent_id"]] = row
+        previous_slots = [CaptureSlotPanels(slot, panels) for slot, panels in previous_by_slot.items()]
+
+        match_results = match_run_to_previous(current_slots, previous_slots)
+
+        for slot_idx, results in match_results.items():
+            for r in results:
+                info = panel_lookup[r.current_source_id]
+                cond = info["condition"]
+
+                if r.matched_previous_source_id is not None:
+                    persistent_id = r.matched_previous_source_id
+                    prev_row = prev_state.get(persistent_id)
+                    matched.append({
+                        "persistent_id": persistent_id, "display_id": info["display_id"],
+                        "distance": r.distance,
+                    })
+                else:
+                    persistent_id = _next_persistent_id(conn)
+                    prev_row = None
+                    new_panel_ids.append(persistent_id)
+                    # Reserve the id immediately so two new panels assigned in
+                    # the same call never collide on the same COUNT(*)-derived id.
+                    conn.execute(
+                        "INSERT INTO panel_identities (persistent_id, capture_slot, first_seen_run_id, "
+                        "last_seen_run_id, last_center_x, last_center_y, observation_count) "
+                        "VALUES (?, ?, ?, ?, ?, ?, 0)",
+                        (persistent_id, slot_idx, run_id, run_id, info["center_x"], info["center_y"]),
+                    )
+
+                # A real condition change requires BOTH the previous and the
+                # new read to be a CONFIDENT ("predicted") read with a
+                # different label - an "uncertain" read is never compared as
+                # if it were a confirmed condition (matches this page's
+                # existing no_prediction/uncertain discipline).
+                if (
+                    prev_row is not None
+                    and prev_row["last_condition_status"] == "predicted"
+                    and cond["status"] == "predicted"
+                    and prev_row["last_condition_label"] != cond["label"]
+                ):
+                    changes.append({
+                        "persistent_id": persistent_id, "display_id": info["display_id"],
+                        "previous_label": prev_row["last_condition_label"],
+                        "previous_confidence": prev_row["last_condition_confidence"],
+                        "new_label": cond["label"], "new_confidence": cond["confidence"],
+                    })
+                    conn.execute(
+                        "INSERT INTO panel_condition_changes (persistent_id, run_id, created_at, "
+                        "previous_label, previous_confidence, new_label, new_confidence) "
+                        "VALUES (?, ?, datetime('now'), ?, ?, ?, ?)",
+                        (persistent_id, run_id, prev_row["last_condition_label"],
+                         prev_row["last_condition_confidence"], cond["label"], cond["confidence"]),
+                    )
+
+                conn.execute(
+                    "INSERT INTO panel_observations (persistent_id, run_id, created_at, capture_slot, "
+                    "display_id, condition_status, condition_label, condition_confidence, "
+                    "center_x, center_y, match_distance) "
+                    "VALUES (?, ?, datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (persistent_id, run_id, slot_idx, info["display_id"], cond["status"],
+                     cond["label"], cond["confidence"], info["center_x"], info["center_y"], r.distance),
+                )
+                conn.execute(
+                    "UPDATE panel_identities SET last_seen_run_id = ?, last_center_x = ?, last_center_y = ?, "
+                    "last_condition_status = ?, last_condition_label = ?, last_condition_confidence = ?, "
+                    "observation_count = observation_count + 1 WHERE persistent_id = ?",
+                    (run_id, info["center_x"], info["center_y"], cond["status"], cond["label"],
+                     cond["confidence"], persistent_id),
+                )
+
+    logger.info(
+        "Panel identity matching for run %d: %d new, %d matched, %d condition change(s)",
+        run_id, len(new_panel_ids), len(matched), len(changes),
+    )
+    return {"new_panel_ids": new_panel_ids, "matched": matched, "changes": changes}
+
+
+def get_panel_identities_summary() -> list[dict]:
+    """Every currently-tracked panel's latest known state, most-recently-seen first."""
+    with _connect() as conn:
+        rows = conn.execute(
+            "SELECT * FROM panel_identities ORDER BY last_seen_run_id DESC, persistent_id ASC"
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def get_panel_observation_history(persistent_id: str) -> list[dict]:
+    """Every observation of one persistent panel, oldest first - a
+    chronological condition timeline for that physical panel."""
+    with _connect() as conn:
+        rows = conn.execute(
+            "SELECT * FROM panel_observations WHERE persistent_id = ? ORDER BY run_id ASC",
+            (persistent_id,),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def get_recent_condition_changes(limit: int = 50) -> list[dict]:
+    """Recently detected condition transitions (e.g. CLEAN -> DUSTY) for
+    matched panels, newest first."""
+    with _connect() as conn:
+        rows = conn.execute(
+            "SELECT * FROM panel_condition_changes ORDER BY created_at DESC, id DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
+    return [dict(r) for r in rows]

@@ -338,9 +338,16 @@ with st.expander("Two condition engines, how they differ from Aerial Inspect, an
         "around the whole array. Its real working range is close-up shots of ~1-3 panels "
         "(like a pole camera positioned near the array). **Select or upload more than one "
         "photo of the same array below** to cover all its panels — results combine into "
-        "one Array Summary. Panels are **not** matched across different captures to the "
-        "same physical panel (that's future work — see the architecture review), so "
-        "captures with overlapping coverage may count a panel more than once."
+        "one Array Summary. Within ONE run, panels are **not** matched across different "
+        "captures to the same physical panel (no cross-capture matching within a single "
+        "run — that's still future work), so overlapping coverage may count a panel more "
+        "than once in that run's total.\n"
+        "- **Across separate runs, panels ARE matched** (Phase 17) — a best-effort, "
+        "estimated match by fixed-camera position, not verified identity. Run Ground "
+        "Inspection again later on the same array and the **Panel History** page (sidebar) "
+        "shows which panels were matched and any detected condition change (e.g. "
+        "CLEAN → DUSTY). See `docs/PANEL_IDENTITY_TRACKING.md` for exactly what this "
+        "assumes and how it degrades when the camera isn't genuinely fixed."
     )
 
 st.divider()
@@ -473,9 +480,10 @@ if run_clicked and captures_in:
     if results:
         st.session_state["ground_inspection_captures"] = results
         summary = _summarize_panels(results)
+        run_id: int | None = None
         try:
             from services import storage
-            storage.record_ground_inspection(
+            run_id = storage.record_ground_inspection(
                 results, flagged=summary["flagged"], unread=summary["unread"],
                 confirmed_clean=summary["confirmed_clean"],
             )
@@ -485,6 +493,17 @@ if run_clicked and captures_in:
                 "⚠️ This run completed successfully (shown below), but could not be saved "
                 "to history — it will not appear on Overview, History, Analytics, or Alerts."
             )
+
+        # Persistent panel identity (Phase 17) — best-effort geometry match
+        # against the previous run, separate try/except so a failure here
+        # never costs the already-saved ground_inspections row above.
+        if run_id is not None:
+            try:
+                identity_result = storage.record_panel_identities(run_id, results)
+                st.session_state["ground_inspection_identity_result"] = identity_result
+            except Exception:  # noqa: BLE001 — identity tracking must never break the live result
+                logger.exception("Failed to match panel identities for run %d", run_id)
+                st.session_state["ground_inspection_identity_result"] = None
     else:
         st.error("No capture produced a result. Nothing to show.")
         st.stop()
@@ -574,6 +593,32 @@ if any_geometry_warning:
         "size, or isolation vs. the rest of that capture's array) — flagged per-panel "
         "below, never silently dropped."
     )
+
+# ---------------------------------------------------------------------------
+# Panel identity (Phase 17) — best-effort geometry match against the
+# previous run. See docs/PANEL_IDENTITY_TRACKING.md for what this assumes
+# (a genuinely fixed camera, same capture order each run) and how it
+# degrades when that assumption doesn't hold. Never a verified identity —
+# every matched/new claim here is an estimate, and changes are only ever
+# flagged between two CONFIDENT reads, never from an uncertain one.
+# ---------------------------------------------------------------------------
+identity_result = st.session_state.get("ground_inspection_identity_result")
+if identity_result is not None:
+    id_parts = []
+    if identity_result["new_panel_ids"]:
+        id_parts.append(f"🆕 {len(identity_result['new_panel_ids'])} new panel(s) now tracked ({', '.join(identity_result['new_panel_ids'])})")
+    if identity_result["matched"]:
+        id_parts.append(f"🔄 {len(identity_result['matched'])} panel(s) matched to a previous capture")
+    if id_parts:
+        st.info(
+            " · ".join(id_parts) + " — **estimated** by fixed-camera position matching, not verified. "
+            "See the **Panel History** page for the full per-panel timeline."
+        )
+    for c in identity_result["changes"]:
+        st.warning(
+            f"🔔 **{c['persistent_id']}** ({c['display_id']}) changed: "
+            f"**{c['previous_label']} ({c['previous_confidence']:.0%}) → {c['new_label']} ({c['new_confidence']:.0%})**"
+        )
 
 st.divider()
 
