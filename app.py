@@ -248,6 +248,48 @@ def _display_id(capture_idx: int, panel_id: str, multi: bool) -> str:
     return f"C{capture_idx}-{panel_id}" if multi else panel_id
 
 
+def _summarize_panels(captures: list[dict[str, Any]]) -> dict[str, Any]:
+    """Flatten every capture's panels into flagged/unread/confirmed_clean
+    lists (CLASSIFIER read = primary condition signal) plus zero-panel
+    capture labels and whether any geometry warning fired.
+
+    Shared by the live results display AND history persistence so the two
+    can never silently drift apart — the number a user sees on screen is
+    exactly the number written to history."""
+    multi = len(captures) > 1
+    all_panels: list[dict[str, Any]] = []
+    zero_panel_captures: list[str] = []
+    any_geometry_warning = False
+
+    for idx, cap in enumerate(captures, start=1):
+        report = cap["report"]
+        if report["panel_count"] == 0:
+            zero_panel_captures.append(cap["label"])
+            continue
+        if report["analysis_status"] == "warning":
+            any_geometry_warning = True
+        for p in report["panels"]:
+            all_panels.append({
+                "display_id": _display_id(idx, p["panel_id"], multi),
+                "condition": p["classifier_condition"],
+                "detector_condition": p["condition"],
+            })
+
+    flagged = [p for p in all_panels if p["condition"]["status"] == "predicted" and p["condition"]["label"] != "CLEAN"]
+    unread = [p for p in all_panels if p["condition"]["status"] in ("uncertain", "no_prediction")]
+    confirmed_clean = [p for p in all_panels if p["condition"]["status"] == "predicted" and p["condition"]["label"] == "CLEAN"]
+
+    return {
+        "multi": multi,
+        "all_panels": all_panels,
+        "zero_panel_captures": zero_panel_captures,
+        "any_geometry_warning": any_geometry_warning,
+        "flagged": flagged,
+        "unread": unread,
+        "confirmed_clean": confirmed_clean,
+    }
+
+
 # ---------------------------------------------------------------------------
 # Header
 # ---------------------------------------------------------------------------
@@ -410,6 +452,19 @@ if run_clicked and captures_in:
 
     if results:
         st.session_state["ground_inspection_captures"] = results
+        summary = _summarize_panels(results)
+        try:
+            from services import storage
+            storage.record_ground_inspection(
+                results, flagged=summary["flagged"], unread=summary["unread"],
+                confirmed_clean=summary["confirmed_clean"],
+            )
+        except Exception:  # noqa: BLE001 — history recording must never break the live result
+            logger.exception("Failed to record Ground Inspection run to local history")
+            st.warning(
+                "⚠️ This run completed successfully (shown below), but could not be saved "
+                "to history — it will not appear on Overview, History, Analytics, or Alerts."
+            )
     else:
         st.error("No capture produced a result. Nothing to show.")
         st.stop()
@@ -427,36 +482,22 @@ if not captures:
     empty_state("Choose capture(s) above and click **Run Ground Inspection** to see results.")
     st.stop()
 
-multi = len(captures) > 1
+summary = _summarize_panels(captures)
+multi = summary["multi"]
+all_panels = summary["all_panels"]
+zero_panel_captures = summary["zero_panel_captures"]
+any_geometry_warning = summary["any_geometry_warning"]
+flagged = summary["flagged"]
+unread = summary["unread"]
+confirmed_clean = summary["confirmed_clean"]
 
-# ---------------------------------------------------------------------------
-# Combined array summary — flattens every capture's panels into one list.
-# PRIMARY condition signal is now the CLASSIFIER (docs/CONDITION_MODEL_4CLASS_CLASSIFIER_V1.md:
+# PRIMARY condition signal is the CLASSIFIER (docs/CONDITION_MODEL_4CLASS_CLASSIFIER_V1.md:
 # 0.752 image-level accuracy vs. the box-detector's 0.727, and dramatically
 # better on DUSTY specifically: 0.794 vs. 0.359 recall). The box-detector's
 # condition read is kept as "detector_condition" for the secondary,
 # localized cross-check shown per panel below — not discarded, since it
 # still carries real localization value the classifier gives up. Captures
 # with 0 panels are reported, never silently dropped from the picture.
-# ---------------------------------------------------------------------------
-all_panels: list[dict[str, Any]] = []  # {"display_id", "condition": {...} (classifier), "detector_condition": {...}}
-zero_panel_captures: list[str] = []
-any_geometry_warning = False
-
-for idx, cap in enumerate(captures, start=1):
-    report = cap["report"]
-    if report["panel_count"] == 0:
-        zero_panel_captures.append(cap["label"])
-        continue
-    if report["analysis_status"] == "warning":
-        any_geometry_warning = True
-    for p in report["panels"]:
-        all_panels.append({
-            "display_id": _display_id(idx, p["panel_id"], multi),
-            "condition": p["classifier_condition"],
-            "detector_condition": p["condition"],
-        })
-
 if multi:
     st.info(
         f"📷 **{len(captures)} captures combined**, {len(all_panels)} total panel detection(s). "
@@ -492,10 +533,6 @@ m5.metric("No prediction", status_counts["no_prediction"])
 # separately as reads that need a better photo — NEVER folded into either
 # "confirmed issue" or "Clean".
 # ---------------------------------------------------------------------------
-flagged = [p for p in all_panels if p["condition"]["status"] == "predicted" and p["condition"]["label"] != "CLEAN"]
-unread = [p for p in all_panels if p["condition"]["status"] in ("uncertain", "no_prediction")]
-confirmed_clean = [p for p in all_panels if p["condition"]["status"] == "predicted" and p["condition"]["label"] == "CLEAN"]
-
 if flagged:
     detail = ", ".join(f"**{p['display_id']}** {p['condition']['label']} ({p['condition']['confidence']:.0%})" for p in flagged)
     st.error(f"🚨 **{len(flagged)} panel(s) show a likely issue:** {detail}")
