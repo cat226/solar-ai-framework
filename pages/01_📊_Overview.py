@@ -59,7 +59,7 @@ stats = storage.get_summary_stats()
 if stats["total_inspections"] == 0:
     empty_state(
         "No inspections recorded yet. KPIs and charts will appear here once you "
-        "run analyses from the **Inspect** page (the app's main entry point).",
+        "run analyses from the **Aerial Inspect** page (sidebar).",
     )
 else:
     st.subheader("Inspection summary")
@@ -109,5 +109,5 @@ else:
 
 st.caption(
     "Per-inspection panel detail: **Panel Results**. Site-level rollups: **Site Health**. "
-    "Full history and filters: **History**. Real-time analysis: the app's main **Inspect** page."
+    "Full history and filters: **History**. Real-time analysis: the **Aerial Inspect** page."
 )

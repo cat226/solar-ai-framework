@@ -24,7 +24,7 @@ all_rows = storage.get_recent_inspections(limit=500)
 
 if not all_rows:
     empty_state(
-        "No inspections recorded yet. Run an analysis from the **Inspect** page "
+        "No inspections recorded yet. Run an analysis from the **Aerial Inspect** page "
         "and it will appear here."
     )
     st.stop()

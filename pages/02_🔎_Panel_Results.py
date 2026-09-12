@@ -1,8 +1,10 @@
 """pages/02_🔎_Panel_Results.py — Panel-level table for the most recent
 live inspection.
 
-Reads st.session_state["last_result"], set by app.py (the Inspect page)
-after a completed run — this is the only mechanism for one Streamlit page
+Reads st.session_state["last_result"], set by pages/12_☀️_Aerial_Inspect.py
+(the production aerial pipeline; relocated from app.py — see
+docs/PHASE_16_ARCHITECTURE_REVIEW.md) after a completed run — this is the
+only mechanism for one Streamlit page
 to hand data to another in a multi-page app. Shows an honest empty state
 when no inspection has been run yet in this browser session, rather than
 any placeholder rows.
@@ -23,7 +25,7 @@ st.title("🔎 Panel Results")
 result = st.session_state.get("last_result")
 if result is None or not getattr(result, "panels", None):
     empty_state(
-        "No panels to show yet. Run an inspection on the main **Inspect** page - "
+        "No panels to show yet. Run an inspection on the **Aerial Inspect** page - "
         "each detected panel's own classification and estimate will appear here."
     )
     st.stop()

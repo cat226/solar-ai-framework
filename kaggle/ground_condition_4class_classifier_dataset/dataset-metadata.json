@@ -1,0 +1,11 @@
+{
+  "title": "Solar AI ground PV condition 4-class CLASSIFIER v1",
+  "id": "edithstark/solar-ai-ground-condition-4class-classifier-v1",
+  "licenses": [
+    {
+      "name": "other"
+    }
+  ],
+  "subtitle": "Panel-crop classifier reformulation - grade C unverified",
+  "description": "Solar AI ground-level PV CONDITION research dataset, CLASSIFICATION reformulation (Phase 16-B).\n\nPERSONAL, NON-COMMERCIAL RESEARCH ONLY. Provenance grade C, tagged `personal-experimental-unverified-provenance` (unchanged from the source detection dataset). Derived from `edithstark/solar-ai-ground-condition-4class-classifier-v1`'s source, `datasets/ground_pv_research/condition_4class_v1/` (the existing, already-audited, already-leakage-split 4-class DETECTION dataset), by deriving ONE dominant image-level label per image from its existing box annotations (majority by instance count, ties broken by total box area, then alphabetically) -- documented in provenance/condition_4class_classifier_v1_report.json. No new photography, no new annotation, no re-splitting: every image keeps its EXISTING train/valid/test split assignment verbatim, so this dataset is leakage-clean by construction.\n\nBuilt because Phase 16-A1's image-level agreement analysis (docs/CONDITION_MODEL_IMAGE_LEVEL_AGREEMENT.md) found the existing box-detection condition model's weakness is dominated by localization noise, not class recognition -- evidence a crop-level classifier (no localization requirement) is worth trying, especially for DUSTY's diffuse, boundary-less texture.\n\nClasses (ImageFolder layout, one dominant label per image): CLEAN, DUSTY, BIRD_DROP, PHYSICAL_DAMAGE. 2411 images total: train 1686 / valid 483 / test 242 (identical counts to the source detection dataset -- every image kept). 910 of 2411 images had more than one distinct class present in their original box annotations; only the dominant class was kept as this image's single label -- a real, disclosed information loss versus the detection dataset, not hidden.\n\nNot a validated engineering or safety diagnosis. Underlying images ultimately trace to Kaggle `pythonafroz/solar-panel-images` (licence Unknown) via the source detection dataset -- do NOT redistribute, publish, use commercially, or claim verified CC BY image rights."
+}

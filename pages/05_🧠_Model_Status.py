@@ -20,7 +20,7 @@ apply_page_chrome("Model Status")
 require_access()
 
 st.title("🧠 Model Status")
-st.caption("Dataset/model provenance detail, kept separate from the main Inspect workflow so it doesn't clutter it.")
+st.caption("Dataset/model provenance detail, kept separate from the Aerial Inspect workflow so it doesn't clutter it.")
 
 
 def _sha256(path: Path) -> str:

@@ -1,0 +1,17 @@
+{
+  "PERSONAL_NON_COMMERCIAL_EXPERIMENTAL": true,
+  "base_model": "weights\\yolo_solar.pt",
+  "base_model_sha256": "0b58609905b8ffe41465751cb842b6ed0368ca2555927e31fb5cd587af37e8ea",
+  "data_yaml": "E:\\SolarAI_Datasets\\domain_adaptation_v1\\mendeley_panel_yolo_experimental_v1\\configs\\data_experimental_domain_adapt_run.yaml",
+  "epochs_requested": 10,
+  "patience": 5,
+  "batch": 8,
+  "imgsz": 640,
+  "freeze": 10,
+  "lr0": 0.0005,
+  "optimizer": "AdamW",
+  "seed": 42,
+  "run_dir": "E:\\SolarAI_Datasets\\domain_adaptation_v1\\training_runs\\domain_adapt_experimental_v1",
+  "checkpoint_saved_to": "weights\\yolo_solar_domain_v1.pt",
+  "output_sha256": "3dc092882be8feabcada21f427263d508e1b796eaed287ec7f1d761df6b50603"
+}

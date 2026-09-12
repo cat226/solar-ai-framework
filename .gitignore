@@ -51,6 +51,18 @@ kaggle/ground_condition_4class_kernel_960/
 # Phase 15E-A augmentation-ablation kernel-push staging copy (canonical
 # notebook is kaggle/ground_condition_4class_train_aug.ipynb, which IS committed)
 kaggle/ground_condition_4class_kernel_aug/
+
+# Phase 16-B classifier reformulation Kaggle staging: bulky image tree
+# (train/valid/test) is regenerable via
+# scripts/build_condition_4class_classifier_dataset.py; dataset-metadata.json
+# and README.md ARE committed. The kernel-push staging copy is also ignored —
+# canonical notebook is kaggle/ground_condition_4class_classifier_train.ipynb,
+# which IS committed.
+kaggle/ground_condition_4class_classifier_dataset/train/
+kaggle/ground_condition_4class_classifier_dataset/valid/
+kaggle/ground_condition_4class_classifier_dataset/test/
+kaggle/ground_condition_4class_classifier_dataset/provenance/
+kaggle/ground_condition_4class_classifier_kernel/
 !datasets/ground_pv_research/reports/
 !datasets/ground_pv_research/reports/**
 # ...except the uncapped audit dump (tens of MB of near-dup pair lists)
@@ -98,6 +110,16 @@ datasets/ground_pv_research/condition/images/
 # --overwrite`. The manifests/ and reports/ (build report, dropped-images list,
 # taxonomy) ARE committed so the conversion stays traceable and reproducible.
 datasets/ground_pv_research/condition_4class_v1/images/
+
+# Phase 16-B classifier reformulation dataset (derived from condition_4class_v1
+# above via scripts/build_condition_4class_classifier_dataset.py — one
+# dominant label per image, ImageFolder layout). Same policy: the
+# materialized image tree is bulky and regenerable; classifier_labels_manifest.csv
+# and the sibling *_report.json (small) ARE committed so the derivation stays
+# traceable and reproducible.
+datasets/ground_pv_research/condition_4class_classifier_v1/train/
+datasets/ground_pv_research/condition_4class_classifier_v1/valid/
+datasets/ground_pv_research/condition_4class_classifier_v1/test/
 
 # Phase 14B representative panel dataset: raw source images, annotation label
 # files, and any derived/materialized image trees are bulky, first-party, and

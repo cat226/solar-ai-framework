@@ -24,7 +24,7 @@ result = st.session_state.get("last_result")
 st.subheader("This inspection")
 if result is None or not getattr(result, "panels", None):
     empty_state(
-        "No site-level summary yet. Run an inspection on the main **Inspect** page "
+        "No site-level summary yet. Run an inspection on the **Aerial Inspect** page "
         "with at least one detected panel."
     )
 else:

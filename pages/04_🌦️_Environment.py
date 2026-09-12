@@ -20,7 +20,7 @@ st.title("🌦️ Environment / Physics")
 
 result = st.session_state.get("last_result")
 if result is None:
-    empty_state("No environmental data yet. Run an inspection on the main **Inspect** page.")
+    empty_state("No environmental data yet. Run an inspection on the **Aerial Inspect** page.")
 else:
     wth, phy = result.weather_data, result.physics_data
 

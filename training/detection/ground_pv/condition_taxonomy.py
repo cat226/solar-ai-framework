@@ -59,6 +59,30 @@ REJECTED_CLASSES: frozenset[str] = frozenset({
 SCHEMA_VERSION = "1.0"
 
 
+def dominant_class(instances: list[tuple[str, float]]) -> str:
+    """Pick ONE dominant class label for a set of (class_name, area)
+    instances on the same image — used to derive an image-level
+    classification label from existing, already-audited box annotations
+    (Phase 16-B), without fabricating a new independent label.
+
+    Deterministic rule: majority by INSTANCE COUNT; ties broken by larger
+    total AREA; remaining ties broken alphabetically. Matches the rule used
+    by scripts/analyze_condition_image_level_agreement.py (Phase 16-A.1) so
+    the two phases derive "dominant class" the same way.
+
+    Raises ValueError on an empty list — never guesses a label for an
+    image with zero instances.
+    """
+    if not instances:
+        raise ValueError("dominant_class() requires at least one (class_name, area) instance")
+    count: dict[str, int] = {}
+    area: dict[str, float] = {}
+    for cls, a in instances:
+        count[cls] = count.get(cls, 0) + 1
+        area[cls] = area.get(cls, 0.0) + a
+    return max(count.keys(), key=lambda c: (count[c], area[c], [-ord(ch) for ch in c]))
+
+
 def is_active_class(name: str) -> bool:
     """True iff `name` (case-sensitive, canonical form) is one of the four
     active condition classes."""

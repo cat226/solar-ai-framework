@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "phase": "16-B \u2014 classifier dataset derivation",
+  "source_dataset": "datasets\\ground_pv_research\\condition_4class_v1",
+  "output_dataset": "datasets\\ground_pv_research\\condition_4class_classifier_v1",
+  "label_derivation_rule": "dominant_class(): majority by box instance COUNT, ties broken by total box AREA, then alphabetically \u2014 see training/detection/ground_pv/condition_taxonomy.py",
+  "split_assignment": "verbatim from splits_4class_manifest.csv \u2014 no re-splitting, no re-grouping",
+  "per_split_class_counts": {
+    "train": {
+      "BIRD_DROP": 509,
+      "CLEAN": 367,
+      "DUSTY": 749,
+      "PHYSICAL_DAMAGE": 61
+    },
+    "valid": {
+      "BIRD_DROP": 144,
+      "CLEAN": 112,
+      "DUSTY": 207,
+      "PHYSICAL_DAMAGE": 20
+    },
+    "test": {
+      "CLEAN": 55,
+      "DUSTY": 107,
+      "BIRD_DROP": 71,
+      "PHYSICAL_DAMAGE": 9
+    }
+  },
+  "total_images_written": 2411,
+  "images_with_no_boxes_skipped": 0,
+  "images_with_minority_annotation_discarded": 910,
+  "minority_annotation_disclosure": "910 of 2411 images had more than one distinct active class present in their box annotations; only the dominant class was kept as this image's single classifier label, per the reformulation's single-label design. This is a real information loss versus the detection dataset, disclosed here not hidden.",
+  "active_taxonomy": [
+    "CLEAN",
+    "DUSTY",
+    "BIRD_DROP",
+    "PHYSICAL_DAMAGE"
+  ]
+}
