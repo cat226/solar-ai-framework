@@ -84,6 +84,14 @@ _CONDITION_WEIGHTS = Path("weights/yolo_solar_condition_4class_research_v2.pt")
 _CLASSIFIER_WEIGHTS = Path("weights/mobilenet_condition_4class_research_v1.pth")
 _DEMO_DIR = Path("assets/demo/ground_pv_real")
 
+# Soft cap on captures per run. Each capture runs a real panel detector +
+# two condition-model passes per detected panel on CPU-plausible hardware
+# (no GPU assumed for this page) — an unbounded multi-file upload would let
+# one run silently take many minutes with only a single spinner for
+# feedback. Enforced as a clear, honest truncation (never a crash, never a
+# silent partial run) — see the truncation message where this is used.
+_MAX_CAPTURES_PER_RUN = 20
+
 # Alphabetical — matches torchvision.datasets.ImageFolder's class-index order,
 # which is how weights/mobilenet_condition_4class_research_v1.pth was trained
 # (scripts/train_condition_4class_classifier.py / the Kaggle notebook).
@@ -391,6 +399,15 @@ else:
             logger.warning("Rejected invalid upload on Ground Inspection page: %s", exc)
             st.error(f"'{uploaded.name}' isn't a valid/safe image — skipped.")
 
+if len(captures_in) > _MAX_CAPTURES_PER_RUN:
+    st.warning(
+        f"⚠️ {len(captures_in)} photos selected — using only the first {_MAX_CAPTURES_PER_RUN} "
+        f"for this run (each capture runs a full detection + condition pass; more than "
+        f"{_MAX_CAPTURES_PER_RUN} at once would make one run take a very long time with no way "
+        "to see partial progress). Run the rest as a separate inspection."
+    )
+    captures_in = captures_in[:_MAX_CAPTURES_PER_RUN]
+
 if captures_in:
     cols = st.columns(min(4, len(captures_in)))
     for i, (label, img) in enumerate(captures_in):
@@ -437,18 +454,21 @@ if run_clicked and captures_in:
         st.stop()
 
     results: list[dict[str, Any]] = []
-    with st.spinner(f"Detecting panels and analyzing condition across {len(captures_in)} capture(s)…"):
-        for label, img in captures_in:
-            try:
-                report = _run_capture(
-                    panel_model, condition_model, classifier_model, classifier_device,
-                    img, label, detection_conf,
-                )
-            except Exception:  # noqa: BLE001 — never crash the app on a research-page inference failure
-                logger.exception("Ground inspection pipeline failed for capture '%s'", label)
-                st.error(f"Capture '{label}': an unexpected error occurred running the pipeline — skipped.")
-                continue
-            results.append({"label": label, "image": img, "report": report})
+    n = len(captures_in)
+    progress = st.progress(0.0, text=f"Starting analysis of {n} capture(s)…")
+    for i, (label, img) in enumerate(captures_in, start=1):
+        progress.progress((i - 1) / n, text=f"Analyzing capture {i}/{n}: {label}")
+        try:
+            report = _run_capture(
+                panel_model, condition_model, classifier_model, classifier_device,
+                img, label, detection_conf,
+            )
+        except Exception:  # noqa: BLE001 — never crash the app on a research-page inference failure
+            logger.exception("Ground inspection pipeline failed for capture '%s'", label)
+            st.error(f"Capture '{label}': an unexpected error occurred running the pipeline — skipped.")
+            continue
+        results.append({"label": label, "image": img, "report": report})
+    progress.progress(1.0, text=f"Done — {len(results)}/{n} capture(s) analyzed.")
 
     if results:
         st.session_state["ground_inspection_captures"] = results
