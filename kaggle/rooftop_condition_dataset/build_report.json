@@ -1,0 +1,14 @@
+{
+ "role": "DOMAIN-ADAPTATION TOP-UP ONLY - too few/skewed to be a standalone dataset (see scripts/build_rooftop_condition_classifier_dataset.py's own refusal)",
+ "label_provenance": "AI visual review (Claude), NOT the property owner - disclosed, not owner-verified",
+ "clean_definition": "no visible dust/bird-drop/damage in the photo; does not rule out dust invisible at this resolution",
+ "counts": {
+  "test/CLEAN": 46,
+  "test/DUSTY": 2,
+  "train/BIRD_DROP": 3,
+  "train/CLEAN": 149,
+  "train/PHYSICAL_DAMAGE": 1,
+  "valid/CLEAN": 40
+ },
+ "total_labeled": 241
+}

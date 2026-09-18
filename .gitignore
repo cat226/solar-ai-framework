@@ -202,3 +202,10 @@ kaggle/rooftop_panel_dataset/labels/
 
 # Phase 19 condition labeling crops (first-party photos; regenerable)
 datasets/ground_pv_research/rooftop_condition_v1/crops/
+
+# Phase 19-B rooftop condition top-up package (regenerable via
+# scripts/build_rooftop_condition_mix_package.py)
+kaggle/rooftop_condition_dataset/train/
+kaggle/rooftop_condition_dataset/valid/
+kaggle/rooftop_condition_dataset/test/
+kaggle/rooftop_condition_kernel/
