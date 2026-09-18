@@ -1,0 +1,390 @@
+{
+  "experiment_name": "condition_mobilenetv2_4class_rooftop_mix_v1",
+  "phase": "19-B - rooftop condition classifier MIX retrain",
+  "model_role": "EXPERIMENTAL - domain-adapted condition classifier, NOT production, NOT owner-validated",
+  "predecessor": "condition_mobilenetv2_4class_classifier_v1 (Phase 16-B)",
+  "classes_index_order": [
+    "BIRD_DROP",
+    "CLEAN",
+    "DUSTY",
+    "PHYSICAL_DAMAGE"
+  ],
+  "baseline_for_comparison": {
+    "checkpoint": "mobilenet_condition_4class_research_v1.pth (Phase 16-B)",
+    "test_accuracy": 0.752
+  },
+  "oversample": 10,
+  "rooftop_label_provenance": "AI visual review (Claude), NOT owner-verified",
+  "rooftop_dataset_kaggle": "edithstark/solar-ai-rooftop-condition-topup-v1",
+  "base_dataset_kaggle": "edithstark/solar-ai-ground-condition-4class-classifier-v1",
+  "hyperparameters": {
+    "epochs_requested": 30,
+    "epochs_run": 10,
+    "batch_size": 32,
+    "lr": 0.0005,
+    "optimizer": "AdamW",
+    "patience": 6,
+    "seed": 42,
+    "input_size": 224
+  },
+  "best_epoch": 4,
+  "best_val_accuracy": 0.7494824016563147,
+  "training_seconds": 197.00277972221375,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.8728938007829201,
+      "train_acc": 0.7204601990049752,
+      "val_loss": 0.9630733903644001,
+      "val_acc": 0.6128364389233955,
+      "seconds": 23.049575090408325
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.634596749472974,
+      "train_acc": 0.7705223880597015,
+      "val_loss": 0.9964119297747286,
+      "val_acc": 0.6169772256728778,
+      "seconds": 19.3014018535614
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.5239717959616315,
+      "train_acc": 0.8146766169154229,
+      "val_loss": 0.9699061083497468,
+      "val_acc": 0.5962732919254659,
+      "seconds": 19.272083282470703
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.4963145668233805,
+      "train_acc": 0.8258706467661692,
+      "val_loss": 0.7023778521989937,
+      "val_acc": 0.7494824016563147,
+      "seconds": 19.076120138168335
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.39517441265915165,
+      "train_acc": 0.8557213930348259,
+      "val_loss": 1.7414517895293018,
+      "val_acc": 0.4389233954451346,
+      "seconds": 18.981385469436646
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.42135972837310526,
+      "train_acc": 0.8532338308457711,
+      "val_loss": 0.8111405878580382,
+      "val_acc": 0.6915113871635611,
+      "seconds": 19.160127639770508
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.3616231063853449,
+      "train_acc": 0.8687810945273632,
+      "val_loss": 0.855781196313862,
+      "val_acc": 0.7142857142857143,
+      "seconds": 19.24443292617798
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.3777738479313566,
+      "train_acc": 0.8812189054726368,
+      "val_loss": 0.793748075871364,
+      "val_acc": 0.7391304347826086,
+      "seconds": 19.371424674987793
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.3347242868584187,
+      "train_acc": 0.8759328358208955,
+      "val_loss": 1.0322907610620926,
+      "val_acc": 0.650103519668737,
+      "seconds": 19.44279384613037
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.38907637732539013,
+      "train_acc": 0.865360696517413,
+      "val_loss": 0.7692597679346491,
+      "val_acc": 0.6915113871635611,
+      "seconds": 19.978203296661377
+    }
+  ],
+  "susan_test_set": {
+    "accuracy": 0.7148760330578512,
+    "n": 242,
+    "confusion_matrix": [
+      [
+        47,
+        10,
+        14,
+        0
+      ],
+      [
+        4,
+        34,
+        15,
+        2
+      ],
+      [
+        13,
+        7,
+        87,
+        0
+      ],
+      [
+        3,
+        1,
+        0,
+        5
+      ]
+    ],
+    "class_order": [
+      "BIRD_DROP",
+      "CLEAN",
+      "DUSTY",
+      "PHYSICAL_DAMAGE"
+    ],
+    "per_class": {
+      "BIRD_DROP": {
+        "n": 71,
+        "tp": 47,
+        "fp": 20,
+        "fn": 24,
+        "recall": 0.6619718309859155
+      },
+      "CLEAN": {
+        "n": 55,
+        "tp": 34,
+        "fp": 18,
+        "fn": 21,
+        "recall": 0.6181818181818182
+      },
+      "DUSTY": {
+        "n": 107,
+        "tp": 87,
+        "fp": 29,
+        "fn": 20,
+        "recall": 0.8130841121495327
+      },
+      "PHYSICAL_DAMAGE": {
+        "n": 9,
+        "tp": 5,
+        "fp": 2,
+        "fn": 4,
+        "recall": 0.5555555555555556
+      }
+    }
+  },
+  "rooftop_realworld_check": {
+    "train": {
+      "accuracy": 1.0,
+      "n": 153,
+      "confusion_matrix": [
+        [
+          3,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          149,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ]
+      ],
+      "class_order": [
+        "BIRD_DROP",
+        "CLEAN",
+        "DUSTY",
+        "PHYSICAL_DAMAGE"
+      ],
+      "per_class": {
+        "BIRD_DROP": {
+          "n": 3,
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "recall": 1.0
+        },
+        "CLEAN": {
+          "n": 149,
+          "tp": 149,
+          "fp": 0,
+          "fn": 0,
+          "recall": 1.0
+        },
+        "DUSTY": {
+          "n": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "recall": null
+        },
+        "PHYSICAL_DAMAGE": {
+          "n": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "recall": 1.0
+        }
+      }
+    },
+    "valid": {
+      "accuracy": 1.0,
+      "n": 40,
+      "confusion_matrix": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          40,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "class_order": [
+        "BIRD_DROP",
+        "CLEAN",
+        "DUSTY",
+        "PHYSICAL_DAMAGE"
+      ],
+      "per_class": {
+        "BIRD_DROP": {
+          "n": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "recall": null
+        },
+        "CLEAN": {
+          "n": 40,
+          "tp": 40,
+          "fp": 0,
+          "fn": 0,
+          "recall": 1.0
+        },
+        "DUSTY": {
+          "n": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "recall": null
+        },
+        "PHYSICAL_DAMAGE": {
+          "n": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "recall": null
+        }
+      }
+    },
+    "test": {
+      "accuracy": 0.9583333333333334,
+      "n": 48,
+      "confusion_matrix": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          46,
+          0,
+          0
+        ],
+        [
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "class_order": [
+        "BIRD_DROP",
+        "CLEAN",
+        "DUSTY",
+        "PHYSICAL_DAMAGE"
+      ],
+      "per_class": {
+        "BIRD_DROP": {
+          "n": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "recall": null
+        },
+        "CLEAN": {
+          "n": 46,
+          "tp": 46,
+          "fp": 2,
+          "fn": 0,
+          "recall": 1.0
+        },
+        "DUSTY": {
+          "n": 2,
+          "tp": 0,
+          "fp": 0,
+          "fn": 2,
+          "recall": 0.0
+        },
+        "PHYSICAL_DAMAGE": {
+          "n": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "recall": null
+        }
+      }
+    }
+  },
+  "checkpoint_sha256": "51b4b0d0fb36c1fa2dd9e85d5bf29c2d7b3ad47bbab8d49f747a2562ceca333a",
+  "environment": {
+    "python": "3.12.13",
+    "torch": "2.7.1+cu126",
+    "torchvision": "0.22.1+cu126",
+    "cuda": "12.6",
+    "gpu": "Tesla T4"
+  },
+  "not_production_validated": true
+}

@@ -46,11 +46,19 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.out.exists():
         shutil.rmtree(args.out)
+    # torchvision.datasets.ImageFolder derives its class list (and therefore its integer
+    # label indices) from whichever subdirectories exist on disk. If a split happens to
+    # have zero examples of some class (very possible here - e.g. no DUSTY at all in
+    # train), that class's directory must still exist (even empty) or ImageFolder assigns
+    # a shifted class-index mapping that silently corrupts every other class's labels when
+    # concatenated with the base 4-class dataset. Always create all 4 dirs per split.
+    for split in ("train", "valid", "test"):
+        for cls in CLASSES:
+            (args.out / split / cls).mkdir(parents=True, exist_ok=True)
     counts = Counter()
     for r in rows:
         label = r["label"].strip().upper()
         dst = args.out / r["split"] / label
-        dst.mkdir(parents=True, exist_ok=True)
         shutil.copy2(args.root / "crops" / r["split"] / f"{r['crop_id']}.jpg", dst / f"{r['crop_id']}.jpg")
         counts[(r["split"], label)] += 1
 
