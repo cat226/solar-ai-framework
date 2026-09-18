@@ -153,6 +153,39 @@ panel, correctly excluding the blurred background rows; a 2x7 wide shot
 panels into 14 boxes with no merged "group" boxes. Annotated outputs are in
 `research_runs/ground_pv/phase19/promoted_smoke_test/` (gitignored, regenerable).
 
+## 6.1 Real ceiling: confidence threshold sweep, and why the rest isn't a training bug
+
+There is no such thing as a "100% detector" on real photos — pushing that framing
+would mean either overfitting to memorized images (useless on the next photo)
+or reporting a fabricated number. What's actually true, measured on the
+held-out test split (`datasets/ground_pv_research/rooftop_panel_v1/reports/threshold_sweep_output.txt`):
+
+| conf threshold | recall | precision | false positives |
+|---|---|---|---|
+| 0.05 | 0.958 (46/48) | 0.554 | 37 |
+| 0.10 | 0.938 (45/48) | 0.608 | 29 |
+| 0.25 (app default) | 0.812 (39/48) | 0.696 | 17 |
+| 0.40 | 0.771 (37/48) | 0.787 | 10 |
+
+This is a real precision/recall trade-off curve, not a further improvement —
+lowering the app's confidence slider recovers more panels at the cost of more
+false-positive boxes; there is no free lunch here. At every threshold, 100%
+recall never appears.
+
+The 6 images that still miss a panel at conf=0.25 were visually inspected
+(`research_runs/ground_pv/phase19/miss_*.jpg`): every one is the same genuinely
+hard scene type that caused `IMG_5886.jpg`/`IMG_5887.jpg` to be excluded from
+training entirely (Section 3) — a dense, steeply-angled, 10-15+ panel wide
+shot where physical panels visually overlap/abut in the 2D projection. The
+model DOES detect most panels there (visually confirmed, boxes align with
+ground truth); the misses are specifically in the most crowded overlap zones.
+This is a real, disclosed data-density limitation, not a bug fixable by more
+training epochs or hyperparameter tuning — the project's own prior ablations
+([[phase15d_a_resolution_ablation]], [[phase15e_a_augmentation_ablation]])
+already found that direction gives no return once the underlying data doesn't
+change. The honest next lever, if this matters for your use case, is more
+first-party photos of exactly this dense/wide scene type — not a retrain trick.
+
 ## 7. Condition model: why it is NOT retrained in this phase
 
 The owner also asked to retrain the 4-class condition model
