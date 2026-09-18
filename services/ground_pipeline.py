@@ -31,7 +31,10 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-PANEL_WEIGHTS = Path("weights/yolo_solar_ground_research_v1.pt")
+PANEL_WEIGHTS = Path("weights/yolo_solar_rooftop_v1.pt")
+# Predecessor kept for provenance/comparison, no longer the active detector:
+# weights/yolo_solar_ground_research_v1.pt (Susan-only; missed 42/48 panels on the
+# Phase 19 rooftop holdout — see docs/ROOFTOP_PANEL_DETECTOR_PHASE19.md).
 CONDITION_WEIGHTS = Path("weights/yolo_solar_condition_4class_research_v2.pt")
 CLASSIFIER_WEIGHTS = Path("weights/mobilenet_condition_4class_research_v1.pth")
 

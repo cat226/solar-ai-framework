@@ -193,3 +193,12 @@ Thumbs.db
 
 # one-shot Kaggle upload staging (regenerable)
 kaggle/ground_condition_upload/
+
+# Phase 19: rooftop panel dataset (first-party photos; regenerable via scripts/build_rooftop_panel_dataset.py)
+datasets/ground_pv_research/rooftop_panel_v1/images/
+datasets/ground_pv_research/rooftop_panel_v1/labels/
+kaggle/rooftop_panel_dataset/images/
+kaggle/rooftop_panel_dataset/labels/
+
+# Phase 19 condition labeling crops (first-party photos; regenerable)
+datasets/ground_pv_research/rooftop_condition_v1/crops/

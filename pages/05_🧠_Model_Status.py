@@ -44,12 +44,15 @@ def _artifact_card(title: str, path: Path, note: str) -> None:
 
 _artifact_card(
     "🎯 Ground panel detector",
-    Path("weights/yolo_solar_ground_research_v1.pt"),
-    "⚠️ **Known limitations.** Can miss a single large foreground panel, or draw one "
-    "'group' box around several adjacent panels instead of separating them — see "
-    "`datasets/ground_pv_research/reports/real_world_holdout.md`. Real working range is "
-    "close-up shots of ~1-3 panels; one distant photo of a whole array does not work "
-    "reliably. See **Limitations** for the full picture.",
+    Path("weights/yolo_solar_rooftop_v1.pt"),
+    "Phase 19 retrain on 54 first-party rooftop photos (labels are AI-reviewed SAM "
+    "proposals, **not human-verified** — see `docs/ROOFTOP_PANEL_DETECTOR_PHASE19.md`). "
+    "On a held-out, scene-disjoint slice of that same rooftop, recall went from 6/48 "
+    "panels (predecessor checkpoint) to 39/48 (independently re-verified locally, "
+    "conf≥0.25), with no regression on the original Susan test set. ⚠️ Trained on ONE "
+    "rooftop — the held-out scenes are a different capture session on the same site, "
+    "not a different installation, so generalization to a different roof is unverified. "
+    "See **Limitations** for the full picture.",
 )
 
 _artifact_card(
@@ -74,7 +77,7 @@ st.subheader("Overall")
 _all_present = all(
     Path(p).is_file()
     for p in (
-        "weights/yolo_solar_ground_research_v1.pt",
+        "weights/yolo_solar_rooftop_v1.pt",
         "weights/mobilenet_condition_4class_research_v1.pth",
         "weights/yolo_solar_condition_4class_research_v2.pt",
     )

@@ -15,7 +15,7 @@ This page wires up the ground-domain research pipeline, now with TWO
 independent condition engines cross-checking every panel crop:
 
     full image
-      -> dynamic ground panel detector       (weights/yolo_solar_ground_research_v1.pt)
+      -> dynamic ground panel detector       (weights/yolo_solar_rooftop_v1.pt, Phase 19)
       -> P1..PN                              (training/detection/ground_pv/dynamic_panel_detection.py)
       -> per-panel crop
       -> PRIMARY:   condition CLASSIFIER      (weights/mobilenet_condition_4class_research_v1.pth, Phase 16-B)

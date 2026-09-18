@@ -32,7 +32,7 @@ st.caption("Live overview, computed from this deployment's own recorded inspecti
 st.subheader("System status")
 
 _GROUND_WEIGHTS = {
-    "Panel detector": Path("weights/yolo_solar_ground_research_v1.pt"),
+    "Panel detector": Path("weights/yolo_solar_rooftop_v1.pt"),
     "Condition classifier": Path("weights/mobilenet_condition_4class_research_v1.pth"),
     "Condition detector": Path("weights/yolo_solar_condition_4class_research_v2.pt"),
 }

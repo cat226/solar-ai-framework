@@ -1,0 +1,28 @@
+{
+ "labeled_crops": 0,
+ "per_split": {
+  "train": {},
+  "valid": {},
+  "test": {}
+ },
+ "train_scenes_per_class": {},
+ "ready": false,
+ "blocking_reasons": [
+  "BIRD_DROP: train crops 0 < 20",
+  "BIRD_DROP: train scenes 0 < 2",
+  "BIRD_DROP: valid crops 0 < 5",
+  "BIRD_DROP: test crops 0 < 5",
+  "CLEAN: train crops 0 < 20",
+  "CLEAN: train scenes 0 < 2",
+  "CLEAN: valid crops 0 < 5",
+  "CLEAN: test crops 0 < 5",
+  "DUSTY: train crops 0 < 20",
+  "DUSTY: train scenes 0 < 2",
+  "DUSTY: valid crops 0 < 5",
+  "DUSTY: test crops 0 < 5",
+  "PHYSICAL_DAMAGE: train crops 0 < 20",
+  "PHYSICAL_DAMAGE: train scenes 0 < 2",
+  "PHYSICAL_DAMAGE: valid crops 0 < 5",
+  "PHYSICAL_DAMAGE: test crops 0 < 5"
+ ]
+}

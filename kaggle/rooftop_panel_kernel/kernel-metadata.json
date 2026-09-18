@@ -1,0 +1,16 @@
+{
+  "id": "edithstark/rooftop-panel-yolo11n-v1",
+  "title": "rooftop-panel-yolo11n-v1",
+  "code_file": "rooftop_panel_train.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "dataset_sources": [
+    "edithstark/solar-ai-ground-pv-research-v1",
+    "edithstark/solar-ai-rooftop-panel-v1"
+  ],
+  "competition_sources": [],
+  "kernel_sources": []
+}

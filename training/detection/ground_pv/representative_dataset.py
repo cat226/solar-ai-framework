@@ -112,9 +112,15 @@ VALID_PROVENANCE_STATUSES = {"first_party", "public_supplemental", "unknown"}
 # and excluded_ambiguous are additional, compatible refinements kept from
 # Phase 14B (a finer-grained "still being worked on" / "deliberately
 # skipped as ambiguous" state, neither of which contradicts the spec).
+#
+# annotated_ai_assisted_unverified: boxes proposed by a segmentation model and
+#   accepted/corrected by an AI reviewer looking at each overlay (Phase 19). It is
+#   deliberately NOT annotated_human_verified: it never counts toward the
+#   human-verified readiness gates and needs a person's spot-check before it
+#   can be promoted.
 VALID_ANNOTATION_STATUSES = {
     "pending", "in_progress", "annotated_human_verified", "excluded_ambiguous",
-    "rejected", "needs_review",
+    "rejected", "needs_review", "annotated_ai_assisted_unverified",
 }
 # needs_review: scene identity genuinely unknown (the honest default — see
 #   group_into_scenes()'s docstring on why auto-grouping cannot prove this).

@@ -28,7 +28,7 @@ st.title("🚨 Alerts")
 st.subheader("System availability")
 
 _GROUND_WEIGHTS = {
-    "ground panel detector": Path("weights/yolo_solar_ground_research_v1.pt"),
+    "ground panel detector": Path("weights/yolo_solar_rooftop_v1.pt"),
     "condition classifier": Path("weights/mobilenet_condition_4class_research_v1.pth"),
     "condition detector": Path("weights/yolo_solar_condition_4class_research_v2.pt"),
 }

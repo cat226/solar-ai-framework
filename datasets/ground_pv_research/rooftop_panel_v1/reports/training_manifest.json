@@ -1,0 +1,69 @@
+{
+ "phase": "19 rooftop panel detector",
+ "env": {
+  "python": "3.12.13",
+  "torch": "2.7.1+cu126",
+  "ultralytics": "8.4.138",
+  "gpu": "Tesla T4"
+ },
+ "oversample": 10,
+ "label_provenance": "annotated_ai_assisted_unverified (AI-reviewed SAM proposals); one rooftop",
+ "runs": {
+  "MIX": {
+   "save_dir": "/kaggle/working/research_runs/rooftop_panel/rooftop_MIX",
+   "seconds": 2139.603004693985,
+   "epochs": 60,
+   "best_sha256": "63fbdaad0cb8bb9d98ed09990c89e1e080ca0943437fa95c2afd64c1742e45fb",
+   "eval": {
+    "rooftop_valid": {
+     "precision": 0.9736111558595613,
+     "recall": 0.9224321284635786,
+     "mAP50": 0.9789068825910933,
+     "mAP50_95": 0.8509357449127186
+    },
+    "rooftop_test": {
+     "precision": 0.8650677511329953,
+     "recall": 0.9349990357282841,
+     "mAP50": 0.9353352225902584,
+     "mAP50_95": 0.7379354410674808
+    },
+    "susan_test_panel_only": {
+     "precision": 0.9831860372443235,
+     "recall": 0.9696428571428571,
+     "mAP50": 0.9820755012729407,
+     "mAP50_95": 0.8541349797907818
+    }
+   }
+  },
+  "ROOFTOP_ONLY": {
+   "save_dir": "/kaggle/working/research_runs/rooftop_panel/rooftop_ROOFTOP_ONLY",
+   "seconds": 322.23108100891113,
+   "epochs": 100,
+   "best_sha256": "5d4ad4b815ba0dee1c09f4a72c02c60d0597e2ffd9418c21964a79d041239dfd",
+   "eval": {
+    "rooftop_valid": {
+     "precision": 0.7984747672801749,
+     "recall": 1.0,
+     "mAP50": 0.9574170764569057,
+     "mAP50_95": 0.8574099452932776
+    },
+    "rooftop_test": {
+     "precision": 0.8930854261851313,
+     "recall": 0.8958333333333334,
+     "mAP50": 0.9319387278415473,
+     "mAP50_95": 0.7484549656391986
+    },
+    "susan_test_panel_only": {
+     "precision": 0.5728622954350209,
+     "recall": 0.5821428571428572,
+     "mAP50": 0.58743369774863,
+     "mAP50_95": 0.343842664069104
+    }
+   }
+  }
+ },
+ "checkpoint_sha256": {
+  "rooftop_MIX_promoted_as_yolo_solar_rooftop_v1.pt": "63fbdaad0cb8bb9d98ed09990c89e1e080ca0943437fa95c2afd64c1742e45fb",
+  "rooftop_ROOFTOP_ONLY_kept_as_research_comparison_yolo_solar_rooftop_only_v1.pt": "5d4ad4b815ba0dee1c09f4a72c02c60d0597e2ffd9418c21964a79d041239dfd"
+ }
+}
