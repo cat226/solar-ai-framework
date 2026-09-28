@@ -18,7 +18,7 @@ independent condition engines cross-checking every panel crop:
       -> dynamic ground panel detector       (weights/yolo_solar_rooftop_v1.pt, Phase 19)
       -> P1..PN                              (training/detection/ground_pv/dynamic_panel_detection.py)
       -> per-panel crop
-      -> PRIMARY:   condition CLASSIFIER      (weights/mobilenet_condition_4class_research_v1.pth, Phase 16-B)
+      -> PRIMARY:   condition CLASSIFIER      (weights/mobilenet_condition_4class_rooftop_mix_oversample1_v1.pth, Phase 19-B)
       -> SECONDARY: condition box-DETECTOR    (weights/yolo_solar_condition_4class_research_v2.pt, localized)
       -> CLEAN / DUSTY / BIRD_DROP / PHYSICAL_DAMAGE, or UNCERTAIN (classifier never has NO_PREDICTION;
          the detector still can)
@@ -27,20 +27,27 @@ Why two engines: docs/CONDITION_MODEL_IMAGE_LEVEL_AGREEMENT.md (Phase
 16-A.1) found the box-detector's weakness was mostly localization noise,
 not misrecognition. docs/CONDITION_MODEL_4CLASS_CLASSIFIER_V1.md (Phase
 16-B) then trained a classifier reformulation and measured a real
-improvement on the SAME held-out test set (0.752 vs. 0.727 image-level
-accuracy overall, 0.794 vs. 0.359 recall on DUSTY specifically) — so the
-classifier is now the PRIMARY read shown. The detector's read is kept as a
-SECONDARY, localized cross-check (still real value for BIRD_DROP /
-PHYSICAL_DAMAGE, where "where on the panel" matters and the classifier
-gives that up). Neither replaces the other; this is a genuine hybrid, not
-a silent swap.
+improvement on that SAME held-out (Susan-derived) test set (0.752 vs. 0.727
+image-level accuracy overall) — so the classifier is the PRIMARY read shown.
+The detector's read is kept as a SECONDARY, localized cross-check (still
+real value for BIRD_DROP / PHYSICAL_DAMAGE, where "where on the panel"
+matters and the classifier gives that up). Neither replaces the other;
+this is a genuine hybrid, not a silent swap.
+
+docs/ROOFTOP_CONDITION_MIX_PHASE19B.md (Phase 19-B) then found that
+Phase 16-B checkpoint scored only 0.271 (13/48) on this app's OWN rooftop's
+held-out photos — a domain-shift failure, systematically misreading CLEAN
+panels as DUSTY. Retrained blended into the same base dataset (oversampled
+rooftop crops); the PRIMARY classifier now loaded is that retrain — 0.938
+(45/48) on this rooftop's held-out photos, at a disclosed cost of 0.731 vs.
+0.752 on the original Susan-derived benchmark.
 
 Both checkpoints are frozen, already-trained research artifacts — this page
 performs no training and modifies no weights. Every claim on screen is
 qualitative: no accuracy/precision/recall/mAP is computed for any NEW image
-run through this page (the 0.752/0.727/etc. figures above are the models'
-OWN already-measured held-out test performance, cited, not re-derived
-here), and "uncertain"/"no_prediction" is never shown as "Clean".
+run through this page (the figures above are the models' OWN already-
+measured held-out test performance, cited, not re-derived here), and
+"uncertain"/"no_prediction" is never shown as "Clean".
 
 Multi-capture array coverage
 -----------------------------
@@ -130,13 +137,16 @@ _summarize_panels = ground_pipeline.summarize_panels
 st.title("🔬 Ground Inspection")
 st.warning(
     "**Research prototype, not production-validated.** Separate model stack from the "
-    "**Aerial Inspect** page (production aerial-imagery pipeline — sidebar). On the same "
-    "held-out test set: the condition classifier (primary) reaches 0.752 image-level "
-    "accuracy, the box-detector (secondary) 0.727 — both real, measured, neither perfect "
-    "— and the panel detector can miss a large foreground panel or merge adjacent panels "
-    "into one box on real photos. No accuracy is claimed for any NEW image run through "
-    "this page — only the models' own already-measured test performance is cited. See "
-    "`docs/PHASE_16_ARCHITECTURE_REVIEW.md`, `docs/CONDITION_MODEL_4CLASS_CLASSIFIER_V1.md`."
+    "**Aerial Inspect** page (production aerial-imagery pipeline — sidebar). The condition "
+    "classifier (primary) is a Phase 19-B domain-adapted retrain: **0.938 (45/48)** accuracy "
+    "measured on this rooftop's own held-out photos (the original Phase 16-B checkpoint "
+    "scored only 0.271 there — a real domain-shift failure, now fixed), at a disclosed cost "
+    "of 0.731 vs. 0.752 on the original Susan-derived benchmark. The box-detector "
+    "(secondary) reaches 0.727 on that same Susan-derived set — real, measured, neither "
+    "perfect — and the panel detector can still miss a panel or merge adjacent panels into "
+    "one box on real photos. No accuracy is claimed for any NEW image run through this "
+    "page — only the models' own already-measured test performance is cited. See "
+    "`docs/PHASE_16_ARCHITECTURE_REVIEW.md`, `docs/ROOFTOP_CONDITION_MIX_PHASE19B.md`."
 )
 
 with st.expander("Two condition engines, how they differ from Aerial Inspect, and how array coverage works"):
@@ -146,11 +156,14 @@ with st.expander("Two condition engines, how they differ from Aerial Inspect, an
         "(Clean/Dusty/Hotspot). Built for wide-area installation survey from above — "
         "effectively blind on close-up ground photos, which is not its job.\n"
         "- **Condition classifier (PRIMARY, this page)**: MobileNetV2 trained on panel "
-        "crops to output one condition label per crop — no localization, but measurably "
-        "better: 0.752 image-level test accuracy, and 0.794 recall on DUSTY specifically "
-        "(vs. 0.359 for the detector) — DUSTY's diffuse, boundary-less texture turns out "
-        "to suit a classifier much better than a box detector. See "
-        "`docs/CONDITION_MODEL_4CLASS_CLASSIFIER_V1.md`.\n"
+        "crops to output one condition label per crop — no localization. The Phase 16-B "
+        "version measurably beat the box-detector on DUSTY (0.794 vs. 0.359 recall) but, "
+        "per Phase 19-B, scored only 0.271 on THIS rooftop's own held-out photos — a "
+        "domain-shift failure. The checkpoint now loaded is a Phase 19-B retrain blended "
+        "with this rooftop's own labelled photos: **0.938 on this rooftop's held-out set**, "
+        "0.731 (down from 0.752) on the original Susan-derived benchmark — a deliberate, "
+        "disclosed trade favoring where this app is actually used. See "
+        "`docs/CONDITION_MODEL_4CLASS_CLASSIFIER_V1.md`, `docs/ROOFTOP_CONDITION_MIX_PHASE19B.md`.\n"
         "- **Condition box-detector (SECONDARY, this page)**: a detector trained specifically "
         "on ground-level close-up photos, followed by a **dynamic** number of panels (not "
         "assumed to be 4/6/8), each cropped and independently run through a 4-class condition model "
@@ -355,9 +368,10 @@ flagged = summary["flagged"]
 unread = summary["unread"]
 confirmed_clean = summary["confirmed_clean"]
 
-# PRIMARY condition signal is the CLASSIFIER (docs/CONDITION_MODEL_4CLASS_CLASSIFIER_V1.md:
-# 0.752 image-level accuracy vs. the box-detector's 0.727, and dramatically
-# better on DUSTY specifically: 0.794 vs. 0.359 recall). The box-detector's
+# PRIMARY condition signal is the CLASSIFIER — Phase 19-B rooftop-domain retrain
+# (docs/ROOFTOP_CONDITION_MIX_PHASE19B.md: 0.938 on this rooftop's own held-out
+# photos, vs. 0.271 for the Phase 16-B predecessor there; 0.731 vs. 0.752 on the
+# original Susan-derived benchmark, a deliberate disclosed trade). The box-detector's
 # condition read is kept as "detector_condition" for the secondary,
 # localized cross-check shown per panel below — not discarded, since it
 # still carries real localization value the classifier gives up. Captures

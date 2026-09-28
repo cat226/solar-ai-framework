@@ -57,10 +57,15 @@ _artifact_card(
 
 _artifact_card(
     "🏷️ Condition classifier (primary signal)",
-    Path("weights/mobilenet_condition_4class_research_v1.pth"),
-    "MobileNetV2, trained on panel crops (Phase 16-B). Measured **0.752 image-level test "
-    "accuracy** — DUSTY 0.794, BIRD_DROP 0.676, CLEAN 0.764, PHYSICAL_DAMAGE 0.778 (only 9 "
-    "test images — high variance). See `docs/CONDITION_MODEL_4CLASS_CLASSIFIER_V1.md`.",
+    Path("weights/mobilenet_condition_4class_rooftop_mix_oversample1_v1.pth"),
+    "MobileNetV2 (Phase 16-B architecture), Phase 19-B domain-adapted retrain: the "
+    "original Phase 16-B checkpoint (0.752 on its own Susan-derived test set) scored only "
+    "**0.271 (13/48)** on THIS rooftop's own held-out photos — systematically misreading "
+    "CLEAN panels as DUSTY/PHYSICAL_DAMAGE at high confidence. Retrained blended with this "
+    "rooftop's own labelled crops: now **0.938 (45/48)** on this rooftop's held-out photos, "
+    "at a disclosed cost of 0.731 (down from 0.752) on the original Susan-derived benchmark. "
+    "See `docs/ROOFTOP_CONDITION_MIX_PHASE19B.md` for the full comparison and confusion "
+    "matrices.",
 )
 
 _artifact_card(
@@ -78,7 +83,7 @@ _all_present = all(
     Path(p).is_file()
     for p in (
         "weights/yolo_solar_rooftop_v1.pt",
-        "weights/mobilenet_condition_4class_research_v1.pth",
+        "weights/mobilenet_condition_4class_rooftop_mix_oversample1_v1.pth",
         "weights/yolo_solar_condition_4class_research_v2.pt",
     )
 )

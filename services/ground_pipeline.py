@@ -36,11 +36,18 @@ PANEL_WEIGHTS = Path("weights/yolo_solar_rooftop_v1.pt")
 # weights/yolo_solar_ground_research_v1.pt (Susan-only; missed 42/48 panels on the
 # Phase 19 rooftop holdout — see docs/ROOFTOP_PANEL_DETECTOR_PHASE19.md).
 CONDITION_WEIGHTS = Path("weights/yolo_solar_condition_4class_research_v2.pt")
-CLASSIFIER_WEIGHTS = Path("weights/mobilenet_condition_4class_research_v1.pth")
+CLASSIFIER_WEIGHTS = Path("weights/mobilenet_condition_4class_rooftop_mix_oversample1_v1.pth")
+# Predecessor kept for provenance/comparison, no longer the active classifier:
+# weights/mobilenet_condition_4class_research_v1.pth (Susan-only; measured only 27.1%
+# accuracy — 13/48 — on this rooftop's own held-out photos, systematically misreading
+# CLEAN panels as DUSTY/PHYSICAL_DAMAGE at high confidence, a domain-shift failure —
+# see docs/ROOFTOP_CONDITION_MIX_PHASE19B.md).
 
 # Alphabetical — matches torchvision.datasets.ImageFolder's class-index order,
 # which is how weights/mobilenet_condition_4class_research_v1.pth was trained
-# (scripts/train_condition_4class_classifier.py / the Kaggle notebook).
+# (scripts/train_condition_4class_classifier.py / the Kaggle notebook); the
+# rooftop MIX retrain inherits the identical class order (see that script's
+# base_train_ds.class_to_idx).
 CLASSIFIER_CLASSES = ["BIRD_DROP", "CLEAN", "DUSTY", "PHYSICAL_DAMAGE"]
 CLASSIFIER_INPUT_SIZE = 224
 CLASSIFIER_PREDICTED_THRESHOLD = 0.45  # same "trustworthy" convention used elsewhere in this project
