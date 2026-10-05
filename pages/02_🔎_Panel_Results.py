@@ -78,7 +78,8 @@ else:
             use_container_width=True, hide_index=True,
         )
         st.caption(
-            "The classifier is the primary condition signal (measured better: 0.752 vs. 0.727 "
-            "image-level test accuracy — see `docs/CONDITION_MODEL_4CLASS_CLASSIFIER_V1.md`). "
+            "The classifier is the primary condition signal (rooftop-adapted Phase 19-B retrain; "
+            "its non-CLEAN accuracy on this rooftop is thinly measured — see "
+            "`docs/ROOFTOP_CONDITION_MIX_PHASE19B.md`). "
             "The detector's read is kept as a secondary, localized cross-check."
         )

@@ -234,7 +234,7 @@ v1.0.0 production manifest — **do not add research checkpoints to it.**
 |---|---|---|
 | Panel detection | **Working, good not perfect** | 39–46/48 held-out panels depending on threshold; dense wide shots still lose a few |
 | Per-panel condition | **Working on clean panels; defect detection thinly evidenced** | see 4.2 caveat; DUSTY has 2 examples total |
-| App (`app.py` + dashboard) | Runs; verified end-to-end in a real browser (Playwright) on two real photos (12/12 panels, per-panel reads) | some UI text is stale — see 8.2 |
+| App (`app.py` + dashboard) | Runs; verified end-to-end in a real browser (Playwright) on two real photos (12/12 panels, per-panel reads) | UI text updated to Phase 19 numbers (8.2) |
 | Persistent panel identity (Phase 17) | Implemented and unit-tested (17 tests) | geometry matching for a **fixed** camera only; not validated on real multi-visit data |
 | Pi ingestion (Phase 18) | API + agent implemented and tested in software | **no real Raspberry Pi/camera was ever available — hardware behavior unbenchmarked** |
 | Tests | 1232 passed, 5 skipped | last full run 2026-09-29 |
@@ -286,12 +286,8 @@ v1.0.0 production manifest — **do not add research checkpoints to it.**
 7. Secondary box-detector is still Susan-only (not domain-adapted); the app flags disagreement
    between the two condition engines rather than hiding it.
 
-### 8.2 Known stale / untidy items (verified by grep 2026-10-05; not yet fixed)
-- `pages/06_⚠️_Limitations.py` still says the condition classifier is "measured 0.752" and that
-  the panel detector "can miss a single large foreground panel" with a "real working range of
-  ~1–3 panels" — all pre-Phase-19. `app.py` lines ~54 and ~176 repeat the "~1–3 panels"
-  claim, and `pages/02_🔎_Panel_Results.py:81` cites 0.752. Update them to the Phase 19 numbers
-  (they were not touched when the other pages were).
+### 8.2 Known untidy items
+- Stale UI text (Limitations page, `app.py` "~1-3 panels" claim, Panel Results caption) was **fixed** on 2026-10-05; those pages now state the Phase 19 numbers and the thin non-CLEAN evidence.
 - Stray empty dirs: `weights;C/`, `ground-yolo11n-baseline-v1/`. Legacy root files
   (`TASK-*.md`, `TASK-001.patch`, `PATCH_SUMMARY.md`) and the orphaned `pr-body.md`.
 - Inconsistent convention: `kaggle/rooftop_panel_kernel/` is committed while other `*_kernel/`
@@ -347,4 +343,3 @@ A plain `git clone` will **not** give you a working system:
 5. Ask the owner what they want next before changing models. Their stated complaints so far have
    been about real-world behavior; check `data/inspections.db` (tables `ground_inspections`,
    `panel_observations`, …) to see what they actually saw — that is how the 27% problem was found.
-6. Fix the stale UI text in 8.2 as a small, separate, task-based commit if the owner agrees.

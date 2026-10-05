@@ -51,12 +51,13 @@ measured held-out test performance, cited, not re-derived here), and
 
 Multi-capture array coverage
 -----------------------------
-The panel detector's real working range is close-up shots of ~1-3 panels
-(matching the training data and the 6 documented real reference photos) — it
-does NOT reliably handle one distant/wide shot of a full 6+ panel array
-(verified empirically: on such photos it detects nothing, or draws one huge
-low-confidence "group" box; tiled inference was also tested and produced
-confident FALSE positives on sky/brick/background, so it is NOT used here).
+The Phase 19 panel detector (trained on the owner's own rooftop photos) handles
+close-ups and full-array frames on that rooftop: 39/48 held-out panels found at
+the default sensitivity, never 100%, and it still loses panels in dense,
+steep-angle shots with 10+ panels (docs/ROOFTOP_PANEL_DETECTOR_PHASE19.md).
+Closer, overlapping captures remain the most reliable input. Tiled inference
+was tested earlier and produced confident FALSE positives on sky/brick/
+background, so it is NOT used here.
 
 The honest way to cover a whole array today is multiple closer photos, each
 run through the same per-image pipeline below, with results combined into
@@ -171,10 +172,10 @@ with st.expander("Two condition engines, how they differ from Aerial Inspect, an
         "production artifact, and neither is modified by this page.\n"
         "- A condition read of **'uncertain'** or **'no prediction'** is never displayed "
         "as Clean — a failed/low-confidence read is a failed read, not a diagnosis.\n"
-        "- **One distant photo of a whole 6+ panel array does not work reliably** — "
-        "tested empirically, the detector either finds nothing or draws one giant box "
-        "around the whole array. Its real working range is close-up shots of ~1-3 panels "
-        "(like a pole camera positioned near the array). **Select or upload more than one "
+        "- **Whole-array photos work much better since Phase 19, but not perfectly** — "
+        "on this rooftop a 6-panel frame detects 6 panels (39/48 held-out panels overall); "
+        "dense, steep-angle shots with 10+ panels still lose some. Closer photos remain "
+        "the most reliable input. **Select or upload more than one "
         "photo of the same array below** to cover all its panels — results combine into "
         "one Array Summary. Within ONE run, panels are **not** matched across different "
         "captures to the same physical panel (no cross-capture matching within a single "
