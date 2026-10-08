@@ -20,7 +20,7 @@ Examples
 --------
     python scripts/infer_ground_pv.py \
         --weights weights/yolo_solar_ground_research_v1.pt \
-        --images "E:/Solar Real Images" \
+        --images "E:/Solar AI Project Data/first_party_photos/solar_real_images_6_holdout" \
         --output-dir research_runs/ground_pv/real_world_predictions
 """
 from __future__ import annotations

@@ -70,7 +70,7 @@ st.markdown(
 st.subheader("Storage policy")
 st.caption(
     "Large local Solar AI data (training datasets, model checkpoints, Kaggle staging) "
-    "lives under `E:\\Solar AI Training Images\\` on the development machine — see "
+    "lives under `E:\\Solar AI Project Data\\` on the development machine — see "
     "`training/cloud/base/storage_paths.py` and `training/cloud/README.md`. This has no "
     "effect on the deployed application itself, which only reads the small artifacts "
     "already placed under `weights/`."

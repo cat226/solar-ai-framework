@@ -22,7 +22,7 @@ untouched.
 Example
 -------
     python scripts/analyze_panel_conditions.py \
-        --source "D:\\solar_ai_training_scratch\\Solar Real Images" \
+        --source "E:\\Solar AI Project Data\\first_party_photos\\solar_real_images_6_holdout" \
         --panel-weights weights/yolo_solar_ground_research_v1.pt \
         --condition-weights weights/yolo_solar_condition_4class_research_v1.pt \
         --output-dir research_runs/ground_pv/panel_condition_4class

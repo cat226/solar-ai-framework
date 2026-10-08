@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from training.detection.prepare_mendeley_panel_dataset import audit_raw_label_file
 
-raw_root = Path("E:/SolarAI_Datasets/domain_adaptation_v1/mendeley_raw")
+raw_root = Path("E:/Solar AI Project Data/other_sources/domain_adaptation_v1/mendeley_raw")
 
 for split in ("train", "val", "test"):
     labels_dir = raw_root / split / "labels"

@@ -5,8 +5,8 @@ for the human bounding-box annotation tool.
 Run it, then open the printed URL in a browser:
 
     python training/detection/annotation_tool/server.py \
-        --images-dir "E:/SolarAI_Datasets/domain_adaptation_v1/annotation/images" \
-        --labels-dir "E:/SolarAI_Datasets/domain_adaptation_v1/annotation/labels"
+        --images-dir "E:/Solar AI Project Data/other_sources/domain_adaptation_v1/annotation/images" \
+        --labels-dir "E:/Solar AI Project Data/other_sources/domain_adaptation_v1/annotation/labels"
 
 Binds to 127.0.0.1 only - never exposed beyond this machine. Uses only
 the Python standard library (no new dependency). All box save/load

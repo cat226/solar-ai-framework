@@ -34,7 +34,7 @@ def _compute_default_project_dir(env: dict, platform: str) -> Path:
     if env.get("SOLAR_AI_DATA_ROOT"):
         return Path(env["SOLAR_AI_DATA_ROOT"]) / "local_training_runs" / "detection"
     if platform == "win32":
-        return Path("E:/Solar AI Training Images/local_training_runs/detection")
+        return Path("E:/Solar AI Project Data/local_training_runs/detection")
     return Path("training/detection/runs")
 
 

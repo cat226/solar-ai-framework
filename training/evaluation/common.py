@@ -242,5 +242,5 @@ def default_output_root(env: Optional[dict] = None, platform: Optional[str] = No
     if env.get("SOLAR_AI_DATA_ROOT"):
         return Path(env["SOLAR_AI_DATA_ROOT"]) / "evaluation_runs"
     if platform == "win32":
-        return Path("E:/Solar AI Training Images/evaluation_runs")
+        return Path("E:/Solar AI Project Data/evaluation_runs")
     return Path("training/evaluation/runs")

@@ -194,7 +194,7 @@ def _render_dataset_report_md(payload: dict) -> str:
     if six:
         L.append(
             "The original six owner photos "
-            "(`D:\\solar_ai_training_scratch\\Solar Real Images`) are included in "
+            "(`E:\\Solar AI Project Data\\first_party_photos\\solar_real_images_6_holdout`) are included in "
             "this manifest as a QUALITATIVE REFERENCE ONLY (per Phase 14B req 23) — "
             "**not mixed into the training split automatically**, **excluded from the "
             "verified-scene-count / readiness gates** (Phase 14B.1 req 13), and not "

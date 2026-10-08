@@ -24,7 +24,7 @@ inferred from RGB.
     python scripts/infer_condition_on_panels.py \
         --panel-weights weights/yolo_solar_ground_research_v1.pt \
         --condition-weights weights/yolo_solar_condition_research_v1.pt \
-        --images "D:/solar_ai_training_scratch/Solar Real Images" \
+        --images "E:/Solar AI Project Data/first_party_photos/solar_real_images_6_holdout" \
         --output-dir research_runs/ground_pv/condition_real_world
 """
 from __future__ import annotations

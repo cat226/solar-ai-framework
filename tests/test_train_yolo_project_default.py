@@ -36,7 +36,7 @@ class TestComputeDefaultProjectDir:
     def test_defaults_to_e_drive_on_windows_without_override(self):
         module = _load_train_yolo_module()
         result = module._compute_default_project_dir({}, platform="win32")
-        assert result == Path("E:/Solar AI Training Images/local_training_runs/detection")
+        assert result == Path("E:/Solar AI Project Data/local_training_runs/detection")
 
     def test_falls_back_to_original_repo_relative_path_on_non_windows(self):
         """Critical: this is the path Kaggle's ephemeral Linux container

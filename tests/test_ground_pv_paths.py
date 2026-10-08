@@ -41,10 +41,10 @@ def test_fallback_to_repo_when_no_data_root(monkeypatch):
 def test_data_root_used_when_present(monkeypatch, tmp_path):
     import training.cloud.base.storage_paths as sp
     import training.detection.ground_pv.paths as paths
-    monkeypatch.setattr(sp, "SOLAR_AI_DATA_ROOT", tmp_path / "Solar AI Training Images", raising=False)
+    monkeypatch.setattr(sp, "SOLAR_AI_DATA_ROOT", tmp_path / "Solar AI Project Data", raising=False)
     reloaded = importlib.reload(paths)
     try:
-        assert reloaded.GROUND_PV_DATA_ROOT == tmp_path / "Solar AI Training Images" / "ground_pv_research"
+        assert reloaded.GROUND_PV_DATA_ROOT == tmp_path / "Solar AI Project Data" / "ground_level"
         assert reloaded.RAW_DATASET_DIR.parent.parent == reloaded.GROUND_PV_DATA_ROOT
     finally:
         importlib.reload(paths)

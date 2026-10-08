@@ -14,7 +14,7 @@ labels. Does NOT train anything.
 Example
 -------
     python scripts/build_representative_panel_dataset.py \
-        --raw-images-dir "D:\\solar_ai_training_scratch\\Solar Real Images" \
+        --raw-images-dir "E:\\Solar AI Project Data\\first_party_photos\\solar_real_images_6_holdout" \
         --capture-source first_party \
         --id-prefix firstparty
 """

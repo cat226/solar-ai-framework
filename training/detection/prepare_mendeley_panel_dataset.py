@@ -2,7 +2,7 @@
 """training/detection/prepare_mendeley_panel_dataset.py — Ingests the
 Mendeley "Solar panel anomaly dataset" (Xing Yang et al., DOI
 10.17632/8x7wjsr94v.1, CC BY 4.0 - see
-E:\\SolarAI_Datasets\\acquisition_manifest\\ground_level_bbox_candidates.md
+E:\\Solar AI Project Data\\other_sources\\acquisition_manifest\\ground_level_bbox_candidates.md
 for the full rights/provenance audit) and produces a Solar AI-compatible
 single-class (`solar_panel` = 0) YOLO detection dataset.
 
@@ -137,7 +137,7 @@ _SOURCE_RIGHTS_HOLDER = (
 # mistaken for a verified permissive license downstream. It exists so a
 # personal/non-commercial/experimental run can include these images
 # without EVER claiming they are license-cleared - see
-# E:\SolarAI_Datasets\domain_adaptation_v1\reports\mendeley_ingestion_report.md
+# E:\Solar AI Project Data\other_sources\domain_adaptation_v1\reports\mendeley_ingestion_report.md
 # and the experimental-run addendum in that same reports directory.
 _EXPERIMENTAL_UNVERIFIED_LICENSE = "personal-experimental-unverified-provenance"
 _UNVERIFIED_RIGHTS_HOLDER_NOTE = (

@@ -176,24 +176,28 @@ v1.0.0 production manifest — **do not add research checkpoints to it.**
 
 ## 5. Data
 
-### 5.1 Where everything is
-- **Consolidated copy (ground-level + first-party only): `E:\Solar AI Consolidated Datasets\`** —
-  2.17 GB / ~51,900 files, copy verified (counts, bytes, SHA-256 spot-checks). Contains
-  `README.md`, `MANIFEST.json`, `SHA256SUMS.txt`. **Read its README first.**
-  The `data.yaml` files inside the copies still hold the *original* `D:\…` absolute paths on
-  purpose; use the sibling `*.consolidated.yaml` files, or training will silently read the originals.
-- Originals: `datasets/ground_pv_research/` in the repo (images git-ignored), the owner's 48
-  rooftop photos in `D:\Documents\Solar Test Images\`, the first 6 holdout photos in
-  `E:\Solar Real Images\`.
-- Project bulk root per the storage policy: `E:\Solar AI Training Images\` (aerial data lives
-  here; excluded from the consolidated folder at the owner's request). E: was disconnected for
-  part of this work and has a history of dropouts — verify with `SHA256SUMS.txt` after any
-  reconnect.
-- Excluded on purpose: `E:\Ecotrace Dataset` (different project), `E:\SolarAI_Datasets\quarantine`
-  (unknown licence), `...\domain_adaptation_v1` (experimental aerial), `phase12_audit`.
+### 5.1 Where everything is (updated 2026-10-08: single-folder layout)
+- **All data lives in ONE folder: `E:\Solar AI Project Data\`** (read its `README.md`, `MANIFEST.json`,
+  `SHA256SUMS.txt`). Sub-folders: `ground_level\` (bulk datasets), `first_party_photos\` (the owner's 48 + 6
+  rooftop photos, private), `kaggle_staging\`, `weights_and_bundle\` (sharing package), `other_sources\`
+  (acquisition manifests, Mendeley ground data, quarantine), `ground_pv_download_staging\`, `misc_samples\`.
+- **The repo's git-ignored data folders are Windows junctions into that folder** (`datasets\ground_pv_research\*`
+  -> `E:\Solar AI Project Data\ground_level\*`, `kaggle\*` -> `...\kaggle_staging\*`). Every relative path in
+  the code keeps working; tracked reports/manifests stay in the repo. If E: is disconnected those folders
+  look empty. Never move the E: folder without re-creating the junctions (`mklink /J`). On a machine without
+  this layout (e.g. a clone), set `SOLAR_AI_DATA_ROOT` or copy the data into the repo's `datasets\` folders.
+- Central path defaults were rewritten to the new root: `training/cloud/base/storage_paths.py`
+  (`E:/Solar AI Project Data`) and `training/detection/ground_pv/paths.py` (`<root>/ground_level`).
+- **Aerial datasets were permanently deleted** (owner decision): the old `E:\Solar AI Training Images\`
+  (aerial YOLO/BDAPPV, MobileNet clean/dusty/hotspot sets, SolNET/PVMD raw downloads, smoke sets, eval runs),
+  `D:\solar_ai_training_scratch`, and the aerial samples under `domain_adaptation_v1`. Some older docs,
+  `select_annotation_sample.py` defaults and two skipped tests still mention those paths; they are historical
+  or dormant aerial code and no longer have data behind them. The frozen aerial weights remain in `weights/`.
+- The weights are not data and stay in the repo's `weights\` (git-ignored); a copy for sharing is in
+  `E:\Solar AI Project Data\weights_and_bundle\`.
 - Private Kaggle datasets under the owner's account `edithstark/`: `solar-ai-ground-pv-research-v1`,
-  `…-condition-4class-research-v1`, `…-condition-4class-classifier-v1`,
-  `…-beast-candidate-v1`, `solar-ai-rooftop-panel-v1`, `solar-ai-rooftop-condition-topup-v1`.
+  `...-condition-4class-research-v1`, `...-condition-4class-classifier-v1`,
+  `...-beast-candidate-v1`, `solar-ai-rooftop-panel-v1`, `solar-ai-rooftop-condition-topup-v1`.
 
 ### 5.2 Datasets and what they train
 | Dataset | Use |
@@ -263,7 +267,8 @@ v1.0.0 production manifest — **do not add research checkpoints to it.**
   regression. **Reversed 2026-09-29** after the owner reported poor real-world behavior and
   `data/inspections.db` showed most panels flagged DUSTY; the old classifier scored 27% on the
   owner's held-out photos. Promoted the x1 retrain, verified live. Lesson recorded in 2.3.
-- 2026-10-03: consolidated ground-level datasets to `E:\Solar AI Consolidated Datasets\`.
+- 2026-10-03: consolidated ground-level datasets. 2026-10-08: moved ALL project data into `E:\Solar AI Project Data\`,
+  replaced the repo's data folders with junctions, rewrote the central path defaults, and permanently deleted the aerial datasets.
 
 ---
 
@@ -328,8 +333,8 @@ A plain `git clone` will **not** give you a working system:
 2. **Weights** (git-ignored): copy the three active files in 4.1 (plus the frozen predecessor if
    running the integrity tests) into `weights/`, then check each against the SHA-256 table.
    Without them the app fails closed with `ModelLoadError` — that is by design.
-3. **Datasets** (git-ignored): `E:\Solar AI Consolidated Datasets\` (ground-level + first-party).
-   Remember the `*.consolidated.yaml` note. The owner's photos are private.
+3. **Datasets** (git-ignored): `E:\Solar AI Project Data\` (see 5.1; the owner's repo uses junctions into it).
+   Use the `*.consolidated.yaml` files if training straight from that folder. The owner's photos are private.
 4. **Secrets**: none are needed locally; set `APP_ACCESS_PASSWORD` only if you want the login gate.
 5. **Environment**: Python 3.12, `pip install -r requirements.txt` (+ `requirements-dev.txt`);
    `requirements-constraints.txt` pins versions.
@@ -338,7 +343,7 @@ A plain `git clone` will **not** give you a working system:
 1. Read this file, `AGENTS.md`, then `docs/ROOFTOP_CONDITION_MIX_PHASE19B.md` §0.
 2. `git status` / `git branch --show-current` (must be the feature branch; never `main`).
 3. Verify weight SHA-256s; run `pytest -q` (expect 1232 passed / 5 skipped).
-4. Start the app, upload two photos from `E:\Solar AI Consolidated Datasets\2_first_party_photos\solar_test_images_rooftop_48\`
+4. Start the app, upload two photos from `E:\Solar AI Project Data\first_party_photos\solar_test_images_rooftop_48\`
    (e.g. `IMG_5891.jpg`, `IMG_5893.jpg` → 6 panels each) and confirm sensible output.
 5. Ask the owner what they want next before changing models. Their stated complaints so far have
    been about real-world behavior; check `data/inspections.db` (tables `ground_inspections`,

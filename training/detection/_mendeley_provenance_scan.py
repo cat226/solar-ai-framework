@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from training.detection.prepare_mendeley_panel_dataset import audit_raw_dataset
 
-raw_root = Path("E:/SolarAI_Datasets/domain_adaptation_v1/mendeley_raw")
+raw_root = Path("E:/Solar AI Project Data/other_sources/domain_adaptation_v1/mendeley_raw")
 audit = audit_raw_dataset(raw_root)
 
 _NUMERIC_RE = re.compile(r"^\d+$")
@@ -51,7 +51,7 @@ print(f"  numeric_native by original split: {dict(Counter(stem_to_split[s] for s
 print(f"  suspect_prefixed by original split: {dict(Counter(stem_to_split[s] for s in by_category['suspect_prefixed']))}")
 
 import json
-out = Path("E:/SolarAI_Datasets/domain_adaptation_v1/reports/mendeley_provenance_scan.json")
+out = Path("E:/Solar AI Project Data/other_sources/domain_adaptation_v1/reports/mendeley_provenance_scan.json")
 out.write_text(json.dumps({
     "numeric_native_stems": sorted(by_category["numeric_native"]),
     "suspect_prefixed_stems": sorted(by_category["suspect_prefixed"]),

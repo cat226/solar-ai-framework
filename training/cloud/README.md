@@ -114,7 +114,7 @@ under an innocuous key; don't rely on it as the only safeguard.
 The machine this project has mostly been developed on has C:/D: drives
 running low on space, so `base/storage_paths.py` centralizes where large,
 locally-generated Solar AI data goes: the E: drive
-(`E:\Solar AI Training Images\`), not the repository's own drive. This
+(`E:\Solar AI Project Data\`), not the repository's own drive. This
 applies to downloaded/prepared datasets, Kaggle dataset staging, kernel
 packages, outputs retrieved from Kaggle (checkpoints, result plots, logs),
 local training run directories, and anything else of meaningful size — not

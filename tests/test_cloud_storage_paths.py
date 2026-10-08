@@ -30,7 +30,7 @@ class TestDefaultDataRoot:
 
     def test_defaults_to_e_drive_on_windows_without_override(self, monkeypatch):
         module = _reload_with(monkeypatch, env_value=None, platform="win32")
-        assert module.SOLAR_AI_DATA_ROOT == module.Path("E:/Solar AI Training Images")
+        assert module.SOLAR_AI_DATA_ROOT == module.Path("E:/Solar AI Project Data")
 
     def test_none_on_non_windows_without_override(self, monkeypatch):
         """Must never guess a path that would create a literal 'E:'
@@ -45,7 +45,7 @@ class TestDefaultDataRoot:
         assert module.LOCAL_TRAINING_RUNS_DIR is None
 
     def test_subdirs_derived_from_root_when_present(self, monkeypatch):
-        module = _reload_with(monkeypatch, env_value="E:/Solar AI Training Images", platform="win32")
+        module = _reload_with(monkeypatch, env_value="E:/Solar AI Project Data", platform="win32")
         assert module.KAGGLE_RUNS_DIR == module.SOLAR_AI_DATA_ROOT / "kaggle_runs"
         assert module.LOCAL_TRAINING_RUNS_DIR == module.SOLAR_AI_DATA_ROOT / "local_training_runs"
 
@@ -62,9 +62,9 @@ class TestDefaultDataRoot:
 
 class TestDefaultKagglePackageDir:
     def test_under_kaggle_runs_dir_when_available(self, monkeypatch):
-        module = _reload_with(monkeypatch, env_value="E:/Solar AI Training Images", platform="win32")
+        module = _reload_with(monkeypatch, env_value="E:/Solar AI Project Data", platform="win32")
         result = module.default_kaggle_package_dir("solar-yolo-full-v1")
-        assert result == module.Path("E:/Solar AI Training Images/kaggle_runs/solar-yolo-full-v1")
+        assert result == module.Path("E:/Solar AI Project Data/kaggle_runs/solar-yolo-full-v1")
 
     def test_falls_back_to_repo_relative_path_when_unavailable(self, monkeypatch):
         module = _reload_with(monkeypatch, env_value=None, platform="linux")

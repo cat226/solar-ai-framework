@@ -39,18 +39,20 @@ def _default_data_root() -> Optional[Path]:
     if os.environ.get("SOLAR_AI_DATA_ROOT"):
         return Path(os.environ["SOLAR_AI_DATA_ROOT"])
     if sys.platform == "win32":
-        return Path("E:/Solar AI Training Images")
+        return Path("E:/Solar AI Project Data")
     return None
 
 
 SOLAR_AI_DATA_ROOT = _default_data_root()
 
-# Existing, already-in-use dataset locations under the root (do not rename -
-# real audited data already lives here; see docs/DATASET_SOURCES.md and
-# training/cloud's own experiment records for provenance tied to these
-# exact paths):
-#   <root>/_raw_downloads, source, prepared, yolo_source, yolo_prepared,
-#   yolo_smoke_dataset
+# Dataset locations under the root (2026-10 consolidation: everything for this
+# project lives in ONE folder, and only ground-level data is kept - the
+# aerial datasets were permanently deleted):
+#   <root>/ground_level            mirror of the repo's datasets/ground_pv_research bulk data
+#                                  (the repo folders are junctions into here)
+#   <root>/first_party_photos      the owner's own rooftop photos
+#   <root>/kaggle_staging          mirror of the repo's kaggle/ staging data
+#   <root>/other_sources           acquisition manifests, quarantined and experimental sources
 #
 # New subdirectories for large data this project generates locally, added
 # under the same root rather than scattered elsewhere. Both are Optional -

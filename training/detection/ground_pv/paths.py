@@ -3,7 +3,7 @@ ground-level PV research dataset.
 
 Per the project storage policy (see training/cloud/base/storage_paths.py),
 large local Solar AI data lives on the E: drive
-(``E:/Solar AI Training Images/...``), not the low-space C:/D: drives the
+(``E:/Solar AI Project Data/...``), not the low-space C:/D: drives the
 repo sits on. This module resolves the ground-PV dataset locations to that
 root when it is available, and falls back to repo-relative paths otherwise
 (CI, another machine, a contributor without an E: drive).
@@ -26,10 +26,10 @@ try:  # storage_paths is local-only tooling; safe to import here (never on Kaggl
 except Exception:  # noqa: BLE001
     SOLAR_AI_DATA_ROOT = None  # type: ignore[assignment]
 
-# Bulk data root: <E:/Solar AI Training Images>/ground_pv_research when the
+# Bulk data root: <E:/Solar AI Project Data>/ground_level when the
 # drive is available, else <repo>/datasets/ground_pv_research.
 if SOLAR_AI_DATA_ROOT is not None:
-    GROUND_PV_DATA_ROOT: Path = Path(SOLAR_AI_DATA_ROOT) / "ground_pv_research"
+    GROUND_PV_DATA_ROOT: Path = Path(SOLAR_AI_DATA_ROOT) / "ground_level"
 else:
     GROUND_PV_DATA_ROOT = _REPO_ROOT / "datasets" / "ground_pv_research"
 
@@ -58,7 +58,7 @@ REPORTS_DIR: Path = _REPO_ROOT / "datasets" / "ground_pv_research" / "reports"
 
 def _resolve_representative_panel_root() -> Path:
     if SOLAR_AI_DATA_ROOT is not None and Path(SOLAR_AI_DATA_ROOT).exists():
-        return Path(SOLAR_AI_DATA_ROOT) / "ground_pv_research" / "representative_panel_v1"
+        return Path(SOLAR_AI_DATA_ROOT) / "ground_level" / "representative_panel_v1"
     return _REPO_ROOT / "datasets" / "ground_pv_research" / "representative_panel_v1"
 
 

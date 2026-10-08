@@ -30,7 +30,7 @@ Examples
 
     # Directory (batch / qualitative smoke test)
     python scripts/detect_dynamic_panels.py \
-        --source "D:/solar_ai_training_scratch/Solar Real Images" \
+        --source "E:/Solar AI Project Data/first_party_photos/solar_real_images_6_holdout" \
         --weights weights/yolo_solar_ground_research_v1.pt \
         --output-dir research_runs/ground_pv/dynamic_detection_real_world \
         --save-annotated

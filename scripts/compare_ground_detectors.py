@@ -14,7 +14,7 @@ visually correspond to cell cracks). Hotspot is out of scope, never inferred.
     python scripts/compare_ground_detectors.py \
         --v1 weights/yolo_solar_ground_research_v1.pt \
         --v2 weights/yolo_solar_ground_research_v2.pt \
-        --images "D:/solar_ai_training_scratch/Solar Real Images" \
+        --images "E:/Solar AI Project Data/first_party_photos/solar_real_images_6_holdout" \
         --output-dir research_runs/ground_pv/v2_real_world \
         --condition-weights weights/yolo_solar_condition_research_v1.pt
 """

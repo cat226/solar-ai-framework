@@ -183,7 +183,7 @@ class TestDefaultOutputRoot:
 
     def test_windows_default_is_e_drive(self):
         root = default_output_root(env={}, platform="win32")
-        assert root == Path("E:/Solar AI Training Images/evaluation_runs")
+        assert root == Path("E:/Solar AI Project Data/evaluation_runs")
 
     def test_non_windows_falls_back_to_repo_relative(self):
         root = default_output_root(env={}, platform="linux")
