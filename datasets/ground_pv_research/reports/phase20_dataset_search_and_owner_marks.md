@@ -89,3 +89,22 @@ Reading it honestly:
   classifier is bad (the mapping of marks to labels is unconfirmed, and a small mark inside a whole-panel crop is hard at 224px).
 - The previous Phase 16-B model gets PHYSICAL_DAMAGE on 1 of the 2 damage panels, but it also scored 27% on the owner's
   held-out rooftop crops, so this does not argue for reverting. No decision on model changes is made here.
+
+## 5. Ready-made YOLO candidates with boxes: downloaded and audited (2026-10-21)
+
+Roboflow API metadata for 7 candidates; the 2 with exportable box/segmentation labels were downloaded to
+`F:\Solar AI Derived\candidates_2026_10\` (research quarantine, not in any training corpus) and fingerprinted
+(sha256 + 16x16 dHash <= 6 + source basename) against all 15,628 images already held.
+
+| Candidate | Claimed | Finding | Verdict |
+|---|---|---|---|
+| `aiot-team-1/solar-panels-with-bird-droppings` v2 | 264 imgs, 1 class, 333 boxes, CC BY 4.0 (re-uploader) | 0% overlap, **but every sampled image is a thermal-infrared (false-colour, temperature scale, 2022 timestamps)** | **Reject: wrong modality** |
+| `solarpanels-mi4yb/solar-panel-maintenance-5tv7u` v13 | 2,449 imgs, 6 classes (Afroz taxonomy), CC BY 4.0 (re-uploader) | 1,590 of 2,449 overlap held data (714 byte-identical to the Afroz-derived pool, 497+752 near-dups, shared basenames); of the 859 "non-overlapping" only 390 survive internal dedup and **369 of those 390 are grayscale** (grayscale/contrast variants of held images that a colour-based hash cannot link). At most ~21 colour images are possibly new | **Reject as new data**: same Afroz lineage, licence unverified, stretched to 640x640 |
+| `teste-bi4dw/solar-panel-defects-detection`, `data-science-fpqlt/...`, `teste-bi4dw/solar-panel-7t7jy` | classification only / 0 versions | class counts (63/196/145/185/91) match the Afroz pool | Reject (no boxes, same lineage) |
+| `initial-e1ks9/pv-multi-defect-adsij` | 1,044 imgs: hot_spot, scratch, broken, black_border | thermal-style classes (hot_spot), 0 exportable versions | Reject / not exportable |
+| `beginner-mzzij/solar_panel-mitng` | box counts for 6 classes | 0 versions, not exportable | Not obtainable |
+
+Net: **no ready-made, already-boxed YOLO dataset adds meaningful independent, licensed, in-domain data.**
+The best boxed data that exists (S1 `defects-kgig6`, S3 `solar-panel-a5cyn`, Susan `bw945`) is already held and is
+what `condition_4class_v1` / `yolo` were built from. Their remaining limits are provenance grade C, 640x640
+stretch, and labels that are coarse region boxes rather than tight defect boxes.
