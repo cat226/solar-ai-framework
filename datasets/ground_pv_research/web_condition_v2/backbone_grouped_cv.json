@@ -1,0 +1,464 @@
+{
+  "protocol": "5-fold StratifiedGroupKFold (groups=content family), frozen embeddings + balanced LogisticRegression(C=0.05) on standardised features; OOF predictions for every image",
+  "n_images": 2618,
+  "class_counts": {
+    "BIRD_DROP": 128,
+    "CLEAN": 1559,
+    "DUSTY": 883,
+    "PHYSICAL_DAMAGE": 48
+  },
+  "seed": 42,
+  "configs": {
+    "mobilenet_v2:224": {
+      "accuracy": 0.783,
+      "balanced_accuracy": 0.728,
+      "macro_f1": 0.724,
+      "per_class": {
+        "CLEAN": {
+          "n": 1559,
+          "recall": 0.835,
+          "recall_wilson95": [
+            0.815,
+            0.852
+          ],
+          "precision": 0.853,
+          "f1": 0.843
+        },
+        "DUSTY": {
+          "n": 883,
+          "recall": 0.715,
+          "recall_wilson95": [
+            0.684,
+            0.743
+          ],
+          "precision": 0.696,
+          "f1": 0.705
+        },
+        "BIRD_DROP": {
+          "n": 128,
+          "recall": 0.656,
+          "recall_wilson95": [
+            0.57,
+            0.733
+          ],
+          "precision": 0.609,
+          "f1": 0.632
+        },
+        "PHYSICAL_DAMAGE": {
+          "n": 48,
+          "recall": 0.708,
+          "recall_wilson95": [
+            0.568,
+            0.818
+          ],
+          "precision": 0.723,
+          "f1": 0.716
+        }
+      },
+      "confusion_matrix": [
+        [
+          1301,
+          245,
+          10,
+          3
+        ],
+        [
+          210,
+          631,
+          37,
+          5
+        ],
+        [
+          12,
+          27,
+          84,
+          5
+        ],
+        [
+          3,
+          4,
+          7,
+          34
+        ]
+      ],
+      "by_lineage": {
+        "faulty_solar_panel": {
+          "n": 516,
+          "accuracy": 0.779
+        },
+        "imgclean_imgdirty_web": {
+          "n": 2045,
+          "accuracy": 0.779
+        },
+        "other": {
+          "n": 57,
+          "accuracy": 0.965
+        }
+      },
+      "embed_seconds": 0.6,
+      "feature_dim": 1280
+    },
+    "efficientnet_b0:224": {
+      "accuracy": 0.785,
+      "balanced_accuracy": 0.698,
+      "macro_f1": 0.7,
+      "per_class": {
+        "CLEAN": {
+          "n": 1559,
+          "recall": 0.846,
+          "recall_wilson95": [
+            0.827,
+            0.863
+          ],
+          "precision": 0.855,
+          "f1": 0.85
+        },
+        "DUSTY": {
+          "n": 883,
+          "recall": 0.71,
+          "recall_wilson95": [
+            0.679,
+            0.739
+          ],
+          "precision": 0.7,
+          "f1": 0.705
+        },
+        "BIRD_DROP": {
+          "n": 128,
+          "recall": 0.609,
+          "recall_wilson95": [
+            0.523,
+            0.69
+          ],
+          "precision": 0.578,
+          "f1": 0.593
+        },
+        "PHYSICAL_DAMAGE": {
+          "n": 48,
+          "recall": 0.625,
+          "recall_wilson95": [
+            0.484,
+            0.748
+          ],
+          "precision": 0.682,
+          "f1": 0.652
+        }
+      },
+      "confusion_matrix": [
+        [
+          1319,
+          226,
+          11,
+          3
+        ],
+        [
+          209,
+          627,
+          41,
+          6
+        ],
+        [
+          9,
+          36,
+          78,
+          5
+        ],
+        [
+          6,
+          7,
+          5,
+          30
+        ]
+      ],
+      "by_lineage": {
+        "faulty_solar_panel": {
+          "n": 516,
+          "accuracy": 0.756
+        },
+        "imgclean_imgdirty_web": {
+          "n": 2045,
+          "accuracy": 0.787
+        },
+        "other": {
+          "n": 57,
+          "accuracy": 0.947
+        }
+      },
+      "embed_seconds": 0.6,
+      "feature_dim": 1280
+    },
+    "resnet50:224": {
+      "accuracy": 0.765,
+      "balanced_accuracy": 0.701,
+      "macro_f1": 0.711,
+      "per_class": {
+        "CLEAN": {
+          "n": 1559,
+          "recall": 0.829,
+          "recall_wilson95": [
+            0.81,
+            0.847
+          ],
+          "precision": 0.834,
+          "f1": 0.832
+        },
+        "DUSTY": {
+          "n": 883,
+          "recall": 0.678,
+          "recall_wilson95": [
+            0.647,
+            0.708
+          ],
+          "precision": 0.669,
+          "f1": 0.673
+        },
+        "BIRD_DROP": {
+          "n": 128,
+          "recall": 0.609,
+          "recall_wilson95": [
+            0.523,
+            0.69
+          ],
+          "precision": 0.605,
+          "f1": 0.607
+        },
+        "PHYSICAL_DAMAGE": {
+          "n": 48,
+          "recall": 0.688,
+          "recall_wilson95": [
+            0.547,
+            0.801
+          ],
+          "precision": 0.786,
+          "f1": 0.733
+        }
+      },
+      "confusion_matrix": [
+        [
+          1293,
+          256,
+          10,
+          0
+        ],
+        [
+          241,
+          599,
+          37,
+          6
+        ],
+        [
+          13,
+          34,
+          78,
+          3
+        ],
+        [
+          4,
+          7,
+          4,
+          33
+        ]
+      ],
+      "by_lineage": {
+        "faulty_solar_panel": {
+          "n": 516,
+          "accuracy": 0.748
+        },
+        "imgclean_imgdirty_web": {
+          "n": 2045,
+          "accuracy": 0.764
+        },
+        "other": {
+          "n": 57,
+          "accuracy": 0.965
+        }
+      },
+      "embed_seconds": 547.4,
+      "feature_dim": 2048
+    },
+    "convnext_tiny:224": {
+      "accuracy": 0.827,
+      "balanced_accuracy": 0.777,
+      "macro_f1": 0.776,
+      "per_class": {
+        "CLEAN": {
+          "n": 1559,
+          "recall": 0.874,
+          "recall_wilson95": [
+            0.856,
+            0.889
+          ],
+          "precision": 0.887,
+          "f1": 0.88
+        },
+        "DUSTY": {
+          "n": 883,
+          "recall": 0.762,
+          "recall_wilson95": [
+            0.733,
+            0.789
+          ],
+          "precision": 0.754,
+          "f1": 0.758
+        },
+        "BIRD_DROP": {
+          "n": 128,
+          "recall": 0.742,
+          "recall_wilson95": [
+            0.66,
+            0.81
+          ],
+          "precision": 0.642,
+          "f1": 0.688
+        },
+        "PHYSICAL_DAMAGE": {
+          "n": 48,
+          "recall": 0.729,
+          "recall_wilson95": [
+            0.59,
+            0.834
+          ],
+          "precision": 0.833,
+          "f1": 0.778
+        }
+      },
+      "confusion_matrix": [
+        [
+          1362,
+          189,
+          6,
+          2
+        ],
+        [
+          169,
+          673,
+          38,
+          3
+        ],
+        [
+          4,
+          27,
+          95,
+          2
+        ],
+        [
+          1,
+          3,
+          9,
+          35
+        ]
+      ],
+      "by_lineage": {
+        "faulty_solar_panel": {
+          "n": 516,
+          "accuracy": 0.839
+        },
+        "imgclean_imgdirty_web": {
+          "n": 2045,
+          "accuracy": 0.82
+        },
+        "other": {
+          "n": 57,
+          "accuracy": 0.982
+        }
+      },
+      "embed_seconds": 584.8,
+      "feature_dim": 768
+    },
+    "convnext_tiny:320": {
+      "accuracy": 0.83,
+      "balanced_accuracy": 0.792,
+      "macro_f1": 0.79,
+      "per_class": {
+        "CLEAN": {
+          "n": 1559,
+          "recall": 0.876,
+          "recall_wilson95": [
+            0.858,
+            0.891
+          ],
+          "precision": 0.889,
+          "f1": 0.882
+        },
+        "DUSTY": {
+          "n": 883,
+          "recall": 0.763,
+          "recall_wilson95": [
+            0.734,
+            0.79
+          ],
+          "precision": 0.754,
+          "f1": 0.759
+        },
+        "BIRD_DROP": {
+          "n": 128,
+          "recall": 0.758,
+          "recall_wilson95": [
+            0.677,
+            0.824
+          ],
+          "precision": 0.674,
+          "f1": 0.713
+        },
+        "PHYSICAL_DAMAGE": {
+          "n": 48,
+          "recall": 0.771,
+          "recall_wilson95": [
+            0.635,
+            0.867
+          ],
+          "precision": 0.841,
+          "f1": 0.804
+        }
+      },
+      "confusion_matrix": [
+        [
+          1365,
+          190,
+          3,
+          1
+        ],
+        [
+          165,
+          674,
+          39,
+          5
+        ],
+        [
+          3,
+          27,
+          97,
+          1
+        ],
+        [
+          3,
+          3,
+          5,
+          37
+        ]
+      ],
+      "by_lineage": {
+        "faulty_solar_panel": {
+          "n": 516,
+          "accuracy": 0.824
+        },
+        "imgclean_imgdirty_web": {
+          "n": 2045,
+          "accuracy": 0.828
+        },
+        "other": {
+          "n": 57,
+          "accuracy": 0.965
+        }
+      },
+      "embed_seconds": 710.2,
+      "feature_dim": 768
+    }
+  },
+  "best_by_macro_f1": "convnext_tiny:320",
+  "caveats": [
+    "web-only pool; no rooftop images exist in this pipeline - this is NOT a rooftop-camera accuracy",
+    "C was fixed a priori (0.05), not tuned on OOF; backbone choice IS selected on OOF so the best number is mildly optimistic",
+    "web sources share lineage (stock/ads photos): per-lineage accuracy is reported"
+  ]
+}

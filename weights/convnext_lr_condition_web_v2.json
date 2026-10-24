@@ -1,0 +1,19 @@
+{
+  "classes_index_order": [
+    "CLEAN",
+    "DUSTY",
+    "BIRD_DROP",
+    "PHYSICAL_DAMAGE"
+  ],
+  "recipe": "convnext_tiny@320 frozen embeddings (+hflip avg) -> StandardScaler -> LogisticRegression(C=0.05, class_weight=balanced)",
+  "n_train": 2618,
+  "train_class_counts": {
+    "CLEAN": 1559,
+    "DUSTY": 883,
+    "BIRD_DROP": 128,
+    "PHYSICAL_DAMAGE": 48
+  },
+  "cv_estimate": "see backbone_grouped_cv.json (5-fold family-grouped OOF, macro-F1 0.790)",
+  "status": "RESEARCH ONLY - web photos only, never validated on the target rooftop camera",
+  "bundle_sha256": "42b017153125e977cae2b0fd1a49a80cd34ff3398718068a2f8aa63a03e3c0aa"
+}
