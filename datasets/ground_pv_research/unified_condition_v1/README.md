@@ -58,6 +58,20 @@ UNSURE 9 / PHYSICAL_DAMAGE 6. Rules: do not train on the non-owner rows, do not 
 if verified; the owner reviews/corrects the file. The unified model agrees with only 1 of the 14 owner/high/
 medium-confidence labels (it calls the bird-drop photos CLEAN), which confirms the web-to-rooftop gap.
 
+## Owner ground truth restored: `owner_mark_boxes.json`
+The owner's burned-in marks were diffed against the pristine originals
+(`scripts/extract_owner_mark_boxes.py`, tests in `tests/test_owner_mark_boxes.py`): 6 photos / 7 boxes
+(black = BIRD_DROP, red = PHYSICAL_DAMAGE), each verified by overlay. This is the only machine-readable
+owner ground truth for the rooftop. Review sheets for the AI-proposed labels:
+`scripts/make_label_review_sheets.py` -> `F:\Solar AI Datasets\condition_unified_v1\review_sheets\`.
+New-photo protocol: `docs/ROOFTOP_PHOTO_COLLECTION_GUIDE.md`.
+
+## Deliberately NOT done: defect-level (patch) model
+Needs defect locations, and only 7 owner boxes in ~4 scenes exist. A scene-held-out evaluation on that would
+be noise, so no patch model was trained. Trigger to build it: >= ~10 owner-confirmed defect scenes from the
+fixed camera spot (see the collection guide). Plan then: native-resolution patches of detected panels,
+pretrain on this pool, fine-tune on owner labels, leave-one-scene-out evaluation.
+
 ## Next (needs owner decision)
 In-domain data is the bottleneck: owner-confirmed labels for all 48 photos (explicit no-defect tags) and
 new defect photos in new scenes; consider panel-crop classification via the Phase 14A detector instead of
