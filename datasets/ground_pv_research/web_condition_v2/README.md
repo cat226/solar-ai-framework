@@ -31,6 +31,28 @@ Imgclean/Imgdirty web 0.828. Confusion (rows true; CLEAN, DUSTY, BIRD, PHYS):
 `[1365,190,3,1] [165,674,39,5] [3,27,97,1] [3,3,5,37]` - by far the main error is CLEAN<->DUSTY (355 images),
 then DUSTY->BIRD_DROP (39).
 
+## Full fine-tune on Kaggle (Tesla T4, ~30 min total)
+Per the owner, training runs on Kaggle: private dataset `edithstark/solar-ai-web-condition-v2` (images + `folds.csv`
+with the same family-grouped folds), private kernel `edithstark/web-condition-convnext-v2`
+(`scripts/make_web_condition_finetune_notebook.py` -> `kaggle/web_condition_finetune.ipynb`). ConvNeXt-Tiny, 288 px
+whole-frame, 12 epochs fixed in advance (headline = last epoch, no selection on the held-out fold), AdamW +
+OneCycle, sqrt-inverse-frequency class weights, label smoothing 0.1, fp16, flip TTA. Out-of-fold, every image
+predicted by a model that never saw its family:
+
+| | accuracy | balanced acc | macro-F1 | CLEAN | DUSTY | BIRD_DROP | PHYSICAL_DAMAGE |
+|---|---|---|---|---|---|---|---|
+| frozen embeddings + LR (above) | 0.830 | 0.792 | 0.790 | 0.876 | 0.763 | 0.758 | 0.771 |
+| **fine-tuned ConvNeXt-Tiny** | **0.885** | **0.839** | **0.842** | 0.926 | 0.836 | 0.742 | 0.854 |
+
+Recall intervals (Wilson 95%): CLEAN [0.911, 0.938]; DUSTY [0.810, 0.859]; BIRD_DROP [0.660, 0.810];
+PHYSICAL_DAMAGE [0.728, 0.928]. BIRD_DROP did NOT improve (0.742 vs 0.758, inside the noise) and is mostly
+confused with DUSTY (29 of 128). Accuracy by source: Faulty 0.870, Imgclean/Imgdirty 0.886. Confusion (rows true;
+CLEAN, DUSTY, BIRD, PHYS): `[1443,111,4,1] [119,738,23,3] [1,29,95,3] [1,3,3,41]`.
+Final all-data checkpoint: `weights/convnext_tiny_condition_web_v2.pth` (gitignored; manifest
+`weights/convnext_tiny_condition_web_v2.json`, sha256 `bd9ba44d...`), run with `scripts/infer_web_condition.py`.
+Raw outputs: `kaggle_finetune_cv_metrics.json`, `kaggle_finetune_training_manifest.json`.
+This supersedes the frozen-embedding joblib as the better research model.
+
 ## What this number is and is not
 * It is a **web-photo, same-distribution, family-disjoint** estimate. It is NOT a rooftop-camera accuracy:
   in v1 a web-trained MobileNet got 0/7 exact on the owner's marked rooftop defects while scoring 79% on web test.

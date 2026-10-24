@@ -66,6 +66,15 @@ owner ground truth for the rooftop. Review sheets for the AI-proposed labels:
 `scripts/make_label_review_sheets.py` -> `F:\Solar AI Datasets\condition_unified_v1\review_sheets\`.
 New-photo protocol: `docs/ROOFTOP_PHOTO_COLLECTION_GUIDE.md`.
 
+## Direct test against the owner's boxes (2026-10-24, scratch run, n=7 boxes / 6 photos / ~4 scenes)
+Each owner box -> the detected panel covering it (7/7 covered) -> whole-panel crop -> classifier.
+Exact-class correct: unified web-trained **0/7**, currently promoted rooftop MIX classifier **0/7**.
+MIX calls all 5 bird-drop panels CLEAN at 0.96-1.00 confidence and flags only the 2 physical-damage panels
+(as BIRD_DROP). Unified flags non-CLEAN on 4/7 but also calls ~21% of unmarked panels PHYSICAL_DAMAGE.
+So the earlier "MIX 94% on the rooftop" figure was against AI-assigned labels that the owner's marks
+contradict - it does NOT mean MIX finds the owner's defects. Panel-level labels for unmarked panels are
+unconfirmed, so this measures recall on marked defects only; n is tiny.
+
 ## Deliberately NOT done: defect-level (patch) model
 Needs defect locations, and only 7 owner boxes in ~4 scenes exist. A scene-held-out evaluation on that would
 be noise, so no patch model was trained. Trigger to build it: >= ~10 owner-confirmed defect scenes from the
