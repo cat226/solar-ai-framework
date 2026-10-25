@@ -181,6 +181,39 @@ python -m pi_agent.capture_and_send --config pi_agent/config.yaml --once \
     --test-image assets/demo/ground_pv_real/some_photo.jpeg
 ```
 
+## Classifier choice on the Pi, and alerts
+
+**Which classifier.** `SOLAR_AI_CLASSIFIER` selects the condition classifier used by the shared pipeline (default
+`rooftop_mix`, the MobileNetV2). Opt-in web-trained alternatives need `weights/web_condition_ensemble_v1/`:
+`web_ensemble` (5 models) or `web_ensemble_lite` (2 models: ConvNeXt-Tiny 288 + EfficientNetV2-S 384).
+
+| backend | out-of-fold macro-F1 (web photos) | cost per panel crop on a desktop CPU, 4 threads |
+|---|---|---|
+| `rooftop_mix` | not comparable (different test set) | ~0.02 s (single pass, no flip TTA) |
+| `web_ensemble_lite` | 0.875 | ~1.2 s (with flip TTA) |
+| `web_ensemble` | 0.878 | ~3.8 s |
+
+These timings are **measured on a desktop CPU, not on a Pi**. A Pi 4/5 is several times slower, so budget on the order
+of 5-10x as an unmeasured estimate: a capture with 6 panels would take tens of seconds to a few minutes with the lite
+ensemble. The default 300 s capture interval still fits that, but measure on your board before relying on it.
+Neither classifier is validated on a rooftop camera (see `docs/GROUND_INSPECTION_STATUS_AND_LIMITS.md`).
+
+**Alerts.** `api/main.py` calls `services/notifications.py` after every ingest. It is **off by default**. To enable,
+set these in the environment of the API process (never commit them):
+
+```
+SOLAR_AI_NOTIFY=on
+SOLAR_AI_NOTIFY_WEBHOOK_URL=https://ntfy.sh/<your-private-topic>      # any JSON webhook; and/or SMTP below
+SOLAR_AI_NOTIFY_SMTP_HOST=smtp.example.com  SOLAR_AI_NOTIFY_SMTP_PORT=587
+SOLAR_AI_NOTIFY_SMTP_USER=...  SOLAR_AI_NOTIFY_SMTP_PASSWORD=...  SOLAR_AI_NOTIFY_SMTP_TO=you@example.com
+SOLAR_AI_NOTIFY_COOLDOWN_HOURS=12   SOLAR_AI_NOTIFY_MIN_CONF=0.60
+```
+
+Behaviour: it alerts only on a *predicted* non-CLEAN read at or above `MIN_CONF`, at most once per camera and label per
+cooldown window, and the cooldown is only consumed when a channel really delivered. A failing channel is logged
+(exception type only, never the URL) and never fails the ingest. Every message says the model is unvalidated and that
+the absence of an alert does not mean the panels are clean. Tests: `tests/test_notifications.py`.
+
 ## Security scope (stated honestly, not glossed over)
 
 - Per-camera bearer tokens (`secrets.token_urlsafe(32)`), compared with

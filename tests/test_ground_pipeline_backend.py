@@ -38,8 +38,20 @@ def test_unknown_backend_fails_closed(monkeypatch):
 def test_missing_ensemble_manifest_fails_closed_never_falls_back(monkeypatch, tmp_path):
     monkeypatch.setattr(gp, "ENSEMBLE_MANIFEST", tmp_path / "nope.json")
     assert gp.ensemble_available() is False
-    with pytest.raises(ModelLoadError, match="web ensemble manifest not found"):
+    with pytest.raises(ModelLoadError, match="manifest or member weights not found"):
         gp.load_condition_classifier("web_ensemble")
+
+
+def test_lite_backend_is_selectable_and_checks_member_files(monkeypatch, tmp_path):
+    assert gp.active_classifier_backend("web_ensemble_lite") == "web_ensemble_lite"
+    (tmp_path / "ensemble_lite.json").write_text('{"members": [{"file": "a.pth"}]}')
+    monkeypatch.setattr(gp, "ENSEMBLE_LITE_MANIFEST", tmp_path / "ensemble_lite.json")
+    assert gp.ensemble_available("web_ensemble_lite") is False  # manifest present, member weights missing
+    (tmp_path / "a.pth").write_bytes(b"x")
+    assert gp.ensemble_available("web_ensemble_lite") is True
+    monkeypatch.setattr(gp, "ENSEMBLE_LITE_MANIFEST", tmp_path / "missing.json")
+    with pytest.raises(ModelLoadError):
+        gp.load_condition_classifier("web_ensemble_lite")
 
 
 def test_classify_crop_uses_the_ensembles_own_class_order():

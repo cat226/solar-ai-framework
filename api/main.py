@@ -33,7 +33,7 @@ from typing import Any
 from fastapi import Depends, FastAPI, Header, HTTPException, status
 from pydantic import BaseModel, Field
 
-from services import ground_pipeline, storage
+from services import ground_pipeline, notifications, storage
 from training.detection.ground_pv.condition_taxonomy import CONDITION_4CLASS_ORDER
 from utils.logger import get_logger
 
@@ -150,6 +150,10 @@ def ingest(payload: IngestRequest, camera: dict = Depends(_authenticate)) -> dic
         logger.exception("Failed to match panel identities for camera_id=%s run_id=%d", camera["id"], run_id)
 
     storage.touch_camera_last_seen(camera["id"])
+
+    # Off by default; never raises (see services/notifications.py). Uses the same flagged list as the stored run.
+    notification = notifications.notify_ingest(summary["flagged"], camera, run_id)
+    logger.info("Notification for run_id=%d: sent=%s %s", run_id, notification["sent"], notification["reason"])
 
     problem_detected = len(summary["flagged"]) > 0
     logger.info(

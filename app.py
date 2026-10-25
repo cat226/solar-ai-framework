@@ -153,8 +153,9 @@ st.warning(
 _CLASSIFIER_LABELS = {
     "rooftop_mix": "MobileNetV2, rooftop-adapted (default)",
     "web_ensemble": "Web-trained 5-model ensemble (research, ~5x slower)",
+    "web_ensemble_lite": "Web-trained 2-model ensemble (research, ~2x slower)",
 }
-_backend_options = ["rooftop_mix"] + (["web_ensemble"] if ground_pipeline.ensemble_available() else [])
+_backend_options = ["rooftop_mix"] + [b for b in ("web_ensemble", "web_ensemble_lite") if ground_pipeline.ensemble_available(b)]
 _CLASSIFIER_BACKEND = st.selectbox(
     "Condition classifier (primary)", _backend_options, format_func=_CLASSIFIER_LABELS.get,
     help="The web ensemble loads only if weights/web_condition_ensemble_v1/ is present. Neither option is "
@@ -560,7 +561,7 @@ st.divider()
 st.caption(
     f"Pipeline: full image → dynamic ground panel detector (`{_PANEL_WEIGHTS.name}`) → "
     f"per-panel crop → PRIMARY condition classifier (`{_CLASSIFIER_LABELS[_CLASSIFIER_BACKEND]}`"
-    f"{'' if _CLASSIFIER_BACKEND == 'web_ensemble' else ' · `' + _CLASSIFIER_WEIGHTS.name + '`'}) + "
+    f"{'' if _CLASSIFIER_BACKEND != 'rooftop_mix' else ' · `' + _CLASSIFIER_WEIGHTS.name + '`'}) + "
     f"SECONDARY condition box-detector (`{_CONDITION_WEIGHTS.name}`), run independently "
     "per capture and combined above. All three are frozen research checkpoints, not "
     "production artifacts. No accuracy/precision/recall/mAP is computed or claimed for "

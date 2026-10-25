@@ -21,6 +21,7 @@ for the full evidence trail this pipeline's design decisions are based on.
 """
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 from typing import Any
@@ -56,9 +57,10 @@ CLASSIFIER_PREDICTED_THRESHOLD = 0.45  # same "trustworthy" convention used else
 # Condition-classifier backends. "rooftop_mix" (default) is the MobileNetV2 above. "web_ensemble" is the final
 # web-only 5-backbone ensemble (training/detection/ground_pv/web_ensemble.py): out-of-fold macro-F1 0.878 on WEB
 # photos, never validated on the target rooftop camera. It is opt-in and is never selected silently.
-CLASSIFIER_BACKENDS = ("rooftop_mix", "web_ensemble")
+CLASSIFIER_BACKENDS = ("rooftop_mix", "web_ensemble", "web_ensemble_lite")
 CLASSIFIER_BACKEND_ENV = "SOLAR_AI_CLASSIFIER"
 ENSEMBLE_MANIFEST = Path("weights/web_condition_ensemble_v1/ensemble.json")
+ENSEMBLE_LITE_MANIFEST = Path("weights/web_condition_ensemble_v1/ensemble_lite.json")  # 2 members, ~3x cheaper (Pi)
 
 
 def active_classifier_backend(backend: str | None = None) -> str:
@@ -71,8 +73,20 @@ def active_classifier_backend(backend: str | None = None) -> str:
     return chosen
 
 
-def ensemble_available() -> bool:
-    return ENSEMBLE_MANIFEST.is_file()
+def _manifest_for(backend: str) -> Path:
+    return ENSEMBLE_LITE_MANIFEST if backend == "web_ensemble_lite" else ENSEMBLE_MANIFEST
+
+
+def ensemble_available(backend: str = "web_ensemble") -> bool:
+    """True iff the manifest AND every member checkpoint it lists are present."""
+    manifest = _manifest_for(backend)
+    if not manifest.is_file():
+        return False
+    try:
+        members = json.loads(manifest.read_text(encoding="utf-8"))["members"]
+    except (OSError, ValueError, KeyError):
+        return False
+    return all((manifest.parent / m["file"]).is_file() for m in members)
 
 
 # Soft cap on captures per run/ingestion batch — shared by app.py (Streamlit
@@ -126,17 +140,19 @@ def load_condition_classifier(backend: str | None = None) -> tuple[Any, Any]:
     modest win overall), and specifically 0.794 vs. 0.359 recall on DUSTY —
     see docs/CONDITION_MODEL_4CLASS_CLASSIFIER_V1.md. Fails closed like
     every other model loader in this project."""
-    if active_classifier_backend(backend) == "web_ensemble":
-        if not ensemble_available():
+    chosen = active_classifier_backend(backend)
+    if chosen in ("web_ensemble", "web_ensemble_lite"):
+        manifest = _manifest_for(chosen)
+        if not ensemble_available(chosen):
             raise ModelLoadError(
                 "condition classifier",
-                f"web ensemble manifest not found at {ENSEMBLE_MANIFEST}. Fetch the Kaggle outputs "
+                f"web ensemble manifest or member weights not found for {manifest}. Fetch the Kaggle outputs "
                 "(see datasets/ground_pv_research/web_condition_v2/README.md) or use the default backend.",
             )
         from training.detection.ground_pv.web_ensemble import WebEnsemble  # noqa: PLC0415
 
         try:
-            return WebEnsemble(ENSEMBLE_MANIFEST), None
+            return WebEnsemble(manifest), None
         except Exception as exc:  # noqa: BLE001 — surfaced as a typed, actionable error
             raise ModelLoadError("condition classifier",
                                  f"web ensemble failed to load: {type(exc).__name__}: {exc}") from exc
