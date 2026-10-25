@@ -5,6 +5,10 @@ weights/*.pt
 weights/*.pth
 weights/*.joblib
 weights/*.pkl
+weights/**/*.pt
+weights/**/*.pth
+weights/**/*.joblib
+weights/**/*.pkl
 
 # Prepared/raw training data (never commit datasets)
 training/data/
