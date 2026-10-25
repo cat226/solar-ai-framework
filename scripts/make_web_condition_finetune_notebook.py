@@ -16,10 +16,18 @@ Regenerable: `python scripts/make_web_condition_finetune_notebook.py`.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 NB = ROOT / "kaggle" / "web_condition_finetune.ipynb"
+CONFIGS = {
+    "convnext_small_288": dict(ARCH="convnext_small", SEED=42, SIZE=288, EPOCHS=15, BATCH=32, LR="1e-4"),
+    "convnext_tiny_384": dict(ARCH="convnext_tiny", SEED=7, SIZE=384, EPOCHS=15, BATCH=24, LR="1e-4"),
+    "effnetv2s_384": dict(ARCH="efficientnet_v2_s", SEED=11, SIZE=384, EPOCHS=15, BATCH=24, LR="3e-4"),
+    "convnext_base_256": dict(ARCH="convnext_base", SEED=23, SIZE=256, EPOCHS=15, BATCH=16, LR="8e-5"),
+}
+DEFAULT = dict(ARCH="convnext_tiny", SEED=42, SIZE=288, EPOCHS=12, BATCH=32, LR="1e-4")
 
 
 def md(*lines: str) -> dict:
@@ -32,9 +40,9 @@ def code(src: str) -> dict:
 
 
 CELLS = [
-    md("# Solar AI - web-only condition classifier: ConvNeXt-Tiny fine-tune (v2)",
+    md("# Solar AI - web-only condition classifier: __ARCH__ fine-tune (v2-clean, 5-fold grouped CV + final fit)",
        "",
-       "Research only. Attach the private dataset `edithstark/solar-ai-web-condition-v2` "
+       "Research only. Attach the private dataset `edithstark/solar-ai-web-condition-v2-clean` "
        "(2,618 deduplicated web photos, 4 classes, family-grouped `folds.csv`). Accelerator = GPU, Internet = on "
        "(pretrained ConvNeXt weights). Run All.",
        "",
@@ -69,7 +77,7 @@ assert df.groupby('family').fold.nunique().max() == 1, 'family leaks across fold
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 from torchvision import models, transforms
-SEED, SIZE, EPOCHS, BATCH, LR = 42, 288, 12, 32, 1e-4
+ARCH, SEED, SIZE, EPOCHS, BATCH, LR = '__ARCH__', __SEED__, __SIZE__, __EPOCHS__, __BATCH__, __LR__
 MEAN, STD = [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
 
 def load_small(p):
@@ -90,13 +98,26 @@ class DS(Dataset):
     def __getitem__(self, i):
         j = self.idx[i]; return self.tf(IMGS[j]), int(df.y.iloc[j])
 
+def build_model(arch):
+    n = len(CLASSES)
+    if arch.startswith('convnext'):
+        ctor = {'convnext_tiny': (models.convnext_tiny, models.ConvNeXt_Tiny_Weights),
+                'convnext_small': (models.convnext_small, models.ConvNeXt_Small_Weights),
+                'convnext_base': (models.convnext_base, models.ConvNeXt_Base_Weights)}[arch]
+        m = ctor[0](weights=ctor[1].IMAGENET1K_V1); m.classifier[2] = nn.Linear(m.classifier[2].in_features, n)
+    elif arch == 'efficientnet_v2_s':
+        m = models.efficientnet_v2_s(weights=models.EfficientNet_V2_S_Weights.IMAGENET1K_V1)
+        m.classifier[1] = nn.Linear(m.classifier[1].in_features, n)
+    else:
+        raise KeyError(arch)
+    return m
+
 def seed_all(s):
     random.seed(s); np.random.seed(s); torch.manual_seed(s); torch.cuda.manual_seed_all(s)
 
 def train_model(train_idx, tag):
     seed_all(SEED)
-    m = models.convnext_tiny(weights=models.ConvNeXt_Tiny_Weights.IMAGENET1K_V1)
-    m.classifier[2] = nn.Linear(768, len(CLASSES)); m = m.cuda()
+    m = build_model(ARCH).cuda()
     cnt = np.bincount(df.y.iloc[train_idx], minlength=len(CLASSES))
     w = torch.tensor((len(train_idx) / (len(CLASSES) * np.maximum(cnt, 1))) ** 0.5, dtype=torch.float32).cuda()  # sqrt-inverse freq
     crit = nn.CrossEntropyLoss(weight=w, label_smoothing=0.1)
@@ -167,25 +188,25 @@ def summarize(y, pred, lin):
                 macro_f1=round(float(np.mean(f1s)), 3), per_class=per, confusion_matrix=cm.tolist(), by_lineage=by_lin)
 y = df.y.values; S = summarize(y, oof.argmax(1), df.lineage.values)
 # reference: frozen convnext_tiny@320 + balanced logistic regression, same folds (datasets/.../backbone_grouped_cv.json)
-REF = dict(accuracy=0.830, balanced_accuracy=0.792, macro_f1=0.790,
-           recall={'CLEAN': 0.876, 'DUSTY': 0.763, 'BIRD_DROP': 0.758, 'PHYSICAL_DAMAGE': 0.771})
+REF = dict(accuracy=0.886, balanced_accuracy=0.854, macro_f1=0.855,
+           recall={'CLEAN': 0.922, 'DUSTY': 0.840, 'BIRD_DROP': 0.780, 'PHYSICAL_DAMAGE': 0.875})  # convnext_tiny@288 12ep, same clean pool
 print(f"fine-tuned  acc={S['accuracy']} balacc={S['balanced_accuracy']} macroF1={S['macro_f1']}")
-print(f"frozen LR   acc={REF['accuracy']} balacc={REF['balanced_accuracy']} macroF1={REF['macro_f1']}  (reference)")
+print(f"ref tiny288 acc={REF['accuracy']} balacc={REF['balanced_accuracy']} macroF1={REF['macro_f1']}  (reference run, same folds)")
 for c in CLASSES:
     m = S['per_class'][c]; print(f"  {c:16s} n={m['n']:4d} recall={m['recall']} wilson95={m['recall_wilson95']} precision={m['precision']}  | frozen recall {REF['recall'][c]}")
 print('confusion (rows=true, cols=pred, order', CLASSES, ')'); [print('  ', r) for r in S['confusion_matrix']]
 print('by lineage:', S['by_lineage'])
-(OUT / 'cv_metrics.json').write_text(json.dumps(dict(finetuned=S, frozen_lr_reference=REF, env=ENV, epochs=EPOCHS, size=SIZE, lr=LR,
+(OUT / 'cv_metrics.json').write_text(json.dumps(dict(finetuned=S, reference_convnext_tiny_288=REF, env=ENV, epochs=EPOCHS, size=SIZE, lr=LR,
                                                     batch=BATCH, seed=SEED, fold_minutes={k: round(v / 60, 2) for k, v in fold_times.items()}), indent=2))
 '''),
     md("## 6. Final model on ALL images (same recipe, fixed epochs) + manifest"),
     code(r'''
 t0 = time.time()
 final = train_model(np.arange(len(df)), 'final')
-torch.save(final.state_dict(), OUT / 'convnext_tiny_condition_web_v2.pth')
-sha = hashlib.sha256((OUT / 'convnext_tiny_condition_web_v2.pth').read_bytes()).hexdigest()
+torch.save(final.state_dict(), OUT / f'{ARCH}_{SIZE}_s{SEED}.pth')
+sha = hashlib.sha256((OUT / f'{ARCH}_{SIZE}_s{SEED}.pth').read_bytes()).hexdigest()
 (OUT / 'training_manifest.json').write_text(json.dumps(dict(
-    classes_index_order=CLASSES, architecture='torchvision convnext_tiny, classifier[2]=Linear(768,4), ImageNet-1k pretrained',
+    classes_index_order=CLASSES, architecture=f'torchvision {ARCH}, new 4-way head, ImageNet-1k pretrained',
     preprocessing=f'Resize(({SIZE},{SIZE})) whole frame, ImageNet mean/std; eval = mean of image and horizontal flip',
     epochs=EPOCHS, batch=BATCH, lr=LR, optimizer='AdamW wd=0.05 + OneCycle', loss='CE, sqrt-inverse-frequency weights, label_smoothing=0.1',
     amp='fp16 autocast', seed=SEED, n_train=len(df), env=ENV, final_train_minutes=round((time.time() - t0) / 60, 2),
@@ -198,6 +219,18 @@ print(sorted(p.name for p in OUT.iterdir()))
 nb = {"cells": CELLS, "metadata": {"kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
                                    "language_info": {"name": "python"}}, "nbformat": 4, "nbformat_minor": 5}
 
+def render(cfg: dict) -> str:
+    text = json.dumps(nb, indent=1)
+    for k, v in cfg.items():
+        text = text.replace(f"__{k}__", str(v))
+    assert "__" not in "".join(c for c in re.findall(r"__[A-Z]+__", text)), "unfilled placeholder"
+    return text
+
+
 if __name__ == "__main__":
-    NB.write_text(json.dumps(nb, indent=1), encoding="utf-8")
+    NB.write_text(render(DEFAULT), encoding="utf-8")
     print("wrote", NB)
+    for name, cfg in CONFIGS.items():
+        out = ROOT / "kaggle" / f"web_condition_ft_{name}.ipynb"
+        out.write_text(render(cfg), encoding="utf-8")
+        print("wrote", out)

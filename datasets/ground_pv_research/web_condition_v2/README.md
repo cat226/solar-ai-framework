@@ -85,6 +85,37 @@ within run-to-run noise (single seed). Real gain is mostly BIRD_DROP precision (
 images) remains the dominant error. Checkpoint: `weights/convnext_tiny_condition_web_v2_clean.pth` (gitignored).
 Still a web-photo estimate, not rooftop accuracy.
 
+## FINAL MODEL: 5-backbone ensemble (2026-10-25, Kaggle T4)
+Goal: maximise accuracy on the three web datasets (no rooftop data exists any more). Five fine-tunes on the cleaned pool
+(`edithstark/solar-ai-web-condition-v2-clean`), identical family-grouped 5-fold CV; every member also refit on ALL images.
+Final prediction = mean of the members' softmax probabilities (each averaging image + horizontal flip).
+
+| member (arch, input px, epochs) | acc | bal acc | macro-F1 | CLEAN | DUSTY | BIRD | PHYS |
+|---|---|---|---|---|---|---|---|
+| convnext_tiny 288, 12 ep | 0.886 | 0.854 | 0.855 | .922 | .840 | .780 | .875 |
+| convnext_small 288, 15 ep | 0.891 | 0.854 | 0.862 | .932 | .832 | .818 | .833 |
+| convnext_tiny 384, 15 ep | 0.894 | 0.860 | 0.872 | .929 | .849 | .765 | .896 |
+| efficientnet_v2_s 384, 15 ep | 0.889 | 0.858 | 0.865 | .936 | .820 | .803 | .875 |
+| convnext_base 256, 15 ep | 0.895 | 0.858 | 0.870 | .944 | .822 | .811 | .854 |
+| **ENSEMBLE, mean of all 5 (headline, no selection)** | **0.899** | **0.864** | **0.878** | **.940** | **.843** | **.818** | **.854** |
+| best 3-member subset (picked on OOF, optimistic) | 0.901 | 0.876 | 0.887 | .936 | .853 | .818 | .896 |
+
+Headline recall intervals (Wilson 95%): CLEAN [0.927, 0.950]; DUSTY [0.817, 0.865]; BIRD_DROP [0.744, 0.875] (n=132);
+PHYSICAL_DAMAGE [0.728, 0.928] (n=48). Precision: CLEAN .923, DUSTY .862, BIRD .837, PHYS .953. Confusion (rows true;
+CLEAN, DUSTY, BIRD, PHYS): `[1461,92,2,0] [120,739,17,1] [0,23,108,1] [2,3,2,41]`. Accuracy by source: Faulty 0.890,
+Imgclean/Imgdirty 0.899. The ensemble beats the best single member by ~+0.006 macro-F1 and all five land in 0.855-0.872:
+returns are flattening; the remaining error is dominated by CLEAN<->DUSTY (212 images), which is label ambiguity.
+(ConvNeXt-Base failed once on Kaggle with no log at batch 24, and was rerun at batch 16.)
+
+Package: `weights/web_condition_ensemble_v1/` (5 x .pth, ~850 MB, gitignored; `ensemble.json` tracked with sha256s and the
+OOF estimate). Run: `python scripts/infer_web_ensemble.py --images <folder> [--out-csv f.csv]` (CPU, a few seconds/image).
+Eval: `scripts/eval_web_ensemble.py` -> `ensemble_eval.json`. Notebook generator: `scripts/make_web_condition_finetune_notebook.py`.
+
+**Read this before relying on it.** The ~0.88 macro-F1 / 0.90 accuracy is out-of-fold on WEB photos from the same three
+sources (family-disjoint, but the same web distribution, including stock photos and label noise). It is not a rooftop
+estimate: a web-trained model scored 79% on its web test and 0/7 on the owner's marked rooftop defects. Model selection
+used the OOF scores (5 configs), so a small optimism remains in the headline. Expect lower accuracy on a fixed rooftop camera.
+
 ## What this number is and is not
 * It is a **web-photo, same-distribution, family-disjoint** estimate. It is NOT a rooftop-camera accuracy:
   in v1 a web-trained MobileNet got 0/7 exact on the owner's marked rooftop defects while scoring 79% on web test.
