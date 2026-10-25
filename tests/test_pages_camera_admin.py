@@ -27,7 +27,9 @@ class TestCameraConfigurationPage:
     def test_registering_a_camera_shows_its_one_time_token(self):
         at = AppTest.from_file(_CONFIG_PAGE)
         at.run(timeout=30)
-        at.text_input[0].set_value("Rooftop North").run()
+        # Widgets inside st.form only commit on submit: set the value and click in ONE run. An extra
+        # .run() between them loses the pending value on Streamlit >= 1.62 (clear_on_submit forms).
+        at.text_input[0].set_value("Rooftop North")
         at.button[0].click().run()  # "➕ Register camera"
         assert not at.exception
 
