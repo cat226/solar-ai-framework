@@ -157,6 +157,14 @@ beyond that is one live check (a photo with a hand-confirmed bird-drop mark now 
 BIRD_DROP at 0.74/0.87 on two panels). It also costs 2.1 points on the Susan benchmark — a
 deliberate, disclosed trade.
 
+**CORRECTION (2026-10-26), supersedes the "one live check" above:** a direct test of this classifier on
+the owner's 7 marked defect boxes (panel crop under each box) found it called **all 5 bird-drop panels
+CLEAN at 0.96-1.00 confidence**, and flagged the 2 physical-damage panels with the wrong class. The 0.938 is
+therefore NOT evidence of defect detection. The rooftop photos were deleted at the owner's request on
+2026-10-25. The best classifier the public data allows is the opt-in web-trained ensemble
+(`SOLAR_AI_CLASSIFIER=web_ensemble[_lite]`, out-of-fold macro-F1 0.878 on web photos only); see
+`docs/GROUND_INSPECTION_STATUS_AND_LIMITS.md` and `datasets/ground_pv_research/web_condition_v2/README.md`.
+
 Box-detector (secondary): mAP50 0.444 / box recall 0.441, image-level agreement 0.727
 (Phase 15/16-A.1). Weakness is mostly localization noise.
 

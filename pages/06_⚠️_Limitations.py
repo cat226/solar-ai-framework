@@ -23,10 +23,12 @@ st.error(
 )
 st.markdown(
     "- **Condition classifier (primary signal):** MobileNetV2, Phase 19-B rooftop-adapted "
-    "retrain. Measured 0.938 (45/48) on this rooftop's held-out crops, but that set is 46 CLEAN "
-    "+ 2 DUSTY, so it mostly shows correct CLEAN reads: there are **no held-out BIRD_DROP or "
-    "PHYSICAL_DAMAGE examples and only 2 DUSTY**, so defect detection on this rooftop is "
-    "essentially unmeasured. Its labels are AI-reviewed, not owner-verified. On the original "
+    "retrain. It scored 0.938 (45/48) on held-out crops that were 46 CLEAN + 2 DUSTY, so that "
+    "mostly shows correct CLEAN reads, with **no BIRD_DROP or PHYSICAL_DAMAGE examples**. Its "
+    "labels were AI-reviewed, not owner-verified, and a later direct check against the owner's own "
+    "defect marks found it called **all 5 marked bird-drop panels CLEAN at high confidence: a "
+    "CLEAN result does not mean the panel is clean**. Neither this classifier nor the opt-in "
+    "web-trained ensemble has been validated on the target camera. On the original "
     "Susan-derived benchmark it scores 0.731 (the previous checkpoint: 0.752, but only 0.271 on "
     "this rooftop). See `docs/ROOFTOP_CONDITION_MIX_PHASE19B.md`.\n"
     "- **Condition detector (secondary, localized):** box-detector, measured 0.444 mAP50 / "

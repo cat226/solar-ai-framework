@@ -62,8 +62,12 @@ _artifact_card(
     "original Phase 16-B checkpoint (0.752 on its own Susan-derived test set) scored only "
     "**0.271 (13/48)** on THIS rooftop's own held-out photos — systematically misreading "
     "CLEAN panels as DUSTY/PHYSICAL_DAMAGE at high confidence. Retrained blended with this "
-    "rooftop's own labelled crops: now **0.938 (45/48)** on this rooftop's held-out photos, "
-    "at a disclosed cost of 0.731 (down from 0.752) on the original Susan-derived benchmark. "
+    "rooftop's own labelled crops: scored 0.938 (45/48) on 48 AI-labelled held-out crops "
+    "(46 CLEAN + 2 DUSTY, no defect examples). **That figure is not evidence of defect "
+    "detection:** a later direct check against the owner's own defect marks found it called all "
+    "5 marked bird-drop panels CLEAN. Disclosed cost: 0.731 (down from 0.752) on the original "
+    "Susan-derived benchmark. A web-trained ensemble is available as an opt-in alternative on the "
+    "Ground Inspection page (macro-F1 0.878 on web photos only; also unvalidated on this rooftop). "
     "See `docs/ROOFTOP_CONDITION_MIX_PHASE19B.md` for the full comparison and confusion "
     "matrices.",
 )

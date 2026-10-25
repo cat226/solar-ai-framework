@@ -38,9 +38,12 @@ docs/ROOFTOP_CONDITION_MIX_PHASE19B.md (Phase 19-B) then found that
 Phase 16-B checkpoint scored only 0.271 (13/48) on this app's OWN rooftop's
 held-out photos — a domain-shift failure, systematically misreading CLEAN
 panels as DUSTY. Retrained blended into the same base dataset (oversampled
-rooftop crops); the PRIMARY classifier now loaded is that retrain — 0.938
-(45/48) on this rooftop's held-out photos, at a disclosed cost of 0.731 vs.
-0.752 on the original Susan-derived benchmark.
+rooftop crops); the default PRIMARY classifier is that retrain. Its 0.938
+(45/48) figure came from 48 AI-labelled crops (46 CLEAN + 2 DUSTY, no defect
+examples) that were later deleted; a direct check against the owner's own
+defect marks showed it called all 5 marked bird-drop panels CLEAN, so that
+figure says nothing about defect detection. Disclosed cost: 0.731 vs. 0.752
+on the original Susan-derived benchmark.
 
 Both checkpoints are frozen, already-trained research artifacts — this page
 performs no training and modifies no weights. Every claim on screen is
@@ -172,10 +175,11 @@ with st.expander("Two condition engines, how they differ from Aerial Inspect, an
         "crops to output one condition label per crop — no localization. The Phase 16-B "
         "version measurably beat the box-detector on DUSTY (0.794 vs. 0.359 recall) but, "
         "per Phase 19-B, scored only 0.271 on THIS rooftop's own held-out photos — a "
-        "domain-shift failure. The checkpoint now loaded is a Phase 19-B retrain blended "
-        "with this rooftop's own labelled photos: **0.938 on this rooftop's held-out set**, "
-        "0.731 (down from 0.752) on the original Susan-derived benchmark — a deliberate, "
-        "disclosed trade favoring where this app is actually used. See "
+        "domain-shift failure. The default checkpoint is a Phase 19-B retrain blended "
+        "with this rooftop's own photos. Its earlier **0.938** came from AI-labelled crops with "
+        "no defect examples (46 CLEAN + 2 DUSTY); checked later against the owner's own defect "
+        "marks it called **all 5 marked bird-drop panels CLEAN**, so it is NOT evidence of "
+        "defect detection. 0.731 (down from 0.752) on the original Susan-derived benchmark. See "
         "`docs/CONDITION_MODEL_4CLASS_CLASSIFIER_V1.md`, `docs/ROOFTOP_CONDITION_MIX_PHASE19B.md`.\n"
         "- **Condition box-detector (SECONDARY, this page)**: a detector trained specifically "
         "on ground-level close-up photos, followed by a **dynamic** number of panels (not "
