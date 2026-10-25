@@ -1,0 +1,41 @@
+{
+ "train": {
+  "images": 29,
+  "boxes": 168,
+  "scenes": [
+   "scene0000",
+   "scene0001",
+   "scene0003",
+   "scene0004",
+   "scene0005",
+   "scene0015"
+  ]
+ },
+ "valid": {
+  "images": 7,
+  "boxes": 40,
+  "scenes": [
+   "scene0006",
+   "scene0008"
+  ]
+ },
+ "test": {
+  "images": 10,
+  "boxes": 48,
+  "scenes": [
+   "scene0002",
+   "scene0007"
+  ]
+ },
+ "skipped": [
+  [
+   "IMG_5886.jpg",
+   "excluded_ambiguous"
+  ],
+  [
+   "IMG_5887.jpg",
+   "excluded_ambiguous"
+  ]
+ ],
+ "label_provenance": "annotated_ai_assisted_unverified (reviewer-corrected SAM proposals); NOT human-verified"
+}

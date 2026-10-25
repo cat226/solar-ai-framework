@@ -1,0 +1,11 @@
+{
+  "classes_index_order": [
+    "CLEAN",
+    "DUSTY",
+    "BIRD_DROP",
+    "PHYSICAL_DAMAGE"
+  ],
+  "architecture": "torchvision mobilenet_v2, classifier[1]=Linear(1280,4)",
+  "preprocessing": "Resize((224,224)) whole frame, NO centre crop; ImageNet mean/std",
+  "checkpoint_sha256": "e38cc1ba742f86472a98c4a5b722974649d5e99878a9d0b3cc69142eda352b4c"
+}

@@ -5,12 +5,147 @@ weights/*.pt
 weights/*.pth
 weights/*.joblib
 weights/*.pkl
+weights/**/*.pt
+weights/**/*.pth
+weights/**/*.joblib
+weights/**/*.pkl
 
 # Prepared/raw training data (never commit datasets)
 training/data/
 
+# Ground-level PV research dataset — raw download, normalized copy, split
+# materializations, real-world holdout imagery, and heavy per-image reports.
+# Small text reports (dataset_audit.md/json, evaluation, manifests) ARE
+# committed and are whitelisted below.
+datasets/ground_pv_research/raw/
+datasets/ground_pv_research/audited/
+datasets/ground_pv_research/yolo/
+datasets/ground_pv_research/splits/
+datasets/ground_pv_research/real_world_holdout/images/
+research_runs/
+kaggle/ground_pv_dataset/images/
+kaggle/ground_pv_dataset/labels/
+kaggle/ground_pv_dataset/provenance/
+kaggle/ground_pv_dataset/data.yaml
+# Condition/defect Kaggle staging package: bulky image/label tree + the copied
+# provenance bundle are regenerable (scripts/build_condition_kaggle_package.py).
+# PACKAGE_SUMMARY.json / dataset-metadata.json / README.md ARE committed.
+kaggle/ground_condition_dataset/images/
+kaggle/ground_condition_dataset/labels/
+kaggle/ground_condition_dataset/provenance/
+kaggle/ground_condition_dataset/data.yaml
+
+# Active 4-class condition Kaggle staging package (Phase 15B) — same policy:
+# scripts/build_condition_4class_kaggle_package.py regenerates the bulky
+# image/label tree + provenance bundle. PACKAGE_SUMMARY.json /
+# dataset-metadata.json / README.md ARE committed.
+kaggle/ground_condition_4class_dataset/images/
+kaggle/ground_condition_4class_dataset/labels/
+kaggle/ground_condition_4class_dataset/provenance/
+kaggle/ground_condition_4class_dataset/data.yaml
+# one-shot kernel-push staging copy (the canonical notebook is
+# kaggle/ground_condition_4class_train.ipynb, which IS committed)
+kaggle/ground_condition_4class_kernel/
+# Phase 15B.1 duration-ablation kernel-push staging copy (canonical notebook
+# is kaggle/ground_condition_4class_train_v3.ipynb, which IS committed)
+kaggle/ground_condition_4class_kernel_v3/
+# Phase 15D-A resolution-ablation kernel-push staging copy (canonical
+# notebook is kaggle/ground_condition_4class_train_960.ipynb, which IS committed)
+kaggle/ground_condition_4class_kernel_960/
+# Phase 15E-A augmentation-ablation kernel-push staging copy (canonical
+# notebook is kaggle/ground_condition_4class_train_aug.ipynb, which IS committed)
+kaggle/ground_condition_4class_kernel_aug/
+
+# Phase 16-B classifier reformulation Kaggle staging: bulky image tree
+# (train/valid/test) is regenerable via
+# scripts/build_condition_4class_classifier_dataset.py; dataset-metadata.json
+# and README.md ARE committed. The kernel-push staging copy is also ignored —
+# canonical notebook is kaggle/ground_condition_4class_classifier_train.ipynb,
+# which IS committed.
+kaggle/ground_condition_4class_classifier_dataset/train/
+kaggle/ground_condition_4class_classifier_dataset/valid/
+kaggle/ground_condition_4class_classifier_dataset/test/
+kaggle/ground_condition_4class_classifier_dataset/provenance/
+kaggle/ground_condition_4class_classifier_kernel/
+!datasets/ground_pv_research/reports/
+!datasets/ground_pv_research/reports/**
+# ...except the uncapped audit dump (tens of MB of near-dup pair lists)
+datasets/ground_pv_research/reports/*_full.json
+# Split provenance manifests / READMEs ARE committed (small text, needed to
+# trace every derived image and reproduce the leakage-clean split); only the
+# bulk image/label trees under splits/ stay ignored.
+!datasets/ground_pv_research/splits/
+!datasets/ground_pv_research/splits/**/
+!datasets/ground_pv_research/splits/**/*.csv
+!datasets/ground_pv_research/splits/**/*.md
+datasets/ground_pv_research/splits/**/images/
+datasets/ground_pv_research/splits/**/labels/
+# Candidate defect datasets (discovery/audit phase): raw Roboflow downloads
+# and the per-image fingerprint dumps are bulky and regenerable. The small
+# metadata / manifests / reports / overlap summaries ARE committed.
+datasets/ground_pv_research/candidate_defects/raw/
+datasets/ground_pv_research/candidate_defects/overlap/_fingerprints/
+
+# Phase 12 dataset-acquisition audit: sampled candidate downloads are bulky and
+# regenerable; only the reports/JSON/CSV under phase12_audit/ are committed.
+datasets/ground_pv_research/phase12_audit/samples/
+datasets/ground_pv_research/phase12_audit/_fingerprints/
+
+# Phase 13B beast training: Roboflow candidate raw download + the derived
+# beast dataset image/label trees are bulky and regenerable. The download
+# manifest, audit JSON, conversion metadata and reports ARE committed.
+datasets/ground_pv_research/candidate_acquisition/solar_panel_detection_ubwtz/*/
+datasets/ground_pv_research/yolo_beast_v1/susan/
+datasets/ground_pv_research/yolo_beast_v1/candidate/
+datasets/ground_pv_research/yolo_beast_v1/**/images/
+datasets/ground_pv_research/yolo_beast_v1/**/labels/
+kaggle/ground_beast_dataset/
+
+# Unified condition/defect research dataset (S1 + S3 -> 5 condition classes):
+# the materialized image/label tree is bulky and regenerable via
+# `python scripts/build_condition_dataset.py --overwrite`. The manifests,
+# splits, reports, taxonomy and raw_refs (all small-ish text) ARE committed
+# so every derived image stays traceable and the split is reproducible.
+datasets/ground_pv_research/condition/images/
+
+# Active 4-class condition dataset (Phase 15A, ELECTRICAL_DAMAGE removed from
+# the 5-class dataset above): same policy — the materialized image/label tree
+# is bulky and regenerable via `python scripts/build_condition_4class_dataset.py
+# --overwrite`. The manifests/ and reports/ (build report, dropped-images list,
+# taxonomy) ARE committed so the conversion stays traceable and reproducible.
+datasets/ground_pv_research/condition_4class_v1/images/
+
+# Phase 16-B classifier reformulation dataset (derived from condition_4class_v1
+# above via scripts/build_condition_4class_classifier_dataset.py — one
+# dominant label per image, ImageFolder layout). Same policy: the
+# materialized image tree is bulky and regenerable; classifier_labels_manifest.csv
+# and the sibling *_report.json (small) ARE committed so the derivation stays
+# traceable and reproducible.
+datasets/ground_pv_research/condition_4class_classifier_v1/train/
+datasets/ground_pv_research/condition_4class_classifier_v1/valid/
+datasets/ground_pv_research/condition_4class_classifier_v1/test/
+
+# Phase 14B representative panel dataset: raw source images, annotation label
+# files, and any derived/materialized image trees are bulky, first-party, and
+# regenerable/reproducible from the source manifest. The manifests/, splits/,
+# and reports/ subdirectories (small JSON/CSV/MD — source manifest, split
+# manifest, near-duplicate pairs, failure case registry, dataset report,
+# evaluation protocol) ARE committed so provenance and the audit verdict
+# stay traceable without the underlying bulk imagery.
+datasets/ground_pv_research/representative_panel_v1/raw/
+datasets/ground_pv_research/representative_panel_v1/annotations/
+datasets/ground_pv_research/representative_panel_v1/derived/
+
+# Ultralytics YOLO training runs and pretrained-checkpoint downloads
+runs/
+training/detection/runs/
+*.pt
+
 # Local runtime app data (SQLite inspection history — per-deployment, not project content)
 data/
+
+# Locally-staged Kaggle kernel packages (generated by training/cloud/kaggle, per-machine)
+training/cloud/runs/
 
 # Python
 __pycache__/
@@ -34,6 +169,10 @@ coverage.xml
 .env
 .streamlit/secrets.toml
 
+# Pi camera agent's real config (holds its per-camera API token) — only
+# pi_agent/config.example.yaml (no real token) is committed.
+pi_agent/config.yaml
+
 # Environments
 .venv/
 venv/
@@ -55,3 +194,22 @@ Thumbs.db
 
 # Streamlit
 .streamlit/secrets.toml
+
+# one-shot Kaggle upload staging (regenerable)
+kaggle/ground_condition_upload/
+
+# Phase 19: rooftop panel dataset (first-party photos; regenerable via scripts/build_rooftop_panel_dataset.py)
+datasets/ground_pv_research/rooftop_panel_v1/images/
+datasets/ground_pv_research/rooftop_panel_v1/labels/
+kaggle/rooftop_panel_dataset/images/
+kaggle/rooftop_panel_dataset/labels/
+
+# Phase 19 condition labeling crops (first-party photos; regenerable)
+datasets/ground_pv_research/rooftop_condition_v1/crops/
+
+# Phase 19-B rooftop condition top-up package (regenerable via
+# scripts/build_rooftop_condition_mix_package.py)
+kaggle/rooftop_condition_dataset/train/
+kaggle/rooftop_condition_dataset/valid/
+kaggle/rooftop_condition_dataset/test/
+kaggle/rooftop_condition_kernel/

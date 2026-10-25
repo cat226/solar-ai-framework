@@ -1,0 +1,25 @@
+{
+  "key": "S6_solar-panel-defects-b17u9_v4",
+  "workspace": "solarpanel2",
+  "project": "solar-panel-defects-b17u9",
+  "version": 4,
+  "export_format": "yolov8",
+  "license_shown_on_roboflow": "CC BY 4.0",
+  "downloaded_at_utc": "2026-09-08T06:09:45.018885+00:00",
+  "roboflow_url": "https://universe.roboflow.com/solarpanel2/solar-panel-defects-b17u9/dataset/4",
+  "image_count": 780,
+  "label_txt_count": 782,
+  "top_level_files": [
+    "README.dataset.txt",
+    "README.roboflow.txt",
+    "data.yaml"
+  ],
+  "top_level_dirs": [
+    "test",
+    "train",
+    "valid"
+  ],
+  "notes": [
+    "Raw immutable Roboflow export. Do not edit in place."
+  ]
+}

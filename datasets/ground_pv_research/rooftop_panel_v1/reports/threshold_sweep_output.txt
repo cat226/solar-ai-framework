@@ -1,0 +1,8 @@
+conf>=0.05: recall=0.958 (46/48)  precision=0.554  fp=37
+conf>=0.10: recall=0.938 (45/48)  precision=0.608  fp=29
+conf>=0.15: recall=0.896 (43/48)  precision=0.662  fp=22
+conf>=0.20: recall=0.854 (41/48)  precision=0.683  fp=19
+conf>=0.25: recall=0.812 (39/48)  precision=0.696  fp=17
+   missed per image: [('rooftop_rooftop_0018.jpg', 1), ('rooftop_rooftop_0019.jpg', 2), ('rooftop_rooftop_0020.jpg', 2), ('rooftop_rooftop_0021.jpg', 2), ('rooftop_rooftop_0037.jpg', 1), ('rooftop_rooftop_0039.jpg', 1)]
+conf>=0.30: recall=0.812 (39/48)  precision=0.709  fp=16
+conf>=0.40: recall=0.771 (37/48)  precision=0.787  fp=10

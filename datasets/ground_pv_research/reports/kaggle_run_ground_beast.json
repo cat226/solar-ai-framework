@@ -1,0 +1,80 @@
+{
+  "phase": "13B beast ground PANEL detector training",
+  "status": "BLOCKED (compute)",
+  "model_role": "RESEARCH ground PANEL detector experiments (0=panel 1=cracked 2=dusty). NOT production. NOT a condition model. Does not replace weights/yolo_solar.pt or weights/yolo_solar_ground_research_v1.pt.",
+  "baseline": {
+    "name": "ground_yolo11n_baseline_v1",
+    "checkpoint": "weights/yolo_solar_ground_research_v1.pt",
+    "sha256": "2b26334dc4023ba4c89a80e2350ddc9012358a48cdef713aee86c8e79a1bbb50",
+    "test_metrics": {
+      "precision": 0.8756,
+      "recall": 0.8014,
+      "mAP50": 0.8647,
+      "mAP50_95": 0.6775
+    }
+  },
+  "kaggle": {
+    "kernel": "edithstark/ground-beast-train",
+    "kernel_url": "https://www.kaggle.com/code/edithstark/ground-beast-train",
+    "kernel_version": 2,
+    "kernel_id": 133672402,
+    "datasets": [
+      "edithstark/solar-ai-ground-pv-research-v1",
+      "edithstark/solar-ai-ground-beast-candidate-v1"
+    ],
+    "candidate_dataset_content_sha256": "68fb0e2eca5ce320d6496c08560c7115b322ba8744277d8ec20b1af4ef1114bd",
+    "enable_gpu": true,
+    "account": "edithstark"
+  },
+  "candidate": {
+    "roboflow": "solar-panel-detection-bwpkx/solar-panel-detection-ubwtz v2 (native-resolution yolov8 export)",
+    "raw_download": "datasets/ground_pv_research/candidate_acquisition/solar_panel_detection_ubwtz/v2_native_yolov8 (immutable, gitignored)",
+    "raw_images": 563,
+    "raw_polygon_annotations": 1537,
+    "provenance_status": "UNRESOLVED - personal-experimental-unverified-provenance, research-only. NOT redistribution/publication/commercial/production cleared.",
+    "scene_analysis": "ONE ground-mounted installation, ONE capture session (2024-04-30, ~4 min). 2 video sequences (405 frames) + 96 burst-photo events. Independent physical scenes ~= 1.",
+    "native_aspect": "526 portrait / 37 landscape / 0 square (aspect 0.573-1.81) - FIRST non-square ground-level PV panel data we hold",
+    "selected_for_training": 125,
+    "selection": "drop 58 empty-label images; keep every 12th video frame + 1 image per burst timestamp; cap 130; ALL -> train split (1 scene)"
+  },
+  "derived_dataset": "datasets/ground_pv_research/yolo_beast_v1/ (Susan 6,492 immutable + 125 candidate frames; data_A = Susan only, data_BC = Susan train + candidate train, Susan valid/test)",
+  "experiments": {
+    "B": "Susan + 125 scene-capped candidate (train only), YOLO11n, imgsz 640, 90 epochs, patience 20, batch 16, v1 conservative aug",
+    "C": "Susan + candidate (train only), YOLO11n, imgsz 640, 90 epochs, patience 20, batch 16, moderate scale/aspect aug (scale 0.5, translate 0.15, degrees 7, mosaic 0.4, close_mosaic 15) - NO multi_scale",
+    "A": "NOT trained on Kaggle - Susan-only baseline done by re-evaluating the existing v1 checkpoint locally on the identical Susan test set"
+  },
+  "frozen_across_ABC": [
+    "YOLO11n architecture",
+    "COCO init",
+    "optimizer=auto",
+    "cos_lr",
+    "epochs=100",
+    "patience=25",
+    "seed=42",
+    "imgsz=640",
+    "Susan valid/test identical -> fair held-out comparison"
+  ],
+  "model_selection_rule": "NOT highest mAP. Hierarchy: (1) no catastrophic real-world regression (2) better real-world panel localization on the 6 owner photos (3) better held-out test (4) better recall w/o unacceptable FPs (5) better mAP50-95 (6) reasonable cost. A model that improves test mAP but fails the OOD holdout like v2 -> REJECT.",
+  "owner_photos": "NOT training data. NOT pseudo-labelled. NOT in validation. NOT used for threshold tuning. Qualitative OOD holdout only.",
+  "git_commit_at_launch": "ee0240ae83129fae9f8c3ed148aa1a446289d3c2",
+  "results": {
+    "v1_notebook": "HUNG >17h no output (over-scoped: A/B/C + 27-pass threshold sweep). Cancelled.",
+    "v2_notebook": "ran >9h no output on the Kaggle accelerator (status RUNNING, lastRunTime null); far beyond ~2-4h expected. No retrievable checkpoint.",
+    "experiment_A_local": {
+      "protocol": "local re-eval of weights/yolo_solar_ground_research_v1.pt on Susan test",
+      "test": {
+        "precision": 0.8756,
+        "recall": 0.8014,
+        "mAP50": 0.8647,
+        "mAP50_95": 0.6775
+      },
+      "reproduces_v1": true
+    },
+    "experiment_B": "BLOCKED (compute)",
+    "experiment_C": "BLOCKED (compute)",
+    "model_decision": "C - keep v1 (no completed challenger; candidate adds ~1 scene = 2.7% of training, cannot re-shape the square-image manifold)",
+    "production_disposition": "v1 remains the ground panel detector"
+  },
+  "v1_run_note": "v1 of the notebook (3 experiments A/B/C + 27-pass threshold sweep) HUNG on Kaggle GPU for >17h with no output. Over-scoped for one session. Cancelled by pushing v2.",
+  "threshold_sweep": "done locally on the downloaded checkpoints (Susan val), not in the notebook"
+}

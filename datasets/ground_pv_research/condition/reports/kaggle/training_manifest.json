@@ -1,0 +1,265 @@
+{
+  "experiment_name": "condition_yolo11n_baseline_v1",
+  "model_role": "EXPERIMENTAL RESEARCH condition/defect detector (second stage, on panel crops) \u2014 NOT a panel detector, NOT production",
+  "dataset_kaggle": "edithstark/solar-ai-ground-condition-research-v1",
+  "dataset_sources": [
+    "Roboflow defects-kgig6/detection-for-defects-in-solar-panels v2",
+    "Roboflow solar-panel-a5cyn/dusty-and-bird-droppings v1"
+  ],
+  "provenance_grade": "C",
+  "provenance_tag": "personal-experimental-unverified-provenance",
+  "provenance_warning": "underlying images trace to Kaggle pythonafroz/solar-panel-images (licence Unknown); do NOT redistribute/publish/use commercially/claim verified CC BY",
+  "electrical_damage_semantic_risk": "HIGH \u2014 S1 electrical-damage boxes visually correspond to cell cracks; label preserved, not relabelled; high score is NOT electrical-fault diagnosis",
+  "clean_semantic_limitation": "CLEAN trained only on explicit clean-region annotations; absence of a defect detection is NOT proof of Clean; no CLEAN boxes fabricated",
+  "classes": {
+    "0": "CLEAN",
+    "1": "DUSTY",
+    "2": "BIRD_DROP",
+    "3": "PHYSICAL_DAMAGE",
+    "4": "ELECTRICAL_DAMAGE"
+  },
+  "base_model": "yolo11n.pt",
+  "pretrained_source": "YOLO11n COCO-pretrained (Ultralytics)",
+  "epochs": 100,
+  "imgsz": 640,
+  "batch": -1,
+  "patience": 20,
+  "optimizer": "auto",
+  "cos_lr": true,
+  "seed": 42,
+  "augmentation": {
+    "hsv_h": 0.015,
+    "hsv_s": 0.4,
+    "hsv_v": 0.4,
+    "degrees": 5.0,
+    "translate": 0.1,
+    "scale": 0.3,
+    "shear": 0.0,
+    "perspective": 0.0,
+    "flipud": 0.0,
+    "fliplr": 0.5,
+    "mosaic": 0.5,
+    "mixup": 0.0,
+    "copy_paste": 0.0
+  },
+  "full_train_args": {
+    "data": "/kaggle/working/ground_condition_data.yaml",
+    "epochs": "100",
+    "imgsz": "640",
+    "patience": "20",
+    "seed": "42",
+    "batch": "-1",
+    "device": "0",
+    "project": "/kaggle/working/research_runs/ground_condition",
+    "name": "condition_yolo11n_baseline_v1",
+    "exist_ok": "True",
+    "pretrained": "True",
+    "cos_lr": "True",
+    "optimizer": "auto",
+    "verbose": "True",
+    "val": "True",
+    "hsv_h": "0.015",
+    "hsv_s": "0.4",
+    "hsv_v": "0.4",
+    "degrees": "5.0",
+    "translate": "0.1",
+    "scale": "0.3",
+    "shear": "0.0",
+    "perspective": "0.0",
+    "flipud": "0.0",
+    "fliplr": "0.5",
+    "mosaic": "0.5",
+    "mixup": "0.0",
+    "copy_paste": "0.0"
+  },
+  "device": "cuda:0",
+  "env": {
+    "python": "3.12.13",
+    "torch": "2.7.1+cu126",
+    "torchvision": "0.22.1+cu126",
+    "cuda": "12.6",
+    "ultralytics": "8.4.138",
+    "gpu": "Tesla P100-PCIE-16GB",
+    "gpu_capability": "6.0",
+    "gpu_memory_gb": 17.1
+  },
+  "dataset_hashes": {
+    "split_manifest_sha256": "9eb47dd2ec418114e74d8f9a233b3e82b72066cb2b5a500c96fa9107388488db",
+    "taxonomy_sha256": "4be303ba82cd12ac097810f75dc758d5c8c89c2ac0a83433e3f05dbe8274623f",
+    "package_dataset_content_sha256": "dcebb5e7705305176845adc4e215c92c16a3b666a8d04148f3cd0b142dba2a74",
+    "package_data_yaml_sha256": "5fb557b8dcbd2e4e83b3016080dbbfc6f19923012eefd429e15e4d640c860d8b"
+  },
+  "dataset_stats": {
+    "train": {
+      "images": 1757,
+      "instances": {
+        "DUSTY": 6050,
+        "BIRD_DROP": 5500,
+        "ELECTRICAL_DAMAGE": 767,
+        "CLEAN": 4209,
+        "PHYSICAL_DAMAGE": 481
+      },
+      "images_with_class": {
+        "BIRD_DROP": 737,
+        "ELECTRICAL_DAMAGE": 340,
+        "DUSTY": 959,
+        "CLEAN": 639,
+        "PHYSICAL_DAMAGE": 205
+      },
+      "unique_families_per_class": {
+        "BIRD_DROP": 411,
+        "DUSTY": 597,
+        "CLEAN": 349,
+        "ELECTRICAL_DAMAGE": 225,
+        "PHYSICAL_DAMAGE": 142
+      }
+    },
+    "valid": {
+      "images": 502,
+      "instances": {
+        "CLEAN": 1246,
+        "DUSTY": 1637,
+        "PHYSICAL_DAMAGE": 166,
+        "BIRD_DROP": 1516,
+        "ELECTRICAL_DAMAGE": 208
+      },
+      "images_with_class": {
+        "CLEAN": 184,
+        "DUSTY": 261,
+        "PHYSICAL_DAMAGE": 79,
+        "BIRD_DROP": 194,
+        "ELECTRICAL_DAMAGE": 95
+      },
+      "unique_families_per_class": {
+        "BIRD_DROP": 118,
+        "CLEAN": 106,
+        "DUSTY": 163,
+        "ELECTRICAL_DAMAGE": 61,
+        "PHYSICAL_DAMAGE": 52
+      }
+    },
+    "test": {
+      "images": 250,
+      "instances": {
+        "DUSTY": 863,
+        "BIRD_DROP": 726,
+        "CLEAN": 545,
+        "ELECTRICAL_DAMAGE": 144,
+        "PHYSICAL_DAMAGE": 78
+      },
+      "images_with_class": {
+        "DUSTY": 144,
+        "CLEAN": 95,
+        "ELECTRICAL_DAMAGE": 44,
+        "BIRD_DROP": 100,
+        "PHYSICAL_DAMAGE": 30
+      },
+      "unique_families_per_class": {
+        "BIRD_DROP": 56,
+        "CLEAN": 53,
+        "DUSTY": 90,
+        "PHYSICAL_DAMAGE": 18,
+        "ELECTRICAL_DAMAGE": 31
+      }
+    }
+  },
+  "train_seconds": 2917.6660890579224,
+  "best_epoch": 98,
+  "total_epochs": 100,
+  "run_dir": "/kaggle/working/research_runs/ground_condition/condition_yolo11n_baseline_v1",
+  "val_metrics": {
+    "precision": 0.6237085927890307,
+    "recall": 0.4792776382597287,
+    "mAP50": 0.5204910082154944,
+    "mAP50_95": 0.27923949404088505
+  },
+  "test_metrics": {
+    "precision": 0.623026736166948,
+    "recall": 0.4490730100886795,
+    "mAP50": 0.4717825268564531,
+    "mAP50_95": 0.25397802536273534
+  },
+  "per_class": {
+    "val": {
+      "CLEAN": {
+        "precision": 0.6549898812348115,
+        "recall": 0.5254000583919364,
+        "AP50": 0.5762607623747602,
+        "AP50_95": 0.35814921665753163
+      },
+      "DUSTY": {
+        "precision": 0.5052824064206871,
+        "recall": 0.3427000610873549,
+        "AP50": 0.3829177354256865,
+        "AP50_95": 0.17112944694325377
+      },
+      "BIRD_DROP": {
+        "precision": 0.5286539318896729,
+        "recall": 0.3355393778954335,
+        "AP50": 0.3468725693278472,
+        "AP50_95": 0.13938828412348256
+      },
+      "PHYSICAL_DAMAGE": {
+        "precision": 0.725419933797268,
+        "recall": 0.6204819277108434,
+        "AP50": 0.6738469418276426,
+        "AP50_95": 0.3562973402098645
+      },
+      "ELECTRICAL_DAMAGE": {
+        "precision": 0.7041968106027146,
+        "recall": 0.5722667662130758,
+        "AP50": 0.6225570321215355,
+        "AP50_95": 0.37123318227029267
+      }
+    },
+    "test": {
+      "CLEAN": {
+        "precision": 0.5897178139030844,
+        "recall": 0.49673085765736663,
+        "AP50": 0.5161637581792644,
+        "AP50_95": 0.334835438382589,
+        "test_images_with_class": 95,
+        "test_instances": 545,
+        "test_unique_families": 53
+      },
+      "DUSTY": {
+        "precision": 0.49253220412067,
+        "recall": 0.34762456546929316,
+        "AP50": 0.3576618458954834,
+        "AP50_95": 0.1627148019632285,
+        "test_images_with_class": 144,
+        "test_instances": 863,
+        "test_unique_families": 90
+      },
+      "BIRD_DROP": {
+        "precision": 0.5654280716682661,
+        "recall": 0.3203030249871966,
+        "AP50": 0.37402831248338175,
+        "AP50_95": 0.1493752472514514,
+        "test_images_with_class": 100,
+        "test_instances": 726,
+        "test_unique_families": 56
+      },
+      "PHYSICAL_DAMAGE": {
+        "precision": 0.6595129589205206,
+        "recall": 0.5256410256410257,
+        "AP50": 0.5227672160480252,
+        "AP50_95": 0.2749808304001572,
+        "test_images_with_class": 30,
+        "test_instances": 78,
+        "test_unique_families": 18
+      },
+      "ELECTRICAL_DAMAGE": {
+        "precision": 0.8079426322221993,
+        "recall": 0.5550655766885154,
+        "AP50": 0.5882915016761108,
+        "AP50_95": 0.3479838088162508,
+        "test_images_with_class": 44,
+        "test_instances": 144,
+        "test_unique_families": 31
+      }
+    }
+  },
+  "checkpoint_sha256": "b077251a514424481d51b6a57ebcc30f4a607ea7559053cbb3ef7d0de88f9578",
+  "last_checkpoint_sha256": "da0e1b344271c4d00ed1b106ba64f927fb48755e3f95c97c414350604919e927"
+}

@@ -1,0 +1,658 @@
+{
+  "generated_utc": "2026-09-08T06:16:47.170308+00:00",
+  "method": "exact SHA-256 + 16x16 dHash Hamming<=6 + source-basename (Roboflow .rf. suffix stripped) + image dimensions",
+  "existing_reference_sets": {
+    "existing_derived_yolo_6492": 6492,
+    "existing_raw_susan_bw945_v1": 6493
+  },
+  "candidate_counts": {
+    "C1_solar-panel-defect-w1dfi_v8": 1368,
+    "C3_solar-panel4_v2": 1738,
+    "S1_detection-for-defects_v2": 1963,
+    "S3_dusty-and-bird-droppings_v1": 710,
+    "S4_anomalies-bird-drop_v1": 120,
+    "S6_solar-panel-defects-b17u9_v4": 780
+  },
+  "within_candidate": {
+    "C1_solar-panel-defect-w1dfi_v8": {
+      "images": 1368,
+      "distinct_basenames": 570,
+      "distinct_sha256": 1368,
+      "exact_dup_images_within": 0,
+      "largest_basename_family": 3,
+      "est_unique_source_images": 570,
+      "dimensions": {
+        "640x640": 1368
+      }
+    },
+    "C3_solar-panel4_v2": {
+      "images": 1738,
+      "distinct_basenames": 720,
+      "distinct_sha256": 1737,
+      "exact_dup_images_within": 1,
+      "largest_basename_family": 7,
+      "est_unique_source_images": 720,
+      "dimensions": {
+        "640x640": 1738
+      }
+    },
+    "S1_detection-for-defects_v2": {
+      "images": 1963,
+      "distinct_basenames": 817,
+      "distinct_sha256": 1961,
+      "exact_dup_images_within": 2,
+      "largest_basename_family": 6,
+      "est_unique_source_images": 817,
+      "dimensions": {
+        "640x640": 1963
+      }
+    },
+    "S3_dusty-and-bird-droppings_v1": {
+      "images": 710,
+      "distinct_basenames": 710,
+      "distinct_sha256": 705,
+      "exact_dup_images_within": 5,
+      "largest_basename_family": 1,
+      "est_unique_source_images": 710,
+      "dimensions": {
+        "640x640": 710
+      }
+    },
+    "S4_anomalies-bird-drop_v1": {
+      "images": 120,
+      "distinct_basenames": 120,
+      "distinct_sha256": 119,
+      "exact_dup_images_within": 1,
+      "largest_basename_family": 1,
+      "est_unique_source_images": 120,
+      "dimensions": {
+        "474x632": 5,
+        "1024x768": 4,
+        "720x960": 4,
+        "474x355": 4,
+        "259x194": 3,
+        "980x735": 3,
+        "2016x1512": 3,
+        "800x600": 3
+      }
+    },
+    "S6_solar-panel-defects-b17u9_v4": {
+      "images": 780,
+      "distinct_basenames": 691,
+      "distinct_sha256": 779,
+      "exact_dup_images_within": 1,
+      "largest_basename_family": 3,
+      "est_unique_source_images": 691,
+      "dimensions": {
+        "640x640": 780
+      }
+    }
+  },
+  "matrix": {
+    "C1_solar-panel-defect-w1dfi_v8": {
+      "existing_derived_yolo_6492": {
+        "a_label": "C1_solar-panel-defect-w1dfi_v8",
+        "b_label": "existing_derived_yolo_6492",
+        "a_count": 1368,
+        "b_count": 6492,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 27,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 27,
+        "a_images_overlap_fraction": 0.0197
+      },
+      "existing_raw_susan_bw945_v1": {
+        "a_label": "C1_solar-panel-defect-w1dfi_v8",
+        "b_label": "existing_raw_susan_bw945_v1",
+        "a_count": 1368,
+        "b_count": 6493,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 27,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 27,
+        "a_images_overlap_fraction": 0.0197
+      },
+      "C3_solar-panel4_v2": {
+        "a_label": "C1_solar-panel-defect-w1dfi_v8",
+        "b_label": "C3_solar-panel4_v2",
+        "a_count": 1368,
+        "b_count": 1738,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 258,
+        "exact_a_images": 258,
+        "perceptual_near_dup_a_images": 272,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 272,
+        "a_images_overlap_fraction": 0.1988
+      },
+      "S1_detection-for-defects_v2": {
+        "a_label": "C1_solar-panel-defect-w1dfi_v8",
+        "b_label": "S1_detection-for-defects_v2",
+        "a_count": 1368,
+        "b_count": 1963,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 256,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 256,
+        "a_images_overlap_fraction": 0.1871
+      },
+      "S3_dusty-and-bird-droppings_v1": {
+        "a_label": "C1_solar-panel-defect-w1dfi_v8",
+        "b_label": "S3_dusty-and-bird-droppings_v1",
+        "a_count": 1368,
+        "b_count": 710,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 68,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 68,
+        "a_images_overlap_fraction": 0.0497
+      },
+      "S4_anomalies-bird-drop_v1": {
+        "a_label": "C1_solar-panel-defect-w1dfi_v8",
+        "b_label": "S4_anomalies-bird-drop_v1",
+        "a_count": 1368,
+        "b_count": 120,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 34,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 34,
+        "a_images_overlap_fraction": 0.0249
+      },
+      "S6_solar-panel-defects-b17u9_v4": {
+        "a_label": "C1_solar-panel-defect-w1dfi_v8",
+        "b_label": "S6_solar-panel-defects-b17u9_v4",
+        "a_count": 1368,
+        "b_count": 780,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 70,
+        "exact_a_images": 70,
+        "perceptual_near_dup_a_images": 549,
+        "shared_basename_a_images": 800,
+        "a_images_overlapping_by_any_signal": 1008,
+        "a_images_overlap_fraction": 0.7368
+      }
+    },
+    "C3_solar-panel4_v2": {
+      "existing_derived_yolo_6492": {
+        "a_label": "C3_solar-panel4_v2",
+        "b_label": "existing_derived_yolo_6492",
+        "a_count": 1738,
+        "b_count": 6492,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 22,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 22,
+        "a_images_overlap_fraction": 0.0127
+      },
+      "existing_raw_susan_bw945_v1": {
+        "a_label": "C3_solar-panel4_v2",
+        "b_label": "existing_raw_susan_bw945_v1",
+        "a_count": 1738,
+        "b_count": 6493,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 22,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 22,
+        "a_images_overlap_fraction": 0.0127
+      },
+      "C1_solar-panel-defect-w1dfi_v8": {
+        "a_label": "C3_solar-panel4_v2",
+        "b_label": "C1_solar-panel-defect-w1dfi_v8",
+        "a_count": 1738,
+        "b_count": 1368,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 258,
+        "exact_a_images": 258,
+        "perceptual_near_dup_a_images": 279,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 279,
+        "a_images_overlap_fraction": 0.1605
+      },
+      "S1_detection-for-defects_v2": {
+        "a_label": "C3_solar-panel4_v2",
+        "b_label": "S1_detection-for-defects_v2",
+        "a_count": 1738,
+        "b_count": 1963,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 596,
+        "shared_basename_a_images": 1724,
+        "a_images_overlapping_by_any_signal": 1728,
+        "a_images_overlap_fraction": 0.9942
+      },
+      "S3_dusty-and-bird-droppings_v1": {
+        "a_label": "C3_solar-panel4_v2",
+        "b_label": "S3_dusty-and-bird-droppings_v1",
+        "a_count": 1738,
+        "b_count": 710,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 152,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 152,
+        "a_images_overlap_fraction": 0.0875
+      },
+      "S4_anomalies-bird-drop_v1": {
+        "a_label": "C3_solar-panel4_v2",
+        "b_label": "S4_anomalies-bird-drop_v1",
+        "a_count": 1738,
+        "b_count": 120,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 105,
+        "shared_basename_a_images": 181,
+        "a_images_overlapping_by_any_signal": 233,
+        "a_images_overlap_fraction": 0.1341
+      },
+      "S6_solar-panel-defects-b17u9_v4": {
+        "a_label": "C3_solar-panel4_v2",
+        "b_label": "S6_solar-panel-defects-b17u9_v4",
+        "a_count": 1738,
+        "b_count": 780,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 5,
+        "exact_a_images": 5,
+        "perceptual_near_dup_a_images": 270,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 270,
+        "a_images_overlap_fraction": 0.1554
+      }
+    },
+    "S1_detection-for-defects_v2": {
+      "existing_derived_yolo_6492": {
+        "a_label": "S1_detection-for-defects_v2",
+        "b_label": "existing_derived_yolo_6492",
+        "a_count": 1963,
+        "b_count": 6492,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 31,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 31,
+        "a_images_overlap_fraction": 0.0158
+      },
+      "existing_raw_susan_bw945_v1": {
+        "a_label": "S1_detection-for-defects_v2",
+        "b_label": "existing_raw_susan_bw945_v1",
+        "a_count": 1963,
+        "b_count": 6493,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 31,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 31,
+        "a_images_overlap_fraction": 0.0158
+      },
+      "C1_solar-panel-defect-w1dfi_v8": {
+        "a_label": "S1_detection-for-defects_v2",
+        "b_label": "C1_solar-panel-defect-w1dfi_v8",
+        "a_count": 1963,
+        "b_count": 1368,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 270,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 270,
+        "a_images_overlap_fraction": 0.1375
+      },
+      "C3_solar-panel4_v2": {
+        "a_label": "S1_detection-for-defects_v2",
+        "b_label": "C3_solar-panel4_v2",
+        "a_count": 1963,
+        "b_count": 1738,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 608,
+        "shared_basename_a_images": 1728,
+        "a_images_overlapping_by_any_signal": 1743,
+        "a_images_overlap_fraction": 0.8879
+      },
+      "S3_dusty-and-bird-droppings_v1": {
+        "a_label": "S1_detection-for-defects_v2",
+        "b_label": "S3_dusty-and-bird-droppings_v1",
+        "a_count": 1963,
+        "b_count": 710,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 169,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 169,
+        "a_images_overlap_fraction": 0.0861
+      },
+      "S4_anomalies-bird-drop_v1": {
+        "a_label": "S1_detection-for-defects_v2",
+        "b_label": "S4_anomalies-bird-drop_v1",
+        "a_count": 1963,
+        "b_count": 120,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 102,
+        "shared_basename_a_images": 187,
+        "a_images_overlapping_by_any_signal": 241,
+        "a_images_overlap_fraction": 0.1228
+      },
+      "S6_solar-panel-defects-b17u9_v4": {
+        "a_label": "S1_detection-for-defects_v2",
+        "b_label": "S6_solar-panel-defects-b17u9_v4",
+        "a_count": 1963,
+        "b_count": 780,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 266,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 266,
+        "a_images_overlap_fraction": 0.1355
+      }
+    },
+    "S3_dusty-and-bird-droppings_v1": {
+      "existing_derived_yolo_6492": {
+        "a_label": "S3_dusty-and-bird-droppings_v1",
+        "b_label": "existing_derived_yolo_6492",
+        "a_count": 710,
+        "b_count": 6492,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 2,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 2,
+        "a_images_overlap_fraction": 0.0028
+      },
+      "existing_raw_susan_bw945_v1": {
+        "a_label": "S3_dusty-and-bird-droppings_v1",
+        "b_label": "existing_raw_susan_bw945_v1",
+        "a_count": 710,
+        "b_count": 6493,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 2,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 2,
+        "a_images_overlap_fraction": 0.0028
+      },
+      "C1_solar-panel-defect-w1dfi_v8": {
+        "a_label": "S3_dusty-and-bird-droppings_v1",
+        "b_label": "C1_solar-panel-defect-w1dfi_v8",
+        "a_count": 710,
+        "b_count": 1368,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 76,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 76,
+        "a_images_overlap_fraction": 0.107
+      },
+      "C3_solar-panel4_v2": {
+        "a_label": "S3_dusty-and-bird-droppings_v1",
+        "b_label": "C3_solar-panel4_v2",
+        "a_count": 710,
+        "b_count": 1738,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 169,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 169,
+        "a_images_overlap_fraction": 0.238
+      },
+      "S1_detection-for-defects_v2": {
+        "a_label": "S3_dusty-and-bird-droppings_v1",
+        "b_label": "S1_detection-for-defects_v2",
+        "a_count": 710,
+        "b_count": 1963,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 185,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 185,
+        "a_images_overlap_fraction": 0.2606
+      },
+      "S4_anomalies-bird-drop_v1": {
+        "a_label": "S3_dusty-and-bird-droppings_v1",
+        "b_label": "S4_anomalies-bird-drop_v1",
+        "a_count": 710,
+        "b_count": 120,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 58,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 58,
+        "a_images_overlap_fraction": 0.0817
+      },
+      "S6_solar-panel-defects-b17u9_v4": {
+        "a_label": "S3_dusty-and-bird-droppings_v1",
+        "b_label": "S6_solar-panel-defects-b17u9_v4",
+        "a_count": 710,
+        "b_count": 780,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 77,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 77,
+        "a_images_overlap_fraction": 0.1085
+      }
+    },
+    "S4_anomalies-bird-drop_v1": {
+      "existing_derived_yolo_6492": {
+        "a_label": "S4_anomalies-bird-drop_v1",
+        "b_label": "existing_derived_yolo_6492",
+        "a_count": 120,
+        "b_count": 6492,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 0,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 0,
+        "a_images_overlap_fraction": 0.0
+      },
+      "existing_raw_susan_bw945_v1": {
+        "a_label": "S4_anomalies-bird-drop_v1",
+        "b_label": "existing_raw_susan_bw945_v1",
+        "a_count": 120,
+        "b_count": 6493,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 0,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 0,
+        "a_images_overlap_fraction": 0.0
+      },
+      "C1_solar-panel-defect-w1dfi_v8": {
+        "a_label": "S4_anomalies-bird-drop_v1",
+        "b_label": "C1_solar-panel-defect-w1dfi_v8",
+        "a_count": 120,
+        "b_count": 1368,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 41,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 41,
+        "a_images_overlap_fraction": 0.3417
+      },
+      "C3_solar-panel4_v2": {
+        "a_label": "S4_anomalies-bird-drop_v1",
+        "b_label": "C3_solar-panel4_v2",
+        "a_count": 120,
+        "b_count": 1738,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 105,
+        "shared_basename_a_images": 77,
+        "a_images_overlapping_by_any_signal": 112,
+        "a_images_overlap_fraction": 0.9333
+      },
+      "S1_detection-for-defects_v2": {
+        "a_label": "S4_anomalies-bird-drop_v1",
+        "b_label": "S1_detection-for-defects_v2",
+        "a_count": 120,
+        "b_count": 1963,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 100,
+        "shared_basename_a_images": 81,
+        "a_images_overlapping_by_any_signal": 115,
+        "a_images_overlap_fraction": 0.9583
+      },
+      "S3_dusty-and-bird-droppings_v1": {
+        "a_label": "S4_anomalies-bird-drop_v1",
+        "b_label": "S3_dusty-and-bird-droppings_v1",
+        "a_count": 120,
+        "b_count": 710,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 48,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 48,
+        "a_images_overlap_fraction": 0.4
+      },
+      "S6_solar-panel-defects-b17u9_v4": {
+        "a_label": "S4_anomalies-bird-drop_v1",
+        "b_label": "S6_solar-panel-defects-b17u9_v4",
+        "a_count": 120,
+        "b_count": 780,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 41,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 41,
+        "a_images_overlap_fraction": 0.3417
+      }
+    },
+    "S6_solar-panel-defects-b17u9_v4": {
+      "existing_derived_yolo_6492": {
+        "a_label": "S6_solar-panel-defects-b17u9_v4",
+        "b_label": "existing_derived_yolo_6492",
+        "a_count": 780,
+        "b_count": 6492,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 30,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 30,
+        "a_images_overlap_fraction": 0.0385
+      },
+      "existing_raw_susan_bw945_v1": {
+        "a_label": "S6_solar-panel-defects-b17u9_v4",
+        "b_label": "existing_raw_susan_bw945_v1",
+        "a_count": 780,
+        "b_count": 6493,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 30,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 30,
+        "a_images_overlap_fraction": 0.0385
+      },
+      "C1_solar-panel-defect-w1dfi_v8": {
+        "a_label": "S6_solar-panel-defects-b17u9_v4",
+        "b_label": "C1_solar-panel-defect-w1dfi_v8",
+        "a_count": 780,
+        "b_count": 1368,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 71,
+        "exact_a_images": 71,
+        "perceptual_near_dup_a_images": 665,
+        "shared_basename_a_images": 381,
+        "a_images_overlapping_by_any_signal": 716,
+        "a_images_overlap_fraction": 0.9179
+      },
+      "C3_solar-panel4_v2": {
+        "a_label": "S6_solar-panel-defects-b17u9_v4",
+        "b_label": "C3_solar-panel4_v2",
+        "a_count": 780,
+        "b_count": 1738,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 5,
+        "exact_a_images": 5,
+        "perceptual_near_dup_a_images": 317,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 317,
+        "a_images_overlap_fraction": 0.4064
+      },
+      "S1_detection-for-defects_v2": {
+        "a_label": "S6_solar-panel-defects-b17u9_v4",
+        "b_label": "S1_detection-for-defects_v2",
+        "a_count": 780,
+        "b_count": 1963,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 302,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 302,
+        "a_images_overlap_fraction": 0.3872
+      },
+      "S3_dusty-and-bird-droppings_v1": {
+        "a_label": "S6_solar-panel-defects-b17u9_v4",
+        "b_label": "S3_dusty-and-bird-droppings_v1",
+        "a_count": 780,
+        "b_count": 710,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 86,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 86,
+        "a_images_overlap_fraction": 0.1103
+      },
+      "S4_anomalies-bird-drop_v1": {
+        "a_label": "S6_solar-panel-defects-b17u9_v4",
+        "b_label": "S4_anomalies-bird-drop_v1",
+        "a_count": 780,
+        "b_count": 120,
+        "near_dup_hamming_threshold": 6,
+        "exact_sha_matches": 0,
+        "exact_a_images": 0,
+        "perceptual_near_dup_a_images": 47,
+        "shared_basename_a_images": 0,
+        "a_images_overlapping_by_any_signal": 47,
+        "a_images_overlap_fraction": 0.0603
+      }
+    }
+  },
+  "key_findings": [
+    "Every candidate overlaps the EXISTING Solar AI ground data (Susan bw945 / derived) by only 0-4% (no exact, no shared basename) - the few % perceptual hits are coincidental close-up-panel texture collisions. Candidates would add genuinely new images relative to the existing set.",
+    "S1 superset-contains C3 (99%) and S4 (96%). C3 and S4 add ~no independent images over S1.",
+    "C1 and S6 share 74-92% of images (one 'Defective/Non-Defective' source pool).",
+    "S3 is the most independent: 9-26% overlap with the others; distinct 'Imgdirty_*' filenames.",
+    "Realistic pool of independent, license-passing images across ALL candidates: ~1,900-2,100 unique, concentrated in dusty/bird-drop/clean. Physical_damage ~350-400 unique; ELECTRICAL_DAMAGE ~200-230 unique (the binding constraint)."
+  ]
+}

@@ -1,0 +1,674 @@
+{
+  "raw": {
+    "workspace": {
+      "name": "defects",
+      "url": "defects-kgig6"
+    },
+    "project": {
+      "id": "defects-kgig6/detection-for-defects-in-solar-panels",
+      "type": "object-detection",
+      "name": "Detection for defects in solar panels ",
+      "created": 1686387852.315,
+      "updated": 1691163487.474,
+      "images": 821,
+      "unannotated": 0,
+      "annotation": "defects",
+      "versions": 10,
+      "public": true,
+      "license": "CC BY 4.0",
+      "splits": {
+        "valid": 120,
+        "test": 101,
+        "train": 600
+      },
+      "colors": {
+        "defects": "#C7FC00",
+        "bird-drop": "#8622FF",
+        "`": "#FE0056",
+        "\\": "#00FFCE",
+        "dusty": "#FF8000",
+        "physical-damage": "#00B7EB",
+        "electrical-damage": "#FFFF00",
+        "snow-covered": "#FF00FF",
+        "clean": "#0E7AFE"
+      },
+      "classes": {
+        "bird-drop": 1518,
+        "electrical-damage": 207,
+        "snow-covered": 1299,
+        "clean": 1107,
+        "physical-damage": 169,
+        "dusty": 1460
+      },
+      "icon": {
+        "original": "https://source.roboflow.com/51WsTlqWwNfxSKgBdBOI/ssayr7JO2zXreVKorf6D/original.jpg",
+        "thumb": "https://source.roboflow.com/51WsTlqWwNfxSKgBdBOI/ssayr7JO2zXreVKorf6D/thumb.jpg",
+        "annotation": "https://source.roboflow.com/51WsTlqWwNfxSKgBdBOI/ssayr7JO2zXreVKorf6D/annotation-defects.png"
+      },
+      "preprocessing": {
+        "auto-orient": true,
+        "resize": {
+          "format": "Stretch to",
+          "width": 640,
+          "height": 640
+        },
+        "contrast": {
+          "type": "Contrast Stretching"
+        },
+        "isolate": true
+      },
+      "augmentation": {
+        "image": {
+          "versions": 3
+        },
+        "mosaic": true,
+        "flip": {
+          "horizontal": true,
+          "vertical": true
+        },
+        "ninety": {
+          "clockwise": true,
+          "counter-clockwise": true,
+          "upside-down": false
+        },
+        "rotate": {
+          "degrees": 15
+        }
+      }
+    },
+    "versions": [
+      {
+        "id": "defects-kgig6/detection-for-defects-in-solar-panels/10",
+        "name": "2023-06-16 4:51pm",
+        "created": 1686919925.926,
+        "images": 14478,
+        "splits": {
+          "valid": 761,
+          "test": 640,
+          "train": 13077
+        },
+        "generating": false,
+        "progress": 1,
+        "model": {
+          "id": "detection-for-defects-in-solar-panels/10",
+          "endpoint": "https://serverless.roboflow.com/detection-for-defects-in-solar-panels/10",
+          "start": 1686925748.167,
+          "end": 1686925748.167,
+          "fromScratch": true,
+          "tfjs": true,
+          "oak": false,
+          "map": "50.89",
+          "recall": "49.73",
+          "precision": "74.82"
+        },
+        "preprocessing": {
+          "isolate": true,
+          "auto-orient": true,
+          "contrast": {
+            "type": "Contrast Stretching"
+          },
+          "resize": {
+            "format": "Stretch to",
+            "width": 640,
+            "height": 640
+          }
+        },
+        "augmentation": {
+          "image": {
+            "versions": 3
+          },
+          "rotate": {
+            "degrees": 15
+          },
+          "ninety": {
+            "clockwise": true,
+            "counter-clockwise": true,
+            "upside-down": false
+          },
+          "mosaic": true,
+          "flip": {
+            "horizontal": true,
+            "vertical": true
+          }
+        },
+        "exports": [
+          "clip",
+          "coco",
+          "coco-mmdetection",
+          "createml",
+          "darknet",
+          "florence2-od",
+          "multiclass",
+          "tensorflow",
+          "yolov11",
+          "yolov12",
+          "yolov5-obb",
+          "yolov5pytorch",
+          "yolov7pytorch",
+          "yolov8",
+          "yolov8-obb",
+          "yolov9"
+        ]
+      },
+      {
+        "id": "defects-kgig6/detection-for-defects-in-solar-panels/9",
+        "name": "2023-06-16 4:20pm",
+        "created": 1686918081.117,
+        "images": 14478,
+        "splits": {
+          "valid": 761,
+          "test": 640,
+          "train": 13077
+        },
+        "generating": false,
+        "progress": 1,
+        "preprocessing": {
+          "isolate": true,
+          "auto-orient": true,
+          "contrast": {
+            "type": "Contrast Stretching"
+          },
+          "resize": {
+            "width": 640,
+            "format": "Stretch to",
+            "height": 640
+          }
+        },
+        "augmentation": {
+          "image": {
+            "versions": 3
+          },
+          "ninety": {
+            "clockwise": true,
+            "upside-down": false,
+            "counter-clockwise": true
+          },
+          "mosaic": true,
+          "flip": {
+            "horizontal": true,
+            "vertical": true
+          }
+        },
+        "exports": [
+          "coco",
+          "yolov8"
+        ]
+      },
+      {
+        "id": "defects-kgig6/detection-for-defects-in-solar-panels/8",
+        "name": "2023-06-16 3:01pm",
+        "created": 1686913313.359,
+        "images": 14478,
+        "splits": {
+          "valid": 761,
+          "test": 640,
+          "train": 13077
+        },
+        "generating": false,
+        "progress": 1,
+        "model": {
+          "id": "detection-for-defects-in-solar-panels/8",
+          "endpoint": "https://serverless.roboflow.com/detection-for-defects-in-solar-panels/8",
+          "start": 1686919402.958,
+          "end": 1686919402.958,
+          "fromScratch": true,
+          "tfjs": true,
+          "oak": false,
+          "map": "62.21",
+          "recall": "54.00",
+          "precision": "82.47"
+        },
+        "preprocessing": {
+          "isolate": true,
+          "auto-orient": true,
+          "contrast": {
+            "type": "Contrast Stretching"
+          },
+          "resize": {
+            "width": 640,
+            "format": "Stretch to",
+            "height": 640
+          }
+        },
+        "augmentation": {
+          "rotate": {
+            "degrees": 15
+          },
+          "image": {
+            "versions": 3
+          },
+          "mosaic": true,
+          "flip": {
+            "horizontal": true,
+            "vertical": true
+          }
+        },
+        "exports": [
+          "darknet",
+          "yolov8",
+          "yolov8-obb"
+        ]
+      },
+      {
+        "id": "defects-kgig6/detection-for-defects-in-solar-panels/7",
+        "name": "2023-06-16 9:03am",
+        "created": 1686891858.325,
+        "images": 14478,
+        "splits": {
+          "valid": 761,
+          "test": 640,
+          "train": 13077
+        },
+        "generating": false,
+        "progress": 1,
+        "model": {
+          "id": "detection-for-defects-in-solar-panels/7",
+          "endpoint": "https://serverless.roboflow.com/detection-for-defects-in-solar-panels/7",
+          "start": 1686912870.335,
+          "end": 1686912870.335,
+          "fromScratch": true,
+          "tfjs": true,
+          "oak": false,
+          "map": "55.59",
+          "recall": "51.48",
+          "precision": "78.48"
+        },
+        "preprocessing": {
+          "isolate": true,
+          "auto-orient": true,
+          "contrast": {
+            "type": "Contrast Stretching"
+          },
+          "resize": {
+            "width": 640,
+            "format": "Stretch to",
+            "height": 640
+          }
+        },
+        "augmentation": {
+          "image": {
+            "versions": 3
+          },
+          "mosaic": true,
+          "flip": {
+            "horizontal": true,
+            "vertical": true
+          }
+        },
+        "exports": [
+          "yolov8"
+        ]
+      },
+      {
+        "id": "defects-kgig6/detection-for-defects-in-solar-panels/6",
+        "name": "2023-06-16 9:03am",
+        "created": 1686891858.236,
+        "images": 14478,
+        "splits": {
+          "valid": 761,
+          "test": 640,
+          "train": 13077
+        },
+        "generating": false,
+        "progress": 1,
+        "preprocessing": {
+          "isolate": true,
+          "auto-orient": true,
+          "contrast": {
+            "type": "Contrast Stretching"
+          },
+          "resize": {
+            "width": 640,
+            "format": "Stretch to",
+            "height": 640
+          }
+        },
+        "augmentation": {
+          "image": {
+            "versions": 3
+          },
+          "mosaic": true,
+          "flip": {
+            "horizontal": true,
+            "vertical": true
+          }
+        },
+        "exports": [
+          "voc",
+          "yolov8"
+        ]
+      },
+      {
+        "id": "defects-kgig6/detection-for-defects-in-solar-panels/3",
+        "name": "2023-06-14 1:43pm",
+        "created": 1686735818.654,
+        "images": 2061,
+        "splits": {
+          "valid": 100,
+          "test": 101,
+          "train": 1860
+        },
+        "generating": false,
+        "progress": 1,
+        "model": {
+          "id": "detection-for-defects-in-solar-panels/3",
+          "endpoint": "https://serverless.roboflow.com/detection-for-defects-in-solar-panels/3",
+          "start": 1686735892.96,
+          "end": 1686736621.586,
+          "fromScratch": false,
+          "tfjs": true,
+          "oak": true,
+          "map": "64.91",
+          "recall": "58.97",
+          "precision": "71.17"
+        },
+        "preprocessing": {
+          "auto-orient": true,
+          "contrast": {
+            "type": "Contrast Stretching"
+          },
+          "resize": {
+            "format": "Stretch to",
+            "width": 640,
+            "height": 640
+          }
+        },
+        "augmentation": {
+          "image": {
+            "versions": 3
+          },
+          "mosaic": true
+        },
+        "exports": [
+          "coco",
+          "voc",
+          "yolo26",
+          "yolov11",
+          "yolov5pytorch",
+          "yolov7pytorch",
+          "yolov8"
+        ]
+      },
+      {
+        "id": "defects-kgig6/detection-for-defects-in-solar-panels/2",
+        "name": "2023-06-14 1:57am",
+        "created": 1686693487.408,
+        "images": 1963,
+        "splits": {
+          "valid": 162,
+          "test": 88,
+          "train": 1713
+        },
+        "generating": false,
+        "progress": 1,
+        "model": {
+          "id": "detection-for-defects-in-solar-panels/2",
+          "endpoint": "https://serverless.roboflow.com/detection-for-defects-in-solar-panels/2",
+          "start": 1686693505.669,
+          "end": 1686696661.57,
+          "fromScratch": false,
+          "tfjs": true,
+          "oak": true,
+          "map": "64.24",
+          "recall": "58.90",
+          "precision": "76.73"
+        },
+        "preprocessing": {
+          "auto-orient": true,
+          "contrast": {
+            "type": "Contrast Stretching"
+          },
+          "resize": {
+            "width": 640,
+            "format": "Stretch to",
+            "height": 640
+          }
+        },
+        "augmentation": {
+          "image": {
+            "versions": 3
+          },
+          "mosaic": true
+        },
+        "exports": [
+          "coco",
+          "coco-mmdetection",
+          "darknet",
+          "voc",
+          "yolo26",
+          "yolov11",
+          "yolov5pytorch",
+          "yolov7pytorch",
+          "yolov8"
+        ]
+      }
+    ]
+  },
+  "summary": {
+    "label": "S1  detection-for-defects-in-solar-panels",
+    "workspace": "defects-kgig6",
+    "project": "detection-for-defects-in-solar-panels",
+    "http": 200,
+    "name": "Detection for defects in solar panels ",
+    "type": "object-detection",
+    "license": "CC BY 4.0",
+    "annotation": "defects",
+    "base_images": 821,
+    "class_instance_counts": {
+      "bird-drop": 1518,
+      "electrical-damage": 207,
+      "snow-covered": 1299,
+      "clean": 1107,
+      "physical-damage": 169,
+      "dusty": 1460
+    },
+    "project_splits": {
+      "valid": 120,
+      "test": 101,
+      "train": 600
+    },
+    "created": 1686387852.315,
+    "updated": 1691163487.474,
+    "public": true,
+    "n_versions": 7,
+    "latest_version": {
+      "id": "defects-kgig6/detection-for-defects-in-solar-panels/10",
+      "name": "2023-06-16 4:51pm",
+      "created": 1686919925.926,
+      "images": 14478,
+      "splits": {
+        "valid": 761,
+        "test": 640,
+        "train": 13077
+      },
+      "preprocessing": {
+        "isolate": true,
+        "auto-orient": true,
+        "contrast": {
+          "type": "Contrast Stretching"
+        },
+        "resize": {
+          "format": "Stretch to",
+          "width": 640,
+          "height": 640
+        }
+      },
+      "augmentation": {
+        "image": {
+          "versions": 3
+        },
+        "rotate": {
+          "degrees": 15
+        },
+        "ninety": {
+          "clockwise": true,
+          "counter-clockwise": true,
+          "upside-down": false
+        },
+        "mosaic": true,
+        "flip": {
+          "horizontal": true,
+          "vertical": true
+        }
+      },
+      "exports": [
+        "clip",
+        "coco",
+        "coco-mmdetection",
+        "createml",
+        "darknet",
+        "florence2-od",
+        "multiclass",
+        "tensorflow",
+        "yolov11",
+        "yolov12",
+        "yolov5-obb",
+        "yolov5pytorch",
+        "yolov7pytorch",
+        "yolov8",
+        "yolov8-obb",
+        "yolov9"
+      ]
+    },
+    "all_versions": [
+      {
+        "id": "defects-kgig6/detection-for-defects-in-solar-panels/10",
+        "name": "2023-06-16 4:51pm",
+        "images": 14478,
+        "splits": {
+          "valid": 761,
+          "test": 640,
+          "train": 13077
+        },
+        "created": 1686919925.926,
+        "aug": true,
+        "exports": [
+          "clip",
+          "coco",
+          "coco-mmdetection",
+          "createml",
+          "darknet",
+          "florence2-od",
+          "multiclass",
+          "tensorflow",
+          "yolov11",
+          "yolov12",
+          "yolov5-obb",
+          "yolov5pytorch",
+          "yolov7pytorch",
+          "yolov8",
+          "yolov8-obb",
+          "yolov9"
+        ]
+      },
+      {
+        "id": "defects-kgig6/detection-for-defects-in-solar-panels/9",
+        "name": "2023-06-16 4:20pm",
+        "images": 14478,
+        "splits": {
+          "valid": 761,
+          "test": 640,
+          "train": 13077
+        },
+        "created": 1686918081.117,
+        "aug": true,
+        "exports": [
+          "coco",
+          "yolov8"
+        ]
+      },
+      {
+        "id": "defects-kgig6/detection-for-defects-in-solar-panels/8",
+        "name": "2023-06-16 3:01pm",
+        "images": 14478,
+        "splits": {
+          "valid": 761,
+          "test": 640,
+          "train": 13077
+        },
+        "created": 1686913313.359,
+        "aug": true,
+        "exports": [
+          "darknet",
+          "yolov8",
+          "yolov8-obb"
+        ]
+      },
+      {
+        "id": "defects-kgig6/detection-for-defects-in-solar-panels/7",
+        "name": "2023-06-16 9:03am",
+        "images": 14478,
+        "splits": {
+          "valid": 761,
+          "test": 640,
+          "train": 13077
+        },
+        "created": 1686891858.325,
+        "aug": true,
+        "exports": [
+          "yolov8"
+        ]
+      },
+      {
+        "id": "defects-kgig6/detection-for-defects-in-solar-panels/6",
+        "name": "2023-06-16 9:03am",
+        "images": 14478,
+        "splits": {
+          "valid": 761,
+          "test": 640,
+          "train": 13077
+        },
+        "created": 1686891858.236,
+        "aug": true,
+        "exports": [
+          "voc",
+          "yolov8"
+        ]
+      },
+      {
+        "id": "defects-kgig6/detection-for-defects-in-solar-panels/3",
+        "name": "2023-06-14 1:43pm",
+        "images": 2061,
+        "splits": {
+          "valid": 100,
+          "test": 101,
+          "train": 1860
+        },
+        "created": 1686735818.654,
+        "aug": true,
+        "exports": [
+          "coco",
+          "voc",
+          "yolo26",
+          "yolov11",
+          "yolov5pytorch",
+          "yolov7pytorch",
+          "yolov8"
+        ]
+      },
+      {
+        "id": "defects-kgig6/detection-for-defects-in-solar-panels/2",
+        "name": "2023-06-14 1:57am",
+        "images": 1963,
+        "splits": {
+          "valid": 162,
+          "test": 88,
+          "train": 1713
+        },
+        "created": 1686693487.408,
+        "aug": true,
+        "exports": [
+          "coco",
+          "coco-mmdetection",
+          "darknet",
+          "voc",
+          "yolo26",
+          "yolov11",
+          "yolov5pytorch",
+          "yolov7pytorch",
+          "yolov8"
+        ]
+      }
+    ]
+  }
+}

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import tempfile
@@ -24,8 +25,18 @@ from training.classification.train_mobilenet import _dataset as _train_dataset
 
 
 def _unique_color(cls: str, idx: int) -> tuple[int, int, int]:
-    """Deterministic unique color for test image generation."""
-    base = hash(cls) % 256
+    """Deterministic unique color for test image generation.
+
+    Uses hashlib, not Python's built-in ``hash()`` - the latter is salted
+    per-process (PYTHONHASHSEED) precisely so it's *not* reproducible across
+    runs, which occasionally mapped two different class names to the same
+    ``% 256`` base value and produced two SHA-256-identical synthetic images,
+    intermittently tripping prepare_dataset's real duplicate-image guard in
+    CI and locally (observed for Electrical-Damage/Physical-Damage). This
+    reproduces identically on every run, process, and machine, and is
+    verified collision-free for every real class name this suite uses.
+    """
+    base = int(hashlib.sha256(cls.encode()).hexdigest(), 16) % 256
     r = (base + idx * 37) % 256
     g = (base + 128 + idx * 53) % 256
     b = (base + 64 + idx * 71) % 256

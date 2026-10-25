@@ -1,0 +1,13 @@
+train:
+- D:/Documents/Projects/solar-ai-framework/datasets/ground_pv_research/yolo/train/images
+- D:/Documents/Projects/solar-ai-framework/datasets/ground_pv_research/yolo_beast_v1/candidate/train/images
+val: D:/Documents/Projects/solar-ai-framework/datasets/ground_pv_research/yolo/valid/images
+test: D:/Documents/Projects/solar-ai-framework/datasets/ground_pv_research/yolo/test/images
+names:
+  0: panel
+  1: cracked
+  2: dusty
+_experiment: B/C - Susan train + scene-capped candidate (train only); Susan valid/test
+  unchanged
+_candidate: personal-experimental-unverified-provenance, research-only, ~1 physical
+  scene

@@ -1,0 +1,125 @@
+{
+  "schema_version": "1.0",
+  "phase": "14B/14B.1 \u2014 representative panel dataset audit",
+  "inventory": {
+    "num_images": 6,
+    "num_scenes": 6,
+    "num_corrupt": 0,
+    "source_type_counts": {
+      "first_party": 6
+    },
+    "provenance_status_counts": {
+      "first_party": 6
+    }
+  },
+  "resolution_stats": {
+    "count": 6,
+    "width_min_max": [
+      573,
+      1280
+    ],
+    "height_min_max": [
+      573,
+      1280
+    ],
+    "aspect_ratio_min_max": [
+      0.4477,
+      2.2339
+    ],
+    "orientation_counts": {
+      "portrait": 5,
+      "landscape": 1
+    },
+    "unique_resolutions": 2
+  },
+  "panel_count_stats": {
+    "images_with_known_panel_count": 0,
+    "images_total": 6,
+    "images_by_panel_count": {},
+    "scenes_by_panel_count": {},
+    "target_counts_covered": [],
+    "target_counts_missing": [
+      4,
+      6,
+      8
+    ]
+  },
+  "panel_count_gt_disagreements": [],
+  "duplicate_report": {
+    "exact_duplicate_groups": 0,
+    "exact_duplicate_images": 0,
+    "near_duplicate_pairs": 0,
+    "cross_split_exact_duplicate_groups": 0,
+    "cross_split_near_duplicate_pairs": 0
+  },
+  "split_check": {
+    "ok": true,
+    "crossing_scenes": {}
+  },
+  "split_counts_images": {
+    "reference": 6
+  },
+  "split_counts_scenes": {
+    "reference": 6
+  },
+  "annotation_report": {
+    "total_images": 6,
+    "annotated_images": 6,
+    "missing_label_files": [],
+    "missing_label_count": 0,
+    "images_with_zero_annotations": [
+      "WhatsApp Image 2026-09-07 at 15.25.56.jpeg",
+      "WhatsApp Image 2026-09-07 at 15.25.57 (1).jpeg",
+      "WhatsApp Image 2026-09-07 at 15.25.57.jpeg",
+      "WhatsApp Image 2026-09-07 at 15.25.58.jpeg",
+      "WhatsApp Image 2026-09-07 at 15.25.59 (1).jpeg",
+      "WhatsApp Image 2026-09-07 at 15.25.59.jpeg"
+    ],
+    "images_with_zero_annotations_count": 6,
+    "orphaned_label_files": [],
+    "total_boxes": 0,
+    "files_with_errors": [],
+    "files_with_errors_count": 0,
+    "clean_annotated_files_count": 6,
+    "annotation_complete": true,
+    "ready_for_next_stage": true,
+    "overlap_and_size_diagnostics": {},
+    "images_with_overlap_or_size_diagnostics_count": 0
+  },
+  "readiness_checklist": {
+    "individual_panel_annotations_available": false,
+    "verified_scene_count": 0,
+    "has_verified_4_panel_scene": false,
+    "has_verified_6_panel_scene": false,
+    "has_verified_8_panel_scene": false,
+    "source_families_tracked": true,
+    "train_valid_test_scene_isolated": true,
+    "cross_split_exact_duplicates_zero": true,
+    "cross_split_near_duplicate_families_zero": true,
+    "annotation_audit_passes": true,
+    "genuine_independent_holdout": false,
+    "target_4_6_8_panel_scenes_represented": false,
+    "large_foreground_panels_represented": false,
+    "touching_grouped_panels_represented": false,
+    "native_aspect_ratios_preserved": true,
+    "provenance_documented": true,
+    "num_images": 6,
+    "num_images_annotated_human_verified": 0,
+    "ready_for_phase_14c": false,
+    "blocking_reasons": [
+      "only 0 verified independent scene(s) (annotated_human_verified, scene_status != needs_review, not in the reference split) \u2014 spec minimum is 100",
+      "no human-verified individual-panel annotations exist yet",
+      "no verified 4-panel scene yet",
+      "no verified 6-panel scene yet",
+      "no verified 8-panel scene yet",
+      "no test-split scenes exist yet \u2014 no genuine independent holdout",
+      "4/6/8-panel scenes are not all represented (with known panel counts)",
+      "large-foreground-panel coverage not yet confirmed by a human reviewer's tags",
+      "touching/grouped-panel coverage not yet confirmed by a human reviewer's tags"
+    ]
+  },
+  "six_image_reference": {
+    "num_images": 6,
+    "num_scenes": 6
+  }
+}

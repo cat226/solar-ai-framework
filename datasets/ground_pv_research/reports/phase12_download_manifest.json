@@ -1,0 +1,65 @@
+{
+  "phase": "12 - representative ground-PV data acquisition audit (DISCOVERY ONLY)",
+  "generated_utc": "2026-09-09",
+  "policy": "No bulk downloads. Only SMALL candidates (<= ~700 images) that passed the preliminary gate (RGB, plausibly ground/rooftop, panel-localisation annotation) were sampled for audit. All samples are gitignored (datasets/ground_pv_research/phase12_audit/samples/) and NOT retained beyond the audit. No dataset was acquired for training.",
+  "sampled_for_audit": [
+    {
+      "candidate_id": "P12-01", "ref": "solar-panel-detection-bwpkx/solar-panel-detection-ubwtz",
+      "host": "Roboflow Universe", "version": 13, "format": "yolov8", "images": 563,
+      "gate_passed": "RGB, ground-level oblique, panel-localisation annotation",
+      "outcome": "Tier C - right viewpoint, but segmentation-polygon labels, ~1 physical scene, provenance unresolved",
+      "retained": false
+    },
+    {
+      "candidate_id": "P12-02", "ref": "fxmikf/solar-panel-bounding-boxes-621",
+      "host": "Kaggle", "version": "latest", "format": "YOLO", "images": 621,
+      "gate_passed": "RGB, ground-level/rooftop 'in the wild', YOLO bbox + classes.txt",
+      "outcome": "Tier D - unusable provenance (Getty/stock/YouTube scrape); kept only as a visual domain reference during the audit",
+      "retained": false
+    },
+    {
+      "candidate_id": "P12-04", "ref": "yolo-2uwb2/panel-detection-nfzzu",
+      "host": "Roboflow Universe", "version": 1, "format": "yolov8", "images": 160,
+      "gate_passed": "small, RGB, 'Solar-Panels' class",
+      "outcome": "Tier D - aerial/satellite viewpoint, 114/160 images unannotated",
+      "retained": false
+    },
+    {
+      "candidate_id": "P12-05", "ref": "every/solar-panels-r4trk",
+      "host": "Roboflow Universe", "version": 2, "format": "yolov8", "images": 402,
+      "gate_passed": "small, RGB, 'solar-panels' class",
+      "outcome": "Tier D - aerial/drone-nadir residential rooftops; segmentation-polygon labels",
+      "retained": false
+    },
+    {
+      "candidate_id": "P12-06", "ref": "tensrai/solar-panel-zitzr",
+      "host": "Roboflow Universe", "version": 1, "format": "yolov8", "images": 471,
+      "gate_passed": "small, 'solar-panel' class, module-level boxes",
+      "outcome": "Tier D - GRAYSCALE aerial orthomosaic of a utility-scale ground-mounted farm; 90.6% boundary-touching boxes (tiled)",
+      "retained": false
+    },
+    {
+      "candidate_id": "P12-07", "ref": "javier-aparicio-gonzlez/panel-solar-yolo",
+      "host": "Roboflow Universe", "version": 3, "format": "yolov8", "images": 102,
+      "gate_passed": "small, 'Panel_solar' class, ~15 boxes/image (module-level)",
+      "outcome": "Tier D - GRAYSCALE aerial orthomosaic of a ground-mounted farm",
+      "retained": false
+    }
+  ],
+  "metadata_only_no_download": [
+    "earthbook-zdvbx/solar-panels-rgb (P12-03) - only class is 'dirty', not a panel detector",
+    "roboflow-100/solar-panels-taxvb (P12-08) - thermal cell-anomaly taxonomy",
+    "marius-lee/solar-x0bfa (P12-09) - thermal/IR (Hotspot/Cell Fault)",
+    "kusanagi31415/labeled-solar-panels-rwanda-rooftops (P12-10) - aerial/satellite crops (filename bbox-encoded)",
+    "salimhammadi07/solar-panel-detection-and-identification (P12-11) - = Jiang PV03 aerial segmentation",
+    "zzzpai/solar-panel-od-yolov8 (P12-12) - DUPLICATE of pythonafroz/S1",
+    "aparitosh/solar-panel-dataset (P12-13) - DUPLICATE of S3",
+    "johnsullivan66/rooftop-solar-panel-thailand (P12-14) - aerial tiled segmentation",
+    "rameezakther/ghandinagar-rooftop-segmentation-dataset (P12-15) - aerial rooftop segmentation",
+    "Zenodo 6386767 Villegas-Ceballos (P12-16) - RGB electrical, no localisation annotation, 1 panel/1 camera",
+    "Zenodo 5171712 Jiang PV01/03/08 (P12-17) - satellite/aerial segmentation",
+    "Zenodo 7358126 BDAPPV (P12-18) - aerial (already the aerial-detector training source)"
+  ],
+  "acquired_for_training": "NONE",
+  "credentials": "Kaggle: ~/.kaggle token (account edithstark). Roboflow: project-root .env ROBOFLOW_API_KEY. Neither printed, logged, or committed."
+}

@@ -1,0 +1,248 @@
+{
+  "schema_version": "1.0",
+  "phase": "15D-A \u2014 resolution ablation (imgsz 640 vs 960)",
+  "baseline": {
+    "experiment_name": "condition_yolo11n_4class_baseline_v1",
+    "imgsz": 640,
+    "epochs": 100,
+    "best_epoch": 97,
+    "train_seconds": 2797.391060590744,
+    "checkpoint_sha256": "2dcf6122c18590f33f3b44ad88e054d409509274193977046ad2076d368de28e"
+  },
+  "candidate": {
+    "experiment_name": "condition_yolo11n_4class_960_v1",
+    "imgsz": 960,
+    "epochs": 100,
+    "best_epoch": 88,
+    "train_seconds": 6606.944972276688,
+    "checkpoint_sha256": "eca9332a320b41bb695e5f392f532a489ff8e2df7519cf613997ff5241514ace"
+  },
+  "environment_match": true,
+  "dataset_hashes_match": true,
+  "official_overall_delta_test_default": {
+    "precision": {
+      "baseline": 0.5920913154902189,
+      "candidate": 0.5616168637361262,
+      "delta": -0.03047445175409269
+    },
+    "recall": {
+      "baseline": 0.44047422200046077,
+      "candidate": 0.45156506136893215,
+      "delta": 0.011090839368471384
+    },
+    "mAP50": {
+      "baseline": 0.4437736214675794,
+      "candidate": 0.4509244578341134,
+      "delta": 0.007150836366533964
+    },
+    "mAP50_95": {
+      "baseline": 0.2360894573262115,
+      "candidate": 0.21594787501889626,
+      "delta": -0.020141582307315248
+    }
+  },
+  "official_per_class_delta_test_default": {
+    "CLEAN": {
+      "precision": {
+        "baseline": 0.6272537567975752,
+        "candidate": 0.5297539614105893,
+        "delta": -0.09749979538698594
+      },
+      "recall": {
+        "baseline": 0.5183823529411765,
+        "candidate": 0.5514705882352942,
+        "delta": 0.03308823529411764
+      },
+      "AP50": {
+        "baseline": 0.547523640610293,
+        "candidate": 0.5190719558731686,
+        "delta": -0.02845168473712445
+      },
+      "AP50_95": {
+        "baseline": 0.347465388557959,
+        "candidate": 0.3215297081658041,
+        "delta": -0.02593568039215488
+      }
+    },
+    "DUSTY": {
+      "precision": {
+        "baseline": 0.4669976897025528,
+        "candidate": 0.45755214913885073,
+        "delta": -0.00944554056370206
+      },
+      "recall": {
+        "baseline": 0.32444959443800697,
+        "candidate": 0.2989571263035921,
+        "delta": -0.02549246813441486
+      },
+      "AP50": {
+        "baseline": 0.3422304900052716,
+        "candidate": 0.3218581027212318,
+        "delta": -0.02037238728403984
+      },
+      "AP50_95": {
+        "baseline": 0.15031778957402245,
+        "candidate": 0.12944479384767643,
+        "delta": -0.020872995726346016
+      }
+    },
+    "BIRD_DROP": {
+      "precision": {
+        "baseline": 0.5951638950387926,
+        "candidate": 0.5300146184659148,
+        "delta": -0.06514927657287783
+      },
+      "recall": {
+        "baseline": 0.34214186369958277,
+        "candidate": 0.3532684283727399,
+        "delta": 0.011126564673157147
+      },
+      "AP50": {
+        "baseline": 0.36006914553224056,
+        "candidate": 0.35820864783671963,
+        "delta": -0.0018604976955209351
+      },
+      "AP50_95": {
+        "baseline": 0.14778581384453374,
+        "candidate": 0.14461576574518756,
+        "delta": -0.003170048099346179
+      }
+    },
+    "PHYSICAL_DAMAGE": {
+      "precision": {
+        "baseline": 0.678949920421955,
+        "candidate": 0.7291467259291499,
+        "delta": 0.05019680550719485
+      },
+      "recall": {
+        "baseline": 0.5769230769230769,
+        "candidate": 0.6025641025641025,
+        "delta": 0.02564102564102566
+      },
+      "AP50": {
+        "baseline": 0.5252712097225125,
+        "candidate": 0.6045591249053334,
+        "delta": 0.07928791518282086
+      },
+      "AP50_95": {
+        "baseline": 0.29878883732833084,
+        "candidate": 0.26820123231691684,
+        "delta": -0.030587605011414
+      }
+    }
+  },
+  "size_bin_recall_delta": {
+    "CLEAN": {
+      "tiny": {
+        "baseline": 0.2222222222222222,
+        "candidate": 0.3157894736842105,
+        "delta": 0.0935672514619883
+      },
+      "small": {
+        "baseline": 0.5684931506849316,
+        "candidate": 0.5144927536231884,
+        "delta": -0.0540003970617432
+      },
+      "medium": {
+        "baseline": 0.5488721804511278,
+        "candidate": 0.5147058823529411,
+        "delta": -0.03416629809818672
+      },
+      "large": {
+        "baseline": 0.8071428571428572,
+        "candidate": 0.8188405797101449,
+        "delta": 0.011697722567287738
+      }
+    },
+    "DUSTY": {
+      "tiny": {
+        "baseline": 0.10144927536231885,
+        "candidate": 0.06220095693779904,
+        "delta": -0.039248318424519806
+      },
+      "small": {
+        "baseline": 0.2922374429223744,
+        "candidate": 0.22549019607843138,
+        "delta": -0.06674724684394304
+      },
+      "medium": {
+        "baseline": 0.4595959595959596,
+        "candidate": 0.3888888888888889,
+        "delta": -0.07070707070707072
+      },
+      "large": {
+        "baseline": 0.5606694560669456,
+        "candidate": 0.49572649572649574,
+        "delta": -0.06494296034044988
+      }
+    },
+    "BIRD_DROP": {
+      "tiny": {
+        "baseline": 0.11666666666666667,
+        "candidate": 0.11413043478260869,
+        "delta": -0.0025362318840579795
+      },
+      "small": {
+        "baseline": 0.3595505617977528,
+        "candidate": 0.33516483516483514,
+        "delta": -0.02438572663291766
+      },
+      "medium": {
+        "baseline": 0.5227272727272727,
+        "candidate": 0.49142857142857144,
+        "delta": -0.03129870129870127
+      },
+      "large": {
+        "baseline": 0.546875,
+        "candidate": 0.4864864864864865,
+        "delta": -0.060388513513513487
+      }
+    },
+    "PHYSICAL_DAMAGE": {
+      "tiny": {
+        "baseline": 0.1111111111111111,
+        "candidate": 0.1111111111111111,
+        "delta": 0.0
+      },
+      "small": {
+        "baseline": 0.6666666666666666,
+        "candidate": 0.5789473684210527,
+        "delta": -0.08771929824561397
+      },
+      "medium": {
+        "baseline": 0.75,
+        "candidate": 0.6363636363636364,
+        "delta": -0.11363636363636365
+      },
+      "large": {
+        "baseline": 0.7368421052631579,
+        "candidate": 0.9473684210526315,
+        "delta": 0.21052631578947367
+      }
+    }
+  },
+  "small_object_recall_verdict": {
+    "per_class": {
+      "CLEAN": {
+        "avg_small_bin_delta": 0.01978342720012255,
+        "improved": false
+      },
+      "DUSTY": {
+        "avg_small_bin_delta": -0.052997782634231425,
+        "improved": false
+      },
+      "BIRD_DROP": {
+        "avg_small_bin_delta": -0.01346097925848782,
+        "improved": false
+      },
+      "PHYSICAL_DAMAGE": {
+        "avg_small_bin_delta": -0.04385964912280699,
+        "improved": false
+      }
+    },
+    "classes_improved": 0,
+    "classes_total": 4,
+    "material_improvement": false
+  },
+  "note_on_matching_methodology": "size_bin_recall_delta comes from this project's own greedy IoU matcher (training/detection/ground_pv/condition_error_analysis.py), run independently against BOTH checkpoints at each checkpoint's OWN training imgsz, at a fixed conf>=0.20/IoU>=0.5 matching threshold \u2014 the same methodology Phase 15C used for v3. This is why matching-based overall recall can differ from the official Ultralytics test recall (which reports each class's best-F1 point on the full PR curve, not a literal count at conf=0.20) \u2014 both are reported, never conflated."
+}

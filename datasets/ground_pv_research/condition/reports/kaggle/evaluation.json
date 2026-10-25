@@ -1,0 +1,99 @@
+{
+  "val": {
+    "overall": {
+      "precision": 0.6237085927890307,
+      "recall": 0.4792776382597287,
+      "mAP50": 0.5204910082154944,
+      "mAP50_95": 0.27923949404088505
+    },
+    "per_class": {
+      "CLEAN": {
+        "precision": 0.6549898812348115,
+        "recall": 0.5254000583919364,
+        "AP50": 0.5762607623747602,
+        "AP50_95": 0.35814921665753163
+      },
+      "DUSTY": {
+        "precision": 0.5052824064206871,
+        "recall": 0.3427000610873549,
+        "AP50": 0.3829177354256865,
+        "AP50_95": 0.17112944694325377
+      },
+      "BIRD_DROP": {
+        "precision": 0.5286539318896729,
+        "recall": 0.3355393778954335,
+        "AP50": 0.3468725693278472,
+        "AP50_95": 0.13938828412348256
+      },
+      "PHYSICAL_DAMAGE": {
+        "precision": 0.725419933797268,
+        "recall": 0.6204819277108434,
+        "AP50": 0.6738469418276426,
+        "AP50_95": 0.3562973402098645
+      },
+      "ELECTRICAL_DAMAGE": {
+        "precision": 0.7041968106027146,
+        "recall": 0.5722667662130758,
+        "AP50": 0.6225570321215355,
+        "AP50_95": 0.37123318227029267
+      }
+    },
+    "save_dir": "/kaggle/working/runs/detect/val"
+  },
+  "test": {
+    "overall": {
+      "precision": 0.623026736166948,
+      "recall": 0.4490730100886795,
+      "mAP50": 0.4717825268564531,
+      "mAP50_95": 0.25397802536273534
+    },
+    "per_class": {
+      "CLEAN": {
+        "precision": 0.5897178139030844,
+        "recall": 0.49673085765736663,
+        "AP50": 0.5161637581792644,
+        "AP50_95": 0.334835438382589,
+        "test_images_with_class": 95,
+        "test_instances": 545,
+        "test_unique_families": 53
+      },
+      "DUSTY": {
+        "precision": 0.49253220412067,
+        "recall": 0.34762456546929316,
+        "AP50": 0.3576618458954834,
+        "AP50_95": 0.1627148019632285,
+        "test_images_with_class": 144,
+        "test_instances": 863,
+        "test_unique_families": 90
+      },
+      "BIRD_DROP": {
+        "precision": 0.5654280716682661,
+        "recall": 0.3203030249871966,
+        "AP50": 0.37402831248338175,
+        "AP50_95": 0.1493752472514514,
+        "test_images_with_class": 100,
+        "test_instances": 726,
+        "test_unique_families": 56
+      },
+      "PHYSICAL_DAMAGE": {
+        "precision": 0.6595129589205206,
+        "recall": 0.5256410256410257,
+        "AP50": 0.5227672160480252,
+        "AP50_95": 0.2749808304001572,
+        "test_images_with_class": 30,
+        "test_instances": 78,
+        "test_unique_families": 18
+      },
+      "ELECTRICAL_DAMAGE": {
+        "precision": 0.8079426322221993,
+        "recall": 0.5550655766885154,
+        "AP50": 0.5882915016761108,
+        "AP50_95": 0.3479838088162508,
+        "test_images_with_class": 44,
+        "test_instances": 144,
+        "test_unique_families": 31
+      }
+    },
+    "save_dir": "/kaggle/working/runs/detect/val-2"
+  }
+}

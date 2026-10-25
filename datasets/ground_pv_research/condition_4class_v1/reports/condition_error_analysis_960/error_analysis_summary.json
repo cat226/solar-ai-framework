@@ -1,0 +1,2794 @@
+{
+  "schema_version": "1.0",
+  "phase": "15C \u2014 four-class condition model error analysis",
+  "checkpoint_path": "weights\\yolo_solar_condition_4class_research_v3_960.pt",
+  "checkpoint_sha256": "eca9332a320b41bb695e5f392f532a489ff8e2df7519cf613997ff5241514ace",
+  "dataset_root": "datasets\\ground_pv_research\\condition_4class_v1",
+  "match_confidence_threshold": 0.2,
+  "match_iou_threshold": 0.5,
+  "inference_conf_floor": 0.001,
+  "inference_imgsz": 960,
+  "note_on_thresholds": "match_confidence_threshold reuses the existing v3 operating threshold (0.20) purely as a fixed, already-documented point for INSTANCE-LEVEL TP/FP/FN counting in this diagnostic analysis. This phase does not redefine deployment policy \u2014 see docs/CONDITION_MODEL_4CLASS_ERROR_ANALYSIS.md section I.",
+  "num_test_images": 242,
+  "environment": {
+    "python": "3.12.10",
+    "ultralytics_local": "8.4.118",
+    "note": "local inference environment \u2014 may differ in patch version from the Kaggle training environment recorded in training_manifest.json; see report for the exact delta."
+  },
+  "per_class": {
+    "CLEAN": {
+      "gt_count": 545,
+      "tp": 296,
+      "fp": 301,
+      "fn": 249,
+      "precision_at_match_threshold": 0.49581239530988275,
+      "recall_at_match_threshold": 0.5431192660550459,
+      "tp_confidence_distribution": {
+        "n": 296,
+        "mean": 0.6340514433041617,
+        "median": 0.6658601760864258,
+        "p25": 0.45347707718610764,
+        "p75": 0.8162798136472702,
+        "min": 0.2026878148317337,
+        "max": 0.9541739821434021
+      },
+      "fp_confidence_distribution": {
+        "n": 301,
+        "mean": 0.39433226558655204,
+        "median": 0.3412725627422333,
+        "p25": 0.2523256540298462,
+        "p75": 0.481369286775589,
+        "min": 0.2000790536403656,
+        "max": 0.8953341841697693
+      },
+      "fn_nearby_confidence_distribution": {
+        "n": 237,
+        "mean": 0.5014382845669089,
+        "median": 0.5375348925590515,
+        "p25": 0.22987279295921326,
+        "p75": 0.7926281690597534,
+        "min": 0.0018688490381464362,
+        "max": 0.9458547830581665
+      },
+      "fn_total_miss_count": 12,
+      "fp_category_counts": {
+        "edge/crop artifact": 37,
+        "localization (low-IoU overlap with same-class GT)": 172,
+        "ambiguous visual appearance": 4,
+        "background / non-panel surface": 14,
+        "duplicate/overlapping prediction": 69,
+        "tiny/low-information region": 5
+      },
+      "size_quartile_cuts_area_fraction": [
+        0.01271484375,
+        0.039052734375000016,
+        0.09672123515600001
+      ],
+      "size_bin_recall": {
+        "tiny": {
+          "tp": 42,
+          "fn": 91
+        },
+        "small": {
+          "tp": 71,
+          "fn": 67
+        },
+        "medium": {
+          "tp": 70,
+          "fn": 66
+        },
+        "large": {
+          "tp": 113,
+          "fn": 25
+        }
+      }
+    },
+    "DUSTY": {
+      "gt_count": 863,
+      "tp": 259,
+      "fp": 349,
+      "fn": 604,
+      "precision_at_match_threshold": 0.42598684210526316,
+      "recall_at_match_threshold": 0.30011587485515645,
+      "tp_confidence_distribution": {
+        "n": 259,
+        "mean": 0.5056229673872583,
+        "median": 0.4822457432746887,
+        "p25": 0.3227185010910034,
+        "p75": 0.6681910455226898,
+        "min": 0.20101352035999298,
+        "max": 0.9474390149116516
+      },
+      "fp_confidence_distribution": {
+        "n": 349,
+        "mean": 0.3534796137608225,
+        "median": 0.31157010793685913,
+        "p25": 0.24291671812534332,
+        "p75": 0.43520018458366394,
+        "min": 0.2004331350326538,
+        "max": 0.8870817422866821
+      },
+      "fn_nearby_confidence_distribution": {
+        "n": 588,
+        "mean": 0.31092676699682625,
+        "median": 0.23468651622533798,
+        "p25": 0.12206128798425198,
+        "p75": 0.4825608730316162,
+        "min": 0.0014219038421288133,
+        "max": 0.9474390149116516
+      },
+      "fn_total_miss_count": 16,
+      "fp_category_counts": {
+        "edge/crop artifact": 36,
+        "ambiguous visual appearance": 15,
+        "background / non-panel surface": 47,
+        "localization (low-IoU overlap with same-class GT)": 159,
+        "duplicate/overlapping prediction": 85,
+        "tiny/low-information region": 7
+      },
+      "size_quartile_cuts_area_fraction": [
+        0.010482192577999993,
+        0.020096411328000018,
+        0.03627680078100001
+      ],
+      "size_bin_recall": {
+        "tiny": {
+          "tp": 13,
+          "fn": 196
+        },
+        "small": {
+          "tp": 46,
+          "fn": 158
+        },
+        "medium": {
+          "tp": 84,
+          "fn": 132
+        },
+        "large": {
+          "tp": 116,
+          "fn": 118
+        }
+      }
+    },
+    "BIRD_DROP": {
+      "gt_count": 726,
+      "tp": 258,
+      "fp": 272,
+      "fn": 468,
+      "precision_at_match_threshold": 0.4867924528301887,
+      "recall_at_match_threshold": 0.35537190082644626,
+      "tp_confidence_distribution": {
+        "n": 258,
+        "mean": 0.48956609459579453,
+        "median": 0.45976489782333374,
+        "p25": 0.3067411705851555,
+        "p75": 0.6320166438817978,
+        "min": 0.20137648284435272,
+        "max": 0.9854649901390076
+      },
+      "fp_confidence_distribution": {
+        "n": 272,
+        "mean": 0.3405309743521845,
+        "median": 0.2974730581045151,
+        "p25": 0.2422117218375206,
+        "p75": 0.404627189040184,
+        "min": 0.20079992711544037,
+        "max": 0.804274320602417
+      },
+      "fn_nearby_confidence_distribution": {
+        "n": 395,
+        "mean": 0.20978741879881466,
+        "median": 0.15604551136493683,
+        "p25": 0.07943786680698395,
+        "p75": 0.3099714666604996,
+        "min": 0.0018613312859088182,
+        "max": 0.804274320602417
+      },
+      "fn_total_miss_count": 73,
+      "fp_category_counts": {
+        "edge/crop artifact": 16,
+        "localization (low-IoU overlap with same-class GT)": 120,
+        "duplicate/overlapping prediction": 78,
+        "background / non-panel surface": 40,
+        "other defect mistaken for this class": 4,
+        "ambiguous visual appearance": 11,
+        "tiny/low-information region": 3
+      },
+      "size_quartile_cuts_area_fraction": [
+        0.0033282451169999944,
+        0.006464845312500008,
+        0.011627972216749998
+      ],
+      "size_bin_recall": {
+        "tiny": {
+          "tp": 21,
+          "fn": 163
+        },
+        "small": {
+          "tp": 61,
+          "fn": 121
+        },
+        "medium": {
+          "tp": 86,
+          "fn": 89
+        },
+        "large": {
+          "tp": 90,
+          "fn": 95
+        }
+      }
+    },
+    "PHYSICAL_DAMAGE": {
+      "gt_count": 78,
+      "tp": 45,
+      "fp": 29,
+      "fn": 33,
+      "precision_at_match_threshold": 0.6081081081081081,
+      "recall_at_match_threshold": 0.5769230769230769,
+      "tp_confidence_distribution": {
+        "n": 45,
+        "mean": 0.7289394716421763,
+        "median": 0.8192961812019348,
+        "p25": 0.6454127430915833,
+        "p75": 0.8569557666778564,
+        "min": 0.2290608286857605,
+        "max": 0.9526579976081848
+      },
+      "fp_confidence_distribution": {
+        "n": 29,
+        "mean": 0.44005573874917525,
+        "median": 0.4308101236820221,
+        "p25": 0.30215057730674744,
+        "p75": 0.5739241242408752,
+        "min": 0.20572742819786072,
+        "max": 0.73801589012146
+      },
+      "fn_nearby_confidence_distribution": {
+        "n": 22,
+        "mean": 0.14671003438574684,
+        "median": 0.04549941048026085,
+        "p25": 0.02830764651298523,
+        "p75": 0.16607889905571938,
+        "min": 0.002324879402294755,
+        "max": 0.73801589012146
+      },
+      "fn_total_miss_count": 11,
+      "fp_category_counts": {
+        "edge/crop artifact": 6,
+        "duplicate/overlapping prediction": 10,
+        "tiny/low-information region": 2,
+        "ambiguous visual appearance": 5,
+        "background / non-panel surface": 3,
+        "localization (low-IoU overlap with same-class GT)": 3
+      },
+      "size_quartile_cuts_area_fraction": [
+        0.0068889779297499985,
+        0.015353907812500001,
+        0.047653154492
+      ],
+      "size_bin_recall": {
+        "tiny": {
+          "tp": 2,
+          "fn": 16
+        },
+        "small": {
+          "tp": 11,
+          "fn": 8
+        },
+        "medium": {
+          "tp": 14,
+          "fn": 8
+        },
+        "large": {
+          "tp": 18,
+          "fn": 1
+        }
+      }
+    }
+  },
+  "family_summary_sorted_by_recall_asc": [
+    {
+      "family_id": "fam00122",
+      "class": "CLEAN",
+      "gt_count": 5,
+      "tp": 0,
+      "fp": 0,
+      "fn": 5,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam00267",
+      "class": "DUSTY",
+      "gt_count": 3,
+      "tp": 0,
+      "fp": 4,
+      "fn": 3,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam00278",
+      "class": "BIRD_DROP",
+      "gt_count": 7,
+      "tp": 0,
+      "fp": 11,
+      "fn": 7,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam00309",
+      "class": "BIRD_DROP",
+      "gt_count": 23,
+      "tp": 0,
+      "fp": 0,
+      "fn": 23,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam00143",
+      "class": "BIRD_DROP",
+      "gt_count": 6,
+      "tp": 0,
+      "fp": 1,
+      "fn": 6,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam00558",
+      "class": "DUSTY",
+      "gt_count": 5,
+      "tp": 0,
+      "fp": 1,
+      "fn": 5,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam00168",
+      "class": "DUSTY",
+      "gt_count": 20,
+      "tp": 0,
+      "fp": 3,
+      "fn": 20,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam00625",
+      "class": "DUSTY",
+      "gt_count": 4,
+      "tp": 0,
+      "fp": 3,
+      "fn": 4,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam00812",
+      "class": "DUSTY",
+      "gt_count": 6,
+      "tp": 0,
+      "fp": 5,
+      "fn": 6,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam00876",
+      "class": "DUSTY",
+      "gt_count": 4,
+      "tp": 0,
+      "fp": 0,
+      "fn": 4,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam00908",
+      "class": "DUSTY",
+      "gt_count": 4,
+      "tp": 0,
+      "fp": 4,
+      "fn": 4,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam01224",
+      "class": "DUSTY",
+      "gt_count": 6,
+      "tp": 0,
+      "fp": 1,
+      "fn": 6,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam00977",
+      "class": "DUSTY",
+      "gt_count": 5,
+      "tp": 0,
+      "fp": 2,
+      "fn": 5,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam01232",
+      "class": "DUSTY",
+      "gt_count": 3,
+      "tp": 0,
+      "fp": 4,
+      "fn": 3,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam00989",
+      "class": "DUSTY",
+      "gt_count": 4,
+      "tp": 0,
+      "fp": 3,
+      "fn": 4,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam00999",
+      "class": "DUSTY",
+      "gt_count": 11,
+      "tp": 0,
+      "fp": 1,
+      "fn": 11,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam01009",
+      "class": "DUSTY",
+      "gt_count": 3,
+      "tp": 0,
+      "fp": 1,
+      "fn": 3,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam01048",
+      "class": "DUSTY",
+      "gt_count": 3,
+      "tp": 0,
+      "fp": 0,
+      "fn": 3,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam01058",
+      "class": "DUSTY",
+      "gt_count": 3,
+      "tp": 0,
+      "fp": 0,
+      "fn": 3,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam01069",
+      "class": "DUSTY",
+      "gt_count": 5,
+      "tp": 0,
+      "fp": 2,
+      "fn": 5,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam01089",
+      "class": "DUSTY",
+      "gt_count": 7,
+      "tp": 0,
+      "fp": 1,
+      "fn": 7,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam01098",
+      "class": "DUSTY",
+      "gt_count": 3,
+      "tp": 0,
+      "fp": 0,
+      "fn": 3,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam00487",
+      "class": "CLEAN",
+      "gt_count": 6,
+      "tp": 0,
+      "fp": 1,
+      "fn": 6,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam00487",
+      "class": "BIRD_DROP",
+      "gt_count": 13,
+      "tp": 0,
+      "fp": 0,
+      "fn": 13,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam00497",
+      "class": "DUSTY",
+      "gt_count": 3,
+      "tp": 0,
+      "fp": 0,
+      "fn": 3,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam01129",
+      "class": "BIRD_DROP",
+      "gt_count": 6,
+      "tp": 0,
+      "fp": 1,
+      "fn": 6,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam00781",
+      "class": "BIRD_DROP",
+      "gt_count": 5,
+      "tp": 0,
+      "fp": 0,
+      "fn": 5,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam00791",
+      "class": "BIRD_DROP",
+      "gt_count": 4,
+      "tp": 0,
+      "fp": 5,
+      "fn": 4,
+      "recall": 0.0
+    },
+    {
+      "family_id": "fam00362",
+      "class": "DUSTY",
+      "gt_count": 28,
+      "tp": 2,
+      "fp": 11,
+      "fn": 26,
+      "recall": 0.07142857142857142
+    },
+    {
+      "family_id": "fam00162",
+      "class": "DUSTY",
+      "gt_count": 27,
+      "tp": 2,
+      "fp": 6,
+      "fn": 25,
+      "recall": 0.07407407407407407
+    },
+    {
+      "family_id": "fam00351",
+      "class": "DUSTY",
+      "gt_count": 24,
+      "tp": 2,
+      "fp": 6,
+      "fn": 22,
+      "recall": 0.08333333333333333
+    },
+    {
+      "family_id": "fam00143",
+      "class": "DUSTY",
+      "gt_count": 23,
+      "tp": 2,
+      "fp": 8,
+      "fn": 21,
+      "recall": 0.08695652173913043
+    },
+    {
+      "family_id": "fam00081",
+      "class": "DUSTY",
+      "gt_count": 22,
+      "tp": 2,
+      "fp": 8,
+      "fn": 20,
+      "recall": 0.09090909090909091
+    },
+    {
+      "family_id": "fam00450",
+      "class": "CLEAN",
+      "gt_count": 11,
+      "tp": 1,
+      "fp": 0,
+      "fn": 10,
+      "recall": 0.09090909090909091
+    },
+    {
+      "family_id": "fam00177",
+      "class": "CLEAN",
+      "gt_count": 9,
+      "tp": 1,
+      "fp": 6,
+      "fn": 8,
+      "recall": 0.1111111111111111
+    },
+    {
+      "family_id": "fam00227",
+      "class": "BIRD_DROP",
+      "gt_count": 9,
+      "tp": 1,
+      "fp": 3,
+      "fn": 8,
+      "recall": 0.1111111111111111
+    },
+    {
+      "family_id": "fam00387",
+      "class": "BIRD_DROP",
+      "gt_count": 17,
+      "tp": 2,
+      "fp": 2,
+      "fn": 15,
+      "recall": 0.11764705882352941
+    },
+    {
+      "family_id": "fam00247",
+      "class": "BIRD_DROP",
+      "gt_count": 16,
+      "tp": 2,
+      "fp": 3,
+      "fn": 14,
+      "recall": 0.125
+    },
+    {
+      "family_id": "fam00399",
+      "class": "DUSTY",
+      "gt_count": 8,
+      "tp": 1,
+      "fp": 9,
+      "fn": 7,
+      "recall": 0.125
+    },
+    {
+      "family_id": "fam00309",
+      "class": "DUSTY",
+      "gt_count": 14,
+      "tp": 2,
+      "fp": 0,
+      "fn": 12,
+      "recall": 0.14285714285714285
+    },
+    {
+      "family_id": "fam00450",
+      "class": "DUSTY",
+      "gt_count": 7,
+      "tp": 1,
+      "fp": 13,
+      "fn": 6,
+      "recall": 0.14285714285714285
+    },
+    {
+      "family_id": "fam00132",
+      "class": "DUSTY",
+      "gt_count": 33,
+      "tp": 5,
+      "fp": 10,
+      "fn": 28,
+      "recall": 0.15151515151515152
+    },
+    {
+      "family_id": "fam00187",
+      "class": "BIRD_DROP",
+      "gt_count": 24,
+      "tp": 4,
+      "fp": 6,
+      "fn": 20,
+      "recall": 0.16666666666666666
+    },
+    {
+      "family_id": "fam00198",
+      "class": "BIRD_DROP",
+      "gt_count": 30,
+      "tp": 5,
+      "fp": 8,
+      "fn": 25,
+      "recall": 0.16666666666666666
+    },
+    {
+      "family_id": "fam00257",
+      "class": "DUSTY",
+      "gt_count": 6,
+      "tp": 1,
+      "fp": 1,
+      "fn": 5,
+      "recall": 0.16666666666666666
+    },
+    {
+      "family_id": "fam00362",
+      "class": "BIRD_DROP",
+      "gt_count": 18,
+      "tp": 3,
+      "fp": 2,
+      "fn": 15,
+      "recall": 0.16666666666666666
+    },
+    {
+      "family_id": "fam01107",
+      "class": "DUSTY",
+      "gt_count": 6,
+      "tp": 1,
+      "fp": 3,
+      "fn": 5,
+      "recall": 0.16666666666666666
+    },
+    {
+      "family_id": "fam00578",
+      "class": "BIRD_DROP",
+      "gt_count": 12,
+      "tp": 2,
+      "fp": 1,
+      "fn": 10,
+      "recall": 0.16666666666666666
+    },
+    {
+      "family_id": "fam00198",
+      "class": "DUSTY",
+      "gt_count": 11,
+      "tp": 2,
+      "fp": 4,
+      "fn": 9,
+      "recall": 0.18181818181818182
+    },
+    {
+      "family_id": "fam00046",
+      "class": "DUSTY",
+      "gt_count": 21,
+      "tp": 4,
+      "fp": 6,
+      "fn": 17,
+      "recall": 0.19047619047619047
+    },
+    {
+      "family_id": "fam00267",
+      "class": "BIRD_DROP",
+      "gt_count": 10,
+      "tp": 2,
+      "fp": 1,
+      "fn": 8,
+      "recall": 0.2
+    },
+    {
+      "family_id": "fam00299",
+      "class": "DUSTY",
+      "gt_count": 10,
+      "tp": 2,
+      "fp": 1,
+      "fn": 8,
+      "recall": 0.2
+    },
+    {
+      "family_id": "fam00450",
+      "class": "PHYSICAL_DAMAGE",
+      "gt_count": 10,
+      "tp": 2,
+      "fp": 1,
+      "fn": 8,
+      "recall": 0.2
+    },
+    {
+      "family_id": "fam00530",
+      "class": "DUSTY",
+      "gt_count": 10,
+      "tp": 2,
+      "fp": 1,
+      "fn": 8,
+      "recall": 0.2
+    },
+    {
+      "family_id": "fam00198",
+      "class": "CLEAN",
+      "gt_count": 9,
+      "tp": 2,
+      "fp": 0,
+      "fn": 7,
+      "recall": 0.2222222222222222
+    },
+    {
+      "family_id": "fam00368",
+      "class": "BIRD_DROP",
+      "gt_count": 9,
+      "tp": 2,
+      "fp": 0,
+      "fn": 7,
+      "recall": 0.2222222222222222
+    },
+    {
+      "family_id": "fam00217",
+      "class": "CLEAN",
+      "gt_count": 53,
+      "tp": 13,
+      "fp": 18,
+      "fn": 40,
+      "recall": 0.24528301886792453
+    },
+    {
+      "family_id": "fam00594",
+      "class": "BIRD_DROP",
+      "gt_count": 8,
+      "tp": 2,
+      "fp": 5,
+      "fn": 6,
+      "recall": 0.25
+    },
+    {
+      "family_id": "fam00060",
+      "class": "BIRD_DROP",
+      "gt_count": 12,
+      "tp": 3,
+      "fp": 4,
+      "fn": 9,
+      "recall": 0.25
+    },
+    {
+      "family_id": "fam00430",
+      "class": "DUSTY",
+      "gt_count": 4,
+      "tp": 1,
+      "fp": 0,
+      "fn": 3,
+      "recall": 0.25
+    },
+    {
+      "family_id": "fam00845",
+      "class": "DUSTY",
+      "gt_count": 4,
+      "tp": 1,
+      "fp": 2,
+      "fn": 3,
+      "recall": 0.25
+    },
+    {
+      "family_id": "fam00853",
+      "class": "DUSTY",
+      "gt_count": 4,
+      "tp": 1,
+      "fp": 0,
+      "fn": 3,
+      "recall": 0.25
+    },
+    {
+      "family_id": "fam00865",
+      "class": "DUSTY",
+      "gt_count": 4,
+      "tp": 1,
+      "fp": 0,
+      "fn": 3,
+      "recall": 0.25
+    },
+    {
+      "family_id": "fam00227",
+      "class": "CLEAN",
+      "gt_count": 22,
+      "tp": 6,
+      "fp": 2,
+      "fn": 16,
+      "recall": 0.2727272727272727
+    },
+    {
+      "family_id": "fam00497",
+      "class": "PHYSICAL_DAMAGE",
+      "gt_count": 11,
+      "tp": 3,
+      "fp": 10,
+      "fn": 8,
+      "recall": 0.2727272727272727
+    },
+    {
+      "family_id": "fam00091",
+      "class": "DUSTY",
+      "gt_count": 47,
+      "tp": 13,
+      "fp": 14,
+      "fn": 34,
+      "recall": 0.2765957446808511
+    },
+    {
+      "family_id": "fam00375",
+      "class": "DUSTY",
+      "gt_count": 36,
+      "tp": 10,
+      "fp": 9,
+      "fn": 26,
+      "recall": 0.2777777777777778
+    },
+    {
+      "family_id": "fam00187",
+      "class": "DUSTY",
+      "gt_count": 7,
+      "tp": 2,
+      "fp": 5,
+      "fn": 5,
+      "recall": 0.2857142857142857
+    },
+    {
+      "family_id": "fam00339",
+      "class": "BIRD_DROP",
+      "gt_count": 7,
+      "tp": 2,
+      "fp": 1,
+      "fn": 5,
+      "recall": 0.2857142857142857
+    },
+    {
+      "family_id": "fam00015",
+      "class": "BIRD_DROP",
+      "gt_count": 79,
+      "tp": 23,
+      "fp": 16,
+      "fn": 56,
+      "recall": 0.2911392405063291
+    },
+    {
+      "family_id": "fam00152",
+      "class": "BIRD_DROP",
+      "gt_count": 10,
+      "tp": 3,
+      "fp": 3,
+      "fn": 7,
+      "recall": 0.3
+    },
+    {
+      "family_id": "fam00102",
+      "class": "BIRD_DROP",
+      "gt_count": 10,
+      "tp": 3,
+      "fp": 1,
+      "fn": 7,
+      "recall": 0.3
+    },
+    {
+      "family_id": "fam00554",
+      "class": "DUSTY",
+      "gt_count": 10,
+      "tp": 3,
+      "fp": 10,
+      "fn": 7,
+      "recall": 0.3
+    },
+    {
+      "family_id": "fam00237",
+      "class": "CLEAN",
+      "gt_count": 23,
+      "tp": 7,
+      "fp": 9,
+      "fn": 16,
+      "recall": 0.30434782608695654
+    },
+    {
+      "family_id": "fam00328",
+      "class": "BIRD_DROP",
+      "gt_count": 13,
+      "tp": 4,
+      "fp": 6,
+      "fn": 9,
+      "recall": 0.3076923076923077
+    },
+    {
+      "family_id": "fam00177",
+      "class": "DUSTY",
+      "gt_count": 16,
+      "tp": 5,
+      "fp": 4,
+      "fn": 11,
+      "recall": 0.3125
+    },
+    {
+      "family_id": "fam00520",
+      "class": "DUSTY",
+      "gt_count": 16,
+      "tp": 5,
+      "fp": 3,
+      "fn": 11,
+      "recall": 0.3125
+    },
+    {
+      "family_id": "fam00152",
+      "class": "DUSTY",
+      "gt_count": 9,
+      "tp": 3,
+      "fp": 5,
+      "fn": 6,
+      "recall": 0.3333333333333333
+    },
+    {
+      "family_id": "fam00247",
+      "class": "CLEAN",
+      "gt_count": 15,
+      "tp": 5,
+      "fp": 14,
+      "fn": 10,
+      "recall": 0.3333333333333333
+    },
+    {
+      "family_id": "fam00801",
+      "class": "DUSTY",
+      "gt_count": 3,
+      "tp": 1,
+      "fp": 0,
+      "fn": 2,
+      "recall": 0.3333333333333333
+    },
+    {
+      "family_id": "fam00887",
+      "class": "DUSTY",
+      "gt_count": 3,
+      "tp": 1,
+      "fp": 0,
+      "fn": 2,
+      "recall": 0.3333333333333333
+    },
+    {
+      "family_id": "fam00946",
+      "class": "DUSTY",
+      "gt_count": 3,
+      "tp": 1,
+      "fp": 1,
+      "fn": 2,
+      "recall": 0.3333333333333333
+    },
+    {
+      "family_id": "fam01037",
+      "class": "DUSTY",
+      "gt_count": 6,
+      "tp": 2,
+      "fp": 3,
+      "fn": 4,
+      "recall": 0.3333333333333333
+    },
+    {
+      "family_id": "fam00460",
+      "class": "DUSTY",
+      "gt_count": 6,
+      "tp": 2,
+      "fp": 0,
+      "fn": 4,
+      "recall": 0.3333333333333333
+    },
+    {
+      "family_id": "fam00520",
+      "class": "CLEAN",
+      "gt_count": 6,
+      "tp": 2,
+      "fp": 1,
+      "fn": 4,
+      "recall": 0.3333333333333333
+    },
+    {
+      "family_id": "fam00530",
+      "class": "CLEAN",
+      "gt_count": 3,
+      "tp": 1,
+      "fp": 0,
+      "fn": 2,
+      "recall": 0.3333333333333333
+    },
+    {
+      "family_id": "fam01170",
+      "class": "BIRD_DROP",
+      "gt_count": 3,
+      "tp": 1,
+      "fp": 0,
+      "fn": 2,
+      "recall": 0.3333333333333333
+    },
+    {
+      "family_id": "fam00470",
+      "class": "DUSTY",
+      "gt_count": 17,
+      "tp": 6,
+      "fp": 10,
+      "fn": 11,
+      "recall": 0.35294117647058826
+    },
+    {
+      "family_id": "fam00654",
+      "class": "BIRD_DROP",
+      "gt_count": 14,
+      "tp": 5,
+      "fp": 10,
+      "fn": 9,
+      "recall": 0.35714285714285715
+    },
+    {
+      "family_id": "fam00387",
+      "class": "DUSTY",
+      "gt_count": 14,
+      "tp": 5,
+      "fp": 3,
+      "fn": 9,
+      "recall": 0.35714285714285715
+    },
+    {
+      "family_id": "fam00168",
+      "class": "BIRD_DROP",
+      "gt_count": 11,
+      "tp": 4,
+      "fp": 6,
+      "fn": 7,
+      "recall": 0.36363636363636365
+    },
+    {
+      "family_id": "fam00081",
+      "class": "BIRD_DROP",
+      "gt_count": 11,
+      "tp": 4,
+      "fp": 1,
+      "fn": 7,
+      "recall": 0.36363636363636365
+    },
+    {
+      "family_id": "fam00132",
+      "class": "BIRD_DROP",
+      "gt_count": 16,
+      "tp": 6,
+      "fp": 24,
+      "fn": 10,
+      "recall": 0.375
+    },
+    {
+      "family_id": "fam00497",
+      "class": "CLEAN",
+      "gt_count": 8,
+      "tp": 3,
+      "fp": 3,
+      "fn": 5,
+      "recall": 0.375
+    },
+    {
+      "family_id": "fam00026",
+      "class": "BIRD_DROP",
+      "gt_count": 23,
+      "tp": 9,
+      "fp": 10,
+      "fn": 14,
+      "recall": 0.391304347826087
+    },
+    {
+      "family_id": "fam00152",
+      "class": "CLEAN",
+      "gt_count": 5,
+      "tp": 2,
+      "fp": 14,
+      "fn": 3,
+      "recall": 0.4
+    },
+    {
+      "family_id": "fam00217",
+      "class": "DUSTY",
+      "gt_count": 15,
+      "tp": 6,
+      "fp": 13,
+      "fn": 9,
+      "recall": 0.4
+    },
+    {
+      "family_id": "fam00102",
+      "class": "PHYSICAL_DAMAGE",
+      "gt_count": 5,
+      "tp": 2,
+      "fp": 1,
+      "fn": 3,
+      "recall": 0.4
+    },
+    {
+      "family_id": "fam00081",
+      "class": "CLEAN",
+      "gt_count": 5,
+      "tp": 2,
+      "fp": 0,
+      "fn": 3,
+      "recall": 0.4
+    },
+    {
+      "family_id": "fam00409",
+      "class": "CLEAN",
+      "gt_count": 5,
+      "tp": 2,
+      "fp": 0,
+      "fn": 3,
+      "recall": 0.4
+    },
+    {
+      "family_id": "fam00439",
+      "class": "DUSTY",
+      "gt_count": 5,
+      "tp": 2,
+      "fp": 2,
+      "fn": 3,
+      "recall": 0.4
+    },
+    {
+      "family_id": "fam00113",
+      "class": "BIRD_DROP",
+      "gt_count": 12,
+      "tp": 5,
+      "fp": 2,
+      "fn": 7,
+      "recall": 0.4166666666666667
+    },
+    {
+      "family_id": "fam00047",
+      "class": "BIRD_DROP",
+      "gt_count": 19,
+      "tp": 8,
+      "fp": 3,
+      "fn": 11,
+      "recall": 0.42105263157894735
+    },
+    {
+      "family_id": "fam00545",
+      "class": "BIRD_DROP",
+      "gt_count": 7,
+      "tp": 3,
+      "fp": 11,
+      "fn": 4,
+      "recall": 0.42857142857142855
+    },
+    {
+      "family_id": "fam00375",
+      "class": "CLEAN",
+      "gt_count": 14,
+      "tp": 6,
+      "fp": 1,
+      "fn": 8,
+      "recall": 0.42857142857142855
+    },
+    {
+      "family_id": "fam00470",
+      "class": "CLEAN",
+      "gt_count": 7,
+      "tp": 3,
+      "fp": 4,
+      "fn": 4,
+      "recall": 0.42857142857142855
+    },
+    {
+      "family_id": "fam00237",
+      "class": "BIRD_DROP",
+      "gt_count": 11,
+      "tp": 5,
+      "fp": 4,
+      "fn": 6,
+      "recall": 0.45454545454545453
+    },
+    {
+      "family_id": "fam00368",
+      "class": "DUSTY",
+      "gt_count": 11,
+      "tp": 5,
+      "fp": 0,
+      "fn": 6,
+      "recall": 0.45454545454545453
+    },
+    {
+      "family_id": "fam00530",
+      "class": "BIRD_DROP",
+      "gt_count": 11,
+      "tp": 5,
+      "fp": 4,
+      "fn": 6,
+      "recall": 0.45454545454545453
+    },
+    {
+      "family_id": "fam00177",
+      "class": "BIRD_DROP",
+      "gt_count": 15,
+      "tp": 7,
+      "fp": 2,
+      "fn": 8,
+      "recall": 0.4666666666666667
+    },
+    {
+      "family_id": "fam00278",
+      "class": "CLEAN",
+      "gt_count": 15,
+      "tp": 7,
+      "fp": 1,
+      "fn": 8,
+      "recall": 0.4666666666666667
+    },
+    {
+      "family_id": "fam00102",
+      "class": "DUSTY",
+      "gt_count": 21,
+      "tp": 10,
+      "fp": 10,
+      "fn": 11,
+      "recall": 0.47619047619047616
+    },
+    {
+      "family_id": "fam00060",
+      "class": "CLEAN",
+      "gt_count": 4,
+      "tp": 2,
+      "fp": 0,
+      "fn": 2,
+      "recall": 0.5
+    },
+    {
+      "family_id": "fam00257",
+      "class": "PHYSICAL_DAMAGE",
+      "gt_count": 4,
+      "tp": 2,
+      "fp": 0,
+      "fn": 2,
+      "recall": 0.5
+    },
+    {
+      "family_id": "fam00299",
+      "class": "PHYSICAL_DAMAGE",
+      "gt_count": 4,
+      "tp": 2,
+      "fp": 0,
+      "fn": 2,
+      "recall": 0.5
+    },
+    {
+      "family_id": "fam00565",
+      "class": "DUSTY",
+      "gt_count": 16,
+      "tp": 8,
+      "fp": 1,
+      "fn": 8,
+      "recall": 0.5
+    },
+    {
+      "family_id": "fam00162",
+      "class": "CLEAN",
+      "gt_count": 4,
+      "tp": 2,
+      "fp": 2,
+      "fn": 2,
+      "recall": 0.5
+    },
+    {
+      "family_id": "fam00937",
+      "class": "DUSTY",
+      "gt_count": 4,
+      "tp": 2,
+      "fp": 3,
+      "fn": 2,
+      "recall": 0.5
+    },
+    {
+      "family_id": "fam00470",
+      "class": "PHYSICAL_DAMAGE",
+      "gt_count": 6,
+      "tp": 3,
+      "fp": 1,
+      "fn": 3,
+      "recall": 0.5
+    },
+    {
+      "family_id": "fam00477",
+      "class": "BIRD_DROP",
+      "gt_count": 4,
+      "tp": 2,
+      "fp": 0,
+      "fn": 2,
+      "recall": 0.5
+    },
+    {
+      "family_id": "fam00057",
+      "class": "CLEAN",
+      "gt_count": 4,
+      "tp": 2,
+      "fp": 3,
+      "fn": 2,
+      "recall": 0.5
+    },
+    {
+      "family_id": "fam00008",
+      "class": "BIRD_DROP",
+      "gt_count": 94,
+      "tp": 49,
+      "fp": 57,
+      "fn": 45,
+      "recall": 0.5212765957446809
+    },
+    {
+      "family_id": "fam00509",
+      "class": "BIRD_DROP",
+      "gt_count": 17,
+      "tp": 9,
+      "fp": 8,
+      "fn": 8,
+      "recall": 0.5294117647058824
+    },
+    {
+      "family_id": "fam00339",
+      "class": "DUSTY",
+      "gt_count": 11,
+      "tp": 6,
+      "fp": 3,
+      "fn": 5,
+      "recall": 0.5454545454545454
+    },
+    {
+      "family_id": "fam00375",
+      "class": "BIRD_DROP",
+      "gt_count": 9,
+      "tp": 5,
+      "fp": 3,
+      "fn": 4,
+      "recall": 0.5555555555555556
+    },
+    {
+      "family_id": "fam00460",
+      "class": "BIRD_DROP",
+      "gt_count": 9,
+      "tp": 5,
+      "fp": 1,
+      "fn": 4,
+      "recall": 0.5555555555555556
+    },
+    {
+      "family_id": "fam00339",
+      "class": "CLEAN",
+      "gt_count": 7,
+      "tp": 4,
+      "fp": 6,
+      "fn": 3,
+      "recall": 0.5714285714285714
+    },
+    {
+      "family_id": "fam00113",
+      "class": "DUSTY",
+      "gt_count": 35,
+      "tp": 20,
+      "fp": 20,
+      "fn": 15,
+      "recall": 0.5714285714285714
+    },
+    {
+      "family_id": "fam00720",
+      "class": "DUSTY",
+      "gt_count": 7,
+      "tp": 4,
+      "fp": 5,
+      "fn": 3,
+      "recall": 0.5714285714285714
+    },
+    {
+      "family_id": "fam00071",
+      "class": "DUSTY",
+      "gt_count": 45,
+      "tp": 26,
+      "fp": 18,
+      "fn": 19,
+      "recall": 0.5777777777777777
+    },
+    {
+      "family_id": "fam00288",
+      "class": "BIRD_DROP",
+      "gt_count": 10,
+      "tp": 6,
+      "fp": 4,
+      "fn": 4,
+      "recall": 0.6
+    },
+    {
+      "family_id": "fam00420",
+      "class": "DUSTY",
+      "gt_count": 10,
+      "tp": 6,
+      "fp": 5,
+      "fn": 4,
+      "recall": 0.6
+    },
+    {
+      "family_id": "fam00420",
+      "class": "PHYSICAL_DAMAGE",
+      "gt_count": 5,
+      "tp": 3,
+      "fp": 1,
+      "fn": 2,
+      "recall": 0.6
+    },
+    {
+      "family_id": "fam00026",
+      "class": "DUSTY",
+      "gt_count": 33,
+      "tp": 20,
+      "fp": 19,
+      "fn": 13,
+      "recall": 0.6060606060606061
+    },
+    {
+      "family_id": "fam00046",
+      "class": "CLEAN",
+      "gt_count": 23,
+      "tp": 14,
+      "fp": 4,
+      "fn": 9,
+      "recall": 0.6086956521739131
+    },
+    {
+      "family_id": "fam00208",
+      "class": "CLEAN",
+      "gt_count": 82,
+      "tp": 50,
+      "fp": 86,
+      "fn": 32,
+      "recall": 0.6097560975609756
+    },
+    {
+      "family_id": "fam00008",
+      "class": "CLEAN",
+      "gt_count": 8,
+      "tp": 5,
+      "fp": 3,
+      "fn": 3,
+      "recall": 0.625
+    },
+    {
+      "family_id": "fam00208",
+      "class": "BIRD_DROP",
+      "gt_count": 16,
+      "tp": 10,
+      "fp": 8,
+      "fn": 6,
+      "recall": 0.625
+    },
+    {
+      "family_id": "fam00041",
+      "class": "BIRD_DROP",
+      "gt_count": 6,
+      "tp": 4,
+      "fp": 0,
+      "fn": 2,
+      "recall": 0.6666666666666666
+    },
+    {
+      "family_id": "fam00257",
+      "class": "BIRD_DROP",
+      "gt_count": 6,
+      "tp": 4,
+      "fp": 1,
+      "fn": 2,
+      "recall": 0.6666666666666666
+    },
+    {
+      "family_id": "fam00267",
+      "class": "CLEAN",
+      "gt_count": 3,
+      "tp": 2,
+      "fp": 0,
+      "fn": 1,
+      "recall": 0.6666666666666666
+    },
+    {
+      "family_id": "fam00299",
+      "class": "CLEAN",
+      "gt_count": 6,
+      "tp": 4,
+      "fp": 3,
+      "fn": 2,
+      "recall": 0.6666666666666666
+    },
+    {
+      "family_id": "fam00319",
+      "class": "DUSTY",
+      "gt_count": 21,
+      "tp": 14,
+      "fp": 13,
+      "fn": 7,
+      "recall": 0.6666666666666666
+    },
+    {
+      "family_id": "fam00162",
+      "class": "BIRD_DROP",
+      "gt_count": 3,
+      "tp": 2,
+      "fp": 0,
+      "fn": 1,
+      "recall": 0.6666666666666666
+    },
+    {
+      "family_id": "fam00477",
+      "class": "DUSTY",
+      "gt_count": 6,
+      "tp": 4,
+      "fp": 2,
+      "fn": 2,
+      "recall": 0.6666666666666666
+    },
+    {
+      "family_id": "fam01149",
+      "class": "BIRD_DROP",
+      "gt_count": 3,
+      "tp": 2,
+      "fp": 3,
+      "fn": 1,
+      "recall": 0.6666666666666666
+    },
+    {
+      "family_id": "fam00309",
+      "class": "CLEAN",
+      "gt_count": 16,
+      "tp": 11,
+      "fp": 16,
+      "fn": 5,
+      "recall": 0.6875
+    },
+    {
+      "family_id": "fam00319",
+      "class": "CLEAN",
+      "gt_count": 16,
+      "tp": 11,
+      "fp": 14,
+      "fn": 5,
+      "recall": 0.6875
+    },
+    {
+      "family_id": "fam00439",
+      "class": "CLEAN",
+      "gt_count": 13,
+      "tp": 9,
+      "fp": 3,
+      "fn": 4,
+      "recall": 0.6923076923076923
+    },
+    {
+      "family_id": "fam00399",
+      "class": "CLEAN",
+      "gt_count": 10,
+      "tp": 7,
+      "fp": 2,
+      "fn": 3,
+      "recall": 0.7
+    },
+    {
+      "family_id": "fam00015",
+      "class": "DUSTY",
+      "gt_count": 17,
+      "tp": 12,
+      "fp": 1,
+      "fn": 5,
+      "recall": 0.7058823529411765
+    },
+    {
+      "family_id": "fam01182",
+      "class": "BIRD_DROP",
+      "gt_count": 7,
+      "tp": 5,
+      "fp": 5,
+      "fn": 2,
+      "recall": 0.7142857142857143
+    },
+    {
+      "family_id": "fam00257",
+      "class": "CLEAN",
+      "gt_count": 12,
+      "tp": 9,
+      "fp": 2,
+      "fn": 3,
+      "recall": 0.75
+    },
+    {
+      "family_id": "fam00288",
+      "class": "CLEAN",
+      "gt_count": 4,
+      "tp": 3,
+      "fp": 2,
+      "fn": 1,
+      "recall": 0.75
+    },
+    {
+      "family_id": "fam00615",
+      "class": "DUSTY",
+      "gt_count": 4,
+      "tp": 3,
+      "fp": 3,
+      "fn": 1,
+      "recall": 0.75
+    },
+    {
+      "family_id": "fam00430",
+      "class": "CLEAN",
+      "gt_count": 4,
+      "tp": 3,
+      "fp": 10,
+      "fn": 1,
+      "recall": 0.75
+    },
+    {
+      "family_id": "fam00041",
+      "class": "CLEAN",
+      "gt_count": 9,
+      "tp": 7,
+      "fp": 4,
+      "fn": 2,
+      "recall": 0.7777777777777778
+    },
+    {
+      "family_id": "fam00362",
+      "class": "CLEAN",
+      "gt_count": 18,
+      "tp": 14,
+      "fp": 24,
+      "fn": 4,
+      "recall": 0.7777777777777778
+    },
+    {
+      "family_id": "fam00664",
+      "class": "BIRD_DROP",
+      "gt_count": 5,
+      "tp": 4,
+      "fp": 1,
+      "fn": 1,
+      "recall": 0.8
+    },
+    {
+      "family_id": "fam00351",
+      "class": "BIRD_DROP",
+      "gt_count": 10,
+      "tp": 8,
+      "fp": 3,
+      "fn": 2,
+      "recall": 0.8
+    },
+    {
+      "family_id": "fam00026",
+      "class": "PHYSICAL_DAMAGE",
+      "gt_count": 10,
+      "tp": 8,
+      "fp": 1,
+      "fn": 2,
+      "recall": 0.8
+    },
+    {
+      "family_id": "fam00487",
+      "class": "DUSTY",
+      "gt_count": 5,
+      "tp": 4,
+      "fp": 2,
+      "fn": 1,
+      "recall": 0.8
+    },
+    {
+      "family_id": "fam00208",
+      "class": "PHYSICAL_DAMAGE",
+      "gt_count": 11,
+      "tp": 9,
+      "fp": 7,
+      "fn": 2,
+      "recall": 0.8181818181818182
+    },
+    {
+      "family_id": "fam01161",
+      "class": "BIRD_DROP",
+      "gt_count": 17,
+      "tp": 14,
+      "fp": 13,
+      "fn": 3,
+      "recall": 0.8235294117647058
+    },
+    {
+      "family_id": "fam00008",
+      "class": "DUSTY",
+      "gt_count": 6,
+      "tp": 5,
+      "fp": 3,
+      "fn": 1,
+      "recall": 0.8333333333333334
+    },
+    {
+      "family_id": "fam00676",
+      "class": "CLEAN",
+      "gt_count": 7,
+      "tp": 6,
+      "fp": 8,
+      "fn": 1,
+      "recall": 0.8571428571428571
+    },
+    {
+      "family_id": "fam00477",
+      "class": "CLEAN",
+      "gt_count": 15,
+      "tp": 13,
+      "fp": 3,
+      "fn": 2,
+      "recall": 0.8666666666666667
+    },
+    {
+      "family_id": "fam00015",
+      "class": "CLEAN",
+      "gt_count": 13,
+      "tp": 12,
+      "fp": 1,
+      "fn": 1,
+      "recall": 0.9230769230769231
+    },
+    {
+      "family_id": "fam00122",
+      "class": "BIRD_DROP",
+      "gt_count": 3,
+      "tp": 3,
+      "fp": 0,
+      "fn": 0,
+      "recall": 1.0
+    },
+    {
+      "family_id": "fam00604",
+      "class": "CLEAN",
+      "gt_count": 7,
+      "tp": 7,
+      "fp": 4,
+      "fn": 0,
+      "recall": 1.0
+    },
+    {
+      "family_id": "fam00328",
+      "class": "CLEAN",
+      "gt_count": 4,
+      "tp": 4,
+      "fp": 1,
+      "fn": 0,
+      "recall": 1.0
+    },
+    {
+      "family_id": "fam00143",
+      "class": "CLEAN",
+      "gt_count": 4,
+      "tp": 4,
+      "fp": 0,
+      "fn": 0,
+      "recall": 1.0
+    },
+    {
+      "family_id": "fam00091",
+      "class": "CLEAN",
+      "gt_count": 8,
+      "tp": 8,
+      "fp": 3,
+      "fn": 0,
+      "recall": 1.0
+    },
+    {
+      "family_id": "fam00420",
+      "class": "CLEAN",
+      "gt_count": 5,
+      "tp": 5,
+      "fp": 2,
+      "fn": 0,
+      "recall": 1.0
+    },
+    {
+      "family_id": "fam00026",
+      "class": "CLEAN",
+      "gt_count": 3,
+      "tp": 3,
+      "fp": 1,
+      "fn": 0,
+      "recall": 1.0
+    },
+    {
+      "family_id": "fam00460",
+      "class": "CLEAN",
+      "gt_count": 3,
+      "tp": 3,
+      "fp": 7,
+      "fn": 0,
+      "recall": 1.0
+    },
+    {
+      "family_id": "fam00509",
+      "class": "CLEAN",
+      "gt_count": 3,
+      "tp": 3,
+      "fp": 3,
+      "fn": 0,
+      "recall": 1.0
+    }
+  ],
+  "data_quality_flags": [
+    {
+      "image": "Bird-120-_jpg.rf.622570877a0511ab621b87108398a88b.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.853,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00008"
+    },
+    {
+      "image": "Bird-120-_jpg.rf.a6b2864d5311599c18c7b7a901c95098.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000615,
+      "family_id": "fam00008"
+    },
+    {
+      "image": "Bird-136-_jpg.rf.9155fa1da054a380d90ee79112b869ca.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 1.0,
+      "class_a": "CLEAN",
+      "class_b": "CLEAN",
+      "family_id": "fam00041"
+    },
+    {
+      "image": "Bird-165-_jpg.rf.63940778f3a061a23eb2f0ff52e9d67b.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.879,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00177"
+    },
+    {
+      "image": "Bird-165-_jpg.rf.63940778f3a061a23eb2f0ff52e9d67b.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000977,
+      "family_id": "fam00177"
+    },
+    {
+      "image": "Bird-41-_jpg.rf.626c9eca2afa61a6c214add4efdd2313.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.914,
+      "class_a": "CLEAN",
+      "class_b": "CLEAN",
+      "family_id": "fam00198"
+    },
+    {
+      "image": "Bird-41-_jpg.rf.626c9eca2afa61a6c214add4efdd2313.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.804,
+      "class_a": "CLEAN",
+      "class_b": "CLEAN",
+      "family_id": "fam00198"
+    },
+    {
+      "image": "Bird-41-_jpg.rf.626c9eca2afa61a6c214add4efdd2313.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000984,
+      "family_id": "fam00198"
+    },
+    {
+      "image": "Bird-42-_jpg.rf.a0822e5c2f878a0849e632072e85c8ab.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000955,
+      "family_id": "fam00015"
+    },
+    {
+      "image": "Bird-42-_jpg.rf.c359c0106dd47253a3a5a83b505d4fc0.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000955,
+      "family_id": "fam00015"
+    },
+    {
+      "image": "Bird-42-_jpg.rf.c359c0106dd47253a3a5a83b505d4fc0.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000732,
+      "family_id": "fam00015"
+    },
+    {
+      "image": "Cleaan-10-_jpg.rf.629c2d33d96f3d8f6335739f451ade35.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000842,
+      "family_id": "fam00208"
+    },
+    {
+      "image": "Cleaan-10-_jpg.rf.629c2d33d96f3d8f6335739f451ade35.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000645,
+      "family_id": "fam00208"
+    },
+    {
+      "image": "Cleaan-10-_jpg.rf.72e65ca9c7c8ca8dd5d0e880c584a919.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "CLEAN",
+      "area_fraction": 0.000851,
+      "family_id": "fam00208"
+    },
+    {
+      "image": "Cleaan-10-_jpg.rf.72e65ca9c7c8ca8dd5d0e880c584a919.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "CLEAN",
+      "area_fraction": 0.000836,
+      "family_id": "fam00208"
+    },
+    {
+      "image": "Cleaan-109-_jpg.rf.3caaf2c39fdb135194fb09ac2f54f079.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.858,
+      "class_a": "DUSTY",
+      "class_b": "DUSTY",
+      "family_id": "fam00217"
+    },
+    {
+      "image": "Cleaan-109-_jpg.rf.3caaf2c39fdb135194fb09ac2f54f079.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "CLEAN",
+      "area_fraction": 0.000674,
+      "family_id": "fam00217"
+    },
+    {
+      "image": "Cleaan-109-_jpg.rf.3caaf2c39fdb135194fb09ac2f54f079.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "CLEAN",
+      "area_fraction": 0.000889,
+      "family_id": "fam00217"
+    },
+    {
+      "image": "Cleaan-109-_jpg.rf.3caaf2c39fdb135194fb09ac2f54f079.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "CLEAN",
+      "area_fraction": 0.000623,
+      "family_id": "fam00217"
+    },
+    {
+      "image": "Cleaan-120-_jpg.rf.fdd64011578aa830a2a1d992d77bb38f.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.831,
+      "class_a": "CLEAN",
+      "class_b": "CLEAN",
+      "family_id": "fam00227"
+    },
+    {
+      "image": "Cleaan-151-_jpg.rf.0849e07bf5400273ed2aee9173f7e59b.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.981,
+      "class_a": "CLEAN",
+      "class_b": "CLEAN",
+      "family_id": "fam00247"
+    },
+    {
+      "image": "Cleaan-151-_jpg.rf.b8ab96916f04b2c614c773aa1c142871.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.832,
+      "class_a": "CLEAN",
+      "class_b": "CLEAN",
+      "family_id": "fam00247"
+    },
+    {
+      "image": "Cleaan-185-_jpg.rf.b6f93c125a47a8c382812bc3e2f94c64.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.867,
+      "class_a": "CLEAN",
+      "class_b": "CLEAN",
+      "family_id": "fam00046"
+    },
+    {
+      "image": "Cleaan-185-_jpg.rf.b6f93c125a47a8c382812bc3e2f94c64.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.823,
+      "class_a": "CLEAN",
+      "class_b": "CLEAN",
+      "family_id": "fam00046"
+    },
+    {
+      "image": "Cleaan-185-_jpg.rf.b6f93c125a47a8c382812bc3e2f94c64.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.83,
+      "class_a": "CLEAN",
+      "class_b": "CLEAN",
+      "family_id": "fam00046"
+    },
+    {
+      "image": "Cleaan-198-_jpg.rf.edbf352407233b63c5a8a531d179beb0.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.82,
+      "class_a": "CLEAN",
+      "class_b": "CLEAN",
+      "family_id": "fam00278"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.818,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.809,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.889,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.889,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 1.0,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.875,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.889,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "DUSTY",
+      "area_fraction": 0.000264,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "DUSTY",
+      "area_fraction": 0.000132,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "DUSTY",
+      "area_fraction": 0.000171,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "DUSTY",
+      "area_fraction": 0.00011,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "DUSTY",
+      "area_fraction": 0.000205,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000154,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 7.3e-05,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000407,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000122,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000413,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000222,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000293,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000242,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000198,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000332,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.00041,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000137,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000342,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000137,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000195,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 5.9e-05,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000154,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000154,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000469,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000176,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000176,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000137,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Cleaan-6-_jpg.rf.deb7ef6646058787347b32a26ddbb273.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000103,
+      "family_id": "fam00309"
+    },
+    {
+      "image": "Dust-101-_jpg.rf.06f352425dffebcc63aea92a5ddc45b0.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.991,
+      "class_a": "CLEAN",
+      "class_b": "CLEAN",
+      "family_id": "fam00339"
+    },
+    {
+      "image": "Dust-101-_jpg.rf.06f352425dffebcc63aea92a5ddc45b0.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.854,
+      "class_a": "CLEAN",
+      "class_b": "CLEAN",
+      "family_id": "fam00339"
+    },
+    {
+      "image": "Dust-101-_jpg.rf.e288afca48c23d5ab12c59a5e159834f.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000674,
+      "family_id": "fam00339"
+    },
+    {
+      "image": "Dust-157-_jpg.rf.87dcf051bc99ff186f06496b12b5a740.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.85,
+      "class_a": "DUSTY",
+      "class_b": "DUSTY",
+      "family_id": "fam00168"
+    },
+    {
+      "image": "Dust-157-_jpg.rf.87dcf051bc99ff186f06496b12b5a740.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "DUSTY",
+      "area_fraction": 0.000586,
+      "family_id": "fam00168"
+    },
+    {
+      "image": "Dust-157-_jpg.rf.87dcf051bc99ff186f06496b12b5a740.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "DUSTY",
+      "area_fraction": 0.000762,
+      "family_id": "fam00168"
+    },
+    {
+      "image": "Dust-157-_jpg.rf.87dcf051bc99ff186f06496b12b5a740.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "DUSTY",
+      "area_fraction": 0.00094,
+      "family_id": "fam00168"
+    },
+    {
+      "image": "Dust-157-_jpg.rf.87dcf051bc99ff186f06496b12b5a740.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "DUSTY",
+      "area_fraction": 0.000447,
+      "family_id": "fam00168"
+    },
+    {
+      "image": "Dust-157-_jpg.rf.87dcf051bc99ff186f06496b12b5a740.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "DUSTY",
+      "area_fraction": 0.000322,
+      "family_id": "fam00168"
+    },
+    {
+      "image": "Dust-157-_jpg.rf.87dcf051bc99ff186f06496b12b5a740.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "DUSTY",
+      "area_fraction": 0.000232,
+      "family_id": "fam00168"
+    },
+    {
+      "image": "Dust-157-_jpg.rf.87dcf051bc99ff186f06496b12b5a740.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "DUSTY",
+      "area_fraction": 0.000146,
+      "family_id": "fam00168"
+    },
+    {
+      "image": "Dust-157-_jpg.rf.87dcf051bc99ff186f06496b12b5a740.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "DUSTY",
+      "area_fraction": 0.000124,
+      "family_id": "fam00168"
+    },
+    {
+      "image": "Dust-178-_jpg.rf.6f52501514ec031c223adbd4bc2128ea.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.865,
+      "class_a": "DUSTY",
+      "class_b": "DUSTY",
+      "family_id": "fam00362"
+    },
+    {
+      "image": "Dust-178-_jpg.rf.6f52501514ec031c223adbd4bc2128ea.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.906,
+      "class_a": "DUSTY",
+      "class_b": "DUSTY",
+      "family_id": "fam00362"
+    },
+    {
+      "image": "Dust-178-_jpg.rf.cbc0f151df380551a7aae317194d8094.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.803,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00362"
+    },
+    {
+      "image": "Dust-20-_jpg.rf.0110aa21efdd7e6d7ee5a41986d8cc62.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.862,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00368"
+    },
+    {
+      "image": "Dust-203-_jpg.rf.9698b36859db902a82b8b4b153f1ea04.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "DUSTY",
+      "area_fraction": 0.000791,
+      "family_id": "fam00132"
+    },
+    {
+      "image": "Dust-203-_jpg.rf.e536f515c0a665303abb2c06a571e008.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000791,
+      "family_id": "fam00132"
+    },
+    {
+      "image": "Dust-30-_jpg.rf.c9b93f7560ac72b76b3dc3e130a2d1b9.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.846,
+      "class_a": "CLEAN",
+      "class_b": "CLEAN",
+      "family_id": "fam00375"
+    },
+    {
+      "image": "Dust-30-_jpg.rf.c9b93f7560ac72b76b3dc3e130a2d1b9.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.813,
+      "class_a": "CLEAN",
+      "class_b": "CLEAN",
+      "family_id": "fam00375"
+    },
+    {
+      "image": "Dust-54-_jpg.rf.7d80d3f1bb50c9fadc8f06eb36fcd60a.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.842,
+      "class_a": "DUSTY",
+      "class_b": "DUSTY",
+      "family_id": "fam00071"
+    },
+    {
+      "image": "Dust-54-_jpg.rf.7d80d3f1bb50c9fadc8f06eb36fcd60a.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.881,
+      "class_a": "DUSTY",
+      "class_b": "DUSTY",
+      "family_id": "fam00071"
+    },
+    {
+      "image": "Dust-97-_jpg.rf.a49b4f6abf8f446d44a7b0c3ae5312e5.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.933,
+      "class_a": "DUSTY",
+      "class_b": "DUSTY",
+      "family_id": "fam00091"
+    },
+    {
+      "image": "Electrical-79-_jpg.rf.70883a2a41d046c40f8160dd463336f0.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.886,
+      "class_a": "CLEAN",
+      "class_b": "CLEAN",
+      "family_id": "fam00439"
+    },
+    {
+      "image": "Imgdirty_331_1_jpg.rf.73c5f75f4b484f2ff41b9b8e0ba41026.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "DUSTY",
+      "area_fraction": 0.000872,
+      "family_id": "fam00876"
+    },
+    {
+      "image": "Physical-damaged-35-_jpg.rf.ab7778104870fd7dc4d6fe38dd410cca.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000918,
+      "family_id": "fam00026"
+    },
+    {
+      "image": "Physical-damaged-8-_jpg.rf.104d5ab766aaa209aac0a7c6aeeab3c9.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.816,
+      "class_a": "DUSTY",
+      "class_b": "DUSTY",
+      "family_id": "fam00470"
+    },
+    {
+      "image": "Physical-damaged-8-_jpg.rf.ea37cf440da7b0f997ba071bcfbd7d9c.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.99,
+      "class_a": "CLEAN",
+      "class_b": "CLEAN",
+      "family_id": "fam00470"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.8,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.8,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.8,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 1.0,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 1.0,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 1.0,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.8,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.8,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 1.0,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 1.0,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 1.0,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.8,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 1.0,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.8,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 0.8,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "near-duplicate GT annotation (same class)",
+      "iou": 1.0,
+      "class_a": "BIRD_DROP",
+      "class_b": "BIRD_DROP",
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 3.7e-05,
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 2.2e-05,
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 2.4e-05,
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 2e-05,
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 2e-05,
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 2.9e-05,
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 2.9e-05,
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 2.9e-05,
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 2.2e-05,
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 3.9e-05,
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 3.7e-05,
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 2.2e-05,
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-21-_jpg.rf.26c60a0eef485e7904a18635c6e64393.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 2.9e-05,
+      "family_id": "fam00487"
+    },
+    {
+      "image": "Solar-34-_jpg.rf.2c11fbdbb590f1ed6e5b5fed83dea7b3.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "PHYSICAL_DAMAGE",
+      "area_fraction": 0.000789,
+      "family_id": "fam00497"
+    },
+    {
+      "image": "Solar-34-_jpg.rf.2c11fbdbb590f1ed6e5b5fed83dea7b3.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "PHYSICAL_DAMAGE",
+      "area_fraction": 0.000781,
+      "family_id": "fam00497"
+    },
+    {
+      "image": "Solar-34-_jpg.rf.2c11fbdbb590f1ed6e5b5fed83dea7b3.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "PHYSICAL_DAMAGE",
+      "area_fraction": 0.000752,
+      "family_id": "fam00497"
+    },
+    {
+      "image": "poop-135-_jpg.rf.88522765fa13d50d7a4ec79c9c065803.jpg",
+      "flag": "possibly mislabeled/noise (extremely small GT box)",
+      "class": "BIRD_DROP",
+      "area_fraction": 0.000955,
+      "family_id": "fam00143"
+    }
+  ],
+  "fp_record_count": 951,
+  "fn_record_count": 1354,
+  "tp_record_count": 858
+}

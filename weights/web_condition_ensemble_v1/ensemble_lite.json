@@ -1,0 +1,31 @@
+{
+  "classes_index_order": [
+    "CLEAN",
+    "DUSTY",
+    "BIRD_DROP",
+    "PHYSICAL_DAMAGE"
+  ],
+  "combine": "mean of softmax probabilities; each member averages the image and its horizontal flip",
+  "members": [
+    {
+      "arch": "convnext_tiny",
+      "size": 288,
+      "file": "convnext_tiny_288.pth",
+      "sha256": "016b4c5a5840181564a8016b8cc8d13aa62e2808b62192cbd2114cc1c5e82375"
+    },
+    {
+      "arch": "efficientnet_v2_s",
+      "size": 384,
+      "file": "efficientnet_v2_s_384.pth",
+      "sha256": "ced3e40c9b95e7315046f7debd5e045c23f8235d3fbbc364010130db69eee5c6"
+    }
+  ],
+  "training": "each member = final fit on ALL 2,612 images of edithstark/solar-ai-web-condition-v2-clean (Kaggle T4), fixed epochs, no early stopping",
+  "oof_estimate": {
+    "protocol": "5-fold family-grouped CV, mean of these 2 members' out-of-fold probabilities. The pair was chosen for cost (cheapest strong pair) after seeing OOF scores, so treat as mildly optimistic.",
+    "accuracy": 0.896,
+    "macro_f1": 0.875
+  },
+  "cost": "~1.2 s per panel crop on 4 CPU threads of a desktop CPU (with flip TTA); about 3x cheaper than the full 5-model ensemble",
+  "status": "RESEARCH ONLY - trained on web photos; never validated on the target rooftop camera; not for alerts"
+}

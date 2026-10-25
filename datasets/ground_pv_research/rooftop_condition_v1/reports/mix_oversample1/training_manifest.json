@@ -1,0 +1,414 @@
+{
+  "experiment_name": "condition_mobilenetv2_4class_rooftop_mix_v1",
+  "phase": "19-B - rooftop condition classifier MIX retrain",
+  "model_role": "EXPERIMENTAL - domain-adapted condition classifier, NOT production, NOT owner-validated",
+  "predecessor": "condition_mobilenetv2_4class_classifier_v1 (Phase 16-B)",
+  "classes_index_order": [
+    "BIRD_DROP",
+    "CLEAN",
+    "DUSTY",
+    "PHYSICAL_DAMAGE"
+  ],
+  "baseline_for_comparison": {
+    "checkpoint": "mobilenet_condition_4class_research_v1.pth (Phase 16-B)",
+    "test_accuracy": 0.752
+  },
+  "oversample": 1,
+  "rooftop_label_provenance": "AI visual review (Claude), NOT owner-verified",
+  "rooftop_dataset_kaggle": "edithstark/solar-ai-rooftop-condition-topup-v1",
+  "base_dataset_kaggle": "edithstark/solar-ai-ground-condition-4class-classifier-v1",
+  "hyperparameters": {
+    "epochs_requested": 30,
+    "epochs_run": 13,
+    "batch_size": 32,
+    "lr": 0.0005,
+    "optimizer": "AdamW",
+    "patience": 6,
+    "seed": 42,
+    "input_size": 224
+  },
+  "best_epoch": 7,
+  "best_val_accuracy": 0.7701863354037267,
+  "training_seconds": 170.5178186893463,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.9710005004487652,
+      "train_acc": 0.6084828711256117,
+      "val_loss": 1.0980673400264842,
+      "val_acc": 0.5445134575569358,
+      "seconds": 16.325407028198242
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.6529134700744291,
+      "train_acc": 0.7362697117998912,
+      "val_loss": 0.8260201933961477,
+      "val_acc": 0.7018633540372671,
+      "seconds": 13.077163696289062
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.6119066764797576,
+      "train_acc": 0.7427949972811311,
+      "val_loss": 0.9952121984144175,
+      "val_acc": 0.6231884057971014,
+      "seconds": 12.48957633972168
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.5375927311528824,
+      "train_acc": 0.766721044045677,
+      "val_loss": 0.9003417237698415,
+      "val_acc": 0.7204968944099379,
+      "seconds": 12.784146547317505
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.46879629413999896,
+      "train_acc": 0.797716150081566,
+      "val_loss": 0.784653243317614,
+      "val_acc": 0.7101449275362319,
+      "seconds": 12.792892456054688
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.42470998891090944,
+      "train_acc": 0.8227297444263186,
+      "val_loss": 0.9675703982882371,
+      "val_acc": 0.6625258799171843,
+      "seconds": 12.687271118164062
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.3695899210363837,
+      "train_acc": 0.8471995649809679,
+      "val_loss": 0.7236954582157096,
+      "val_acc": 0.7701863354037267,
+      "seconds": 13.012721300125122
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.29033477490138854,
+      "train_acc": 0.8694942903752039,
+      "val_loss": 0.7741262205639241,
+      "val_acc": 0.7391304347826086,
+      "seconds": 12.711464166641235
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.25647047994219785,
+      "train_acc": 0.88852637302882,
+      "val_loss": 0.9301955322301165,
+      "val_acc": 0.7370600414078675,
+      "seconds": 13.131634950637817
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.2355030396504529,
+      "train_acc": 0.8977705274605764,
+      "val_loss": 0.8587387299192124,
+      "val_acc": 0.7639751552795031,
+      "seconds": 13.057509183883667
+    },
+    {
+      "epoch": 11,
+      "train_loss": 0.22523007426429145,
+      "train_acc": 0.9032082653616096,
+      "val_loss": 0.8507810142469703,
+      "val_acc": 0.7515527950310559,
+      "seconds": 12.744144439697266
+    },
+    {
+      "epoch": 12,
+      "train_loss": 0.2619253094913261,
+      "train_acc": 0.8907014681892332,
+      "val_loss": 0.9138672265453615,
+      "val_acc": 0.7536231884057971,
+      "seconds": 12.794214725494385
+    },
+    {
+      "epoch": 13,
+      "train_loss": 0.3402857685491013,
+      "train_acc": 0.8575312669929309,
+      "val_loss": 0.7585444228249307,
+      "val_acc": 0.7494824016563147,
+      "seconds": 12.746976137161255
+    }
+  ],
+  "susan_test_set": {
+    "accuracy": 0.731404958677686,
+    "n": 242,
+    "confusion_matrix": [
+      [
+        49,
+        7,
+        14,
+        1
+      ],
+      [
+        7,
+        37,
+        10,
+        1
+      ],
+      [
+        14,
+        5,
+        85,
+        3
+      ],
+      [
+        2,
+        0,
+        1,
+        6
+      ]
+    ],
+    "class_order": [
+      "BIRD_DROP",
+      "CLEAN",
+      "DUSTY",
+      "PHYSICAL_DAMAGE"
+    ],
+    "per_class": {
+      "BIRD_DROP": {
+        "n": 71,
+        "tp": 49,
+        "fp": 23,
+        "fn": 22,
+        "recall": 0.6901408450704225
+      },
+      "CLEAN": {
+        "n": 55,
+        "tp": 37,
+        "fp": 12,
+        "fn": 18,
+        "recall": 0.6727272727272727
+      },
+      "DUSTY": {
+        "n": 107,
+        "tp": 85,
+        "fp": 25,
+        "fn": 22,
+        "recall": 0.794392523364486
+      },
+      "PHYSICAL_DAMAGE": {
+        "n": 9,
+        "tp": 6,
+        "fp": 5,
+        "fn": 3,
+        "recall": 0.6666666666666666
+      }
+    }
+  },
+  "rooftop_realworld_check": {
+    "train": {
+      "accuracy": 0.9869281045751634,
+      "n": 153,
+      "confusion_matrix": [
+        [
+          3,
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          147,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1
+        ]
+      ],
+      "class_order": [
+        "BIRD_DROP",
+        "CLEAN",
+        "DUSTY",
+        "PHYSICAL_DAMAGE"
+      ],
+      "per_class": {
+        "BIRD_DROP": {
+          "n": 3,
+          "tp": 3,
+          "fp": 2,
+          "fn": 0,
+          "recall": 1.0
+        },
+        "CLEAN": {
+          "n": 149,
+          "tp": 147,
+          "fp": 0,
+          "fn": 2,
+          "recall": 0.9865771812080537
+        },
+        "DUSTY": {
+          "n": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "recall": null
+        },
+        "PHYSICAL_DAMAGE": {
+          "n": 1,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "recall": 1.0
+        }
+      }
+    },
+    "valid": {
+      "accuracy": 1.0,
+      "n": 40,
+      "confusion_matrix": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          40,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "class_order": [
+        "BIRD_DROP",
+        "CLEAN",
+        "DUSTY",
+        "PHYSICAL_DAMAGE"
+      ],
+      "per_class": {
+        "BIRD_DROP": {
+          "n": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "recall": null
+        },
+        "CLEAN": {
+          "n": 40,
+          "tp": 40,
+          "fp": 0,
+          "fn": 0,
+          "recall": 1.0
+        },
+        "DUSTY": {
+          "n": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "recall": null
+        },
+        "PHYSICAL_DAMAGE": {
+          "n": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "recall": null
+        }
+      }
+    },
+    "test": {
+      "accuracy": 0.9375,
+      "n": 48,
+      "confusion_matrix": [
+        [
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          44,
+          2,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "class_order": [
+        "BIRD_DROP",
+        "CLEAN",
+        "DUSTY",
+        "PHYSICAL_DAMAGE"
+      ],
+      "per_class": {
+        "BIRD_DROP": {
+          "n": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "recall": null
+        },
+        "CLEAN": {
+          "n": 46,
+          "tp": 44,
+          "fp": 1,
+          "fn": 2,
+          "recall": 0.9565217391304348
+        },
+        "DUSTY": {
+          "n": 2,
+          "tp": 1,
+          "fp": 2,
+          "fn": 1,
+          "recall": 0.5
+        },
+        "PHYSICAL_DAMAGE": {
+          "n": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "recall": null
+        }
+      }
+    }
+  },
+  "checkpoint_sha256": "96528bfe5146afadfc83026475e3d0350ba348bd3f5111afa03c9db886662508",
+  "environment": {
+    "python": "3.12.13",
+    "torch": "2.7.1+cu126",
+    "torchvision": "0.22.1+cu126",
+    "cuda": "12.6",
+    "gpu": "Tesla T4"
+  },
+  "not_production_validated": true
+}

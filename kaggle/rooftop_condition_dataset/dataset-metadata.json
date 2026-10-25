@@ -1,0 +1,11 @@
+{
+  "title": "Solar AI rooftop condition top-up v1",
+  "id": "edithstark/solar-ai-rooftop-condition-topup-v1",
+  "licenses": [
+    {
+      "name": "other"
+    }
+  ],
+  "subtitle": "Phase 19-B first-party rooftop condition crops, AI-reviewed, domain top-up only",
+  "description": "PRIVATE. AI-visually-reviewed (not owner-verified) CLEAN/DUSTY/BIRD_DROP/PHYSICAL_DAMAGE crops from one rooftop, 241 total, heavily skewed toward CLEAN. Too few/skewed to train a standalone classifier - meant to be mixed into the much larger solar-ai-ground-condition-4class-classifier-v1 (Susan-derived) training set for domain adaptation only."
+}

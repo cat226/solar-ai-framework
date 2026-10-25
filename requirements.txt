@@ -15,16 +15,22 @@ torchvision>=0.17.0
 Pillow>=10.0.0
 numpy>=1.26.0
 
-# Weather API
+# HTTP client (Pi agent -> ingestion API) and weather API leftovers removed
+# with the aerial pipeline — see docs/PHASE_16_ARCHITECTURE_REVIEW.md.
 requests>=2.31.0
 
-# ML prediction
-xgboost>=2.0.0
-scikit-learn>=1.4.0
-joblib>=1.3.0
+# Ingestion API (Pi camera devices -> central admin panel, Phase 18)
+fastapi>=0.110.0
+uvicorn>=0.29.0
+python-multipart>=0.0.9
 
 # Data
 pandas>=2.2.0
 
 # Configuration
 PyYAML>=6.0.1
+
+# Secret loading — utils.config loads the git-ignored project-root .env
+# (override=False) so API keys can live there instead of a shell export.
+# Guarded import: absence degrades gracefully to env-var-only resolution.
+python-dotenv>=1.0.0

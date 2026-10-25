@@ -1,0 +1,101 @@
+{
+  "raw": {
+    "workspace": {
+      "name": "Solar Panel Defects",
+      "url": "solar-panel-defects-ax0gw"
+    },
+    "project": {
+      "id": "solar-panel-defects-ax0gw/solar-panel-damage-detection-vfg96",
+      "type": "object-detection",
+      "name": "Solar Panel Damage Detection",
+      "created": 1715937455.303,
+      "updated": 1715951652.332,
+      "images": 797,
+      "unannotated": 0,
+      "annotation": "Solar-Panels",
+      "versions": 0,
+      "public": true,
+      "license": "Public Domain",
+      "splits": {
+        "export": 0,
+        "valid": 157,
+        "test": 78,
+        "train": 562
+      },
+      "colors": {
+        "Dusty": "#FF8000",
+        "Snow": "#8622FF",
+        "Defective": "#FE0056",
+        "Bird Drop": "#00B7EB",
+        "Electrical Damage": "#C7FC00",
+        "Physical Damage": "#00FFCE",
+        "Non Defective": "#FFFF00"
+      },
+      "classes": {
+        "Snow": 459,
+        "Physical Damage": 935,
+        "Electrical Damage": 210,
+        "Dusty": 739,
+        "Non Defective": 1841,
+        "Defective": 880,
+        "Bird Drop": 1123
+      },
+      "icon": {
+        "original": "https://source.roboflow.com/nJVIBxT0eagrCthETVS4jQd6Nq63/n24Y5u7MMk3yg8UtiGwe/original.jpg",
+        "thumb": "https://source.roboflow.com/nJVIBxT0eagrCthETVS4jQd6Nq63/n24Y5u7MMk3yg8UtiGwe/thumb.jpg",
+        "annotation": "https://source.roboflow.com/nJVIBxT0eagrCthETVS4jQd6Nq63/n24Y5u7MMk3yg8UtiGwe/annotation-Solar-Panels.png"
+      },
+      "preprocessing": {
+        "auto-orient": true,
+        "resize": {
+          "format": "Stretch to",
+          "width": 640,
+          "height": 640
+        }
+      },
+      "augmentation": {}
+    },
+    "versions": []
+  },
+  "summary": {
+    "label": "S2  Solar Panel Damage Detection",
+    "workspace": "solar-panel-defects-ax0gw",
+    "project": "solar-panel-damage-detection-vfg96",
+    "http": 200,
+    "name": "Solar Panel Damage Detection",
+    "type": "object-detection",
+    "license": "Public Domain",
+    "annotation": "Solar-Panels",
+    "base_images": 797,
+    "class_instance_counts": {
+      "Snow": 459,
+      "Physical Damage": 935,
+      "Electrical Damage": 210,
+      "Dusty": 739,
+      "Non Defective": 1841,
+      "Defective": 880,
+      "Bird Drop": 1123
+    },
+    "project_splits": {
+      "export": 0,
+      "valid": 157,
+      "test": 78,
+      "train": 562
+    },
+    "created": 1715937455.303,
+    "updated": 1715951652.332,
+    "public": true,
+    "n_versions": 0,
+    "latest_version": {
+      "id": null,
+      "name": null,
+      "created": null,
+      "images": null,
+      "splits": null,
+      "preprocessing": null,
+      "augmentation": null,
+      "exports": null
+    },
+    "all_versions": []
+  }
+}

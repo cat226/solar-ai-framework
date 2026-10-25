@@ -33,8 +33,20 @@ REVIEW REQUIRED, REQUEST REQUIRED, RESTRICTED, REJECTED, UNKNOWN.
 - **License**: CC BY 4.0 for the dataset itself. Note: underlying base imagery is from Google (subject to Google's own imagery terms) and IGN France (Open License 2.0) — attribution to both the dataset authors and imagery providers required.
 - **Access**: OPEN, no request needed. `bdappv.zip` (8.16 GB, 28,807 Google + 17,325 IGN images) and `data.zip` (17.7 MB, metadata).
 - **Annotation format**: Segmentation masks (13,303 Google + 7,686 IGN masks) generated from crowdsourced polygon annotations — **not bounding boxes directly**. Converting to YOLO-format bounding boxes requires computing the axis-aligned bounding box of each mask/polygon instance. This is a standard, well-defined, disclosed transformation (not a subjective relabeling judgment) — the resulting boxes would be documented as "derived from BDAPPV segmentation masks," not represented as originally hand-drawn bounding boxes.
-- **Open question before use**: need to confirm mask granularity — are masks per-individual-panel-installation (giving clean per-instance boxes) or coarser regional masks that would need connected-component splitting? Not yet verified; requires downloading and inspecting actual mask files.
-- **Status**: VERIFIED + USABLE (license/access), CONVERSION REQUIRED before it's YOLO-detection-ready.
+- **Mask granularity — CONFIRMED 2026-09-03** by downloading and inspecting `data.zip`
+  (17.7MB, not the full 8GB archive): the underlying annotations are **vector polygons**,
+  not raster masks. `data/replication/campaign-google/polygon-analysis.json` (13,303
+  entries) is a JSON list of `{id, polygons: [{points: [{x,y}, ...], score, area}, ...]}` —
+  one entry per image, one polygon per individual panel installation, pixel-coordinate
+  points. This is per-instance by construction (no connected-component splitting needed):
+  a YOLO bounding box is simply `(min(x), min(y), max(x), max(y))` over each polygon's
+  points, normalized by the source image's width/height. The IGN campaign has the
+  equivalent `campaign-ign/polygon-analysis.json` (7,686 entries). Still need to confirm,
+  before the full download: each image's actual pixel dimensions (to normalize
+  coordinates) and how `id` maps to the corresponding image filename inside the 8GB
+  `bdappv.zip` (not yet downloaded).
+- **Status**: VERIFIED + USABLE (license/access), conversion path confirmed straightforward.
+  Full 8GB image archive not yet downloaded (only the 17.7MB polygon metadata was).
 
 ### 2. Multi-resolution PV panel segmentation dataset (PV01/PV03/PV08)
 
@@ -52,6 +64,35 @@ not currently blocked** — two independently-licensed (CC BY 4.0), peer-reviewe
 publicly downloadable, no-request-needed sources exist. The remaining work is engineering
 (mask→bbox conversion, YOLO-format dataset preparation, training pipeline), not
 provenance/access research.
+
+## Faster mirror found: Hugging Face (2026-09-03)
+
+Zenodo's direct download of `bdappv.zip` proved extremely slow in practice (~36-40KB/s
+sustained, ~63 hour ETA for the full 8.16GB, unaffected by reconnecting) — a real
+operational blocker distinct from provenance/license. The same dataset is also mirrored at
+**https://huggingface.co/datasets/gabrielkasmi/bdappv** (CC BY 4.0, no auth required),
+pre-split into train/validation/test parquet shards per campaign (Google, IGN), each row
+embedding the 400×400px image + its segmentation mask + metadata directly — no separate
+mask-file bookkeeping needed. Direct `curl` to the HF `resolve` URL sustained ~237KB/s
+(roughly 6x faster than Zenodo), though the `huggingface_hub` Python library's own
+`hf_hub_download()` call stalled indefinitely for an unclear reason — plain HTTP GET to the
+resolve URL works fine and is what should be used going forward, not the library.
+
+**License nuance discovered**: the companion fine-tuned model checkpoints
+(`gabrielkasmi/bdappv-models`) are licensed CC-BY-**NC** 4.0 for the Google-imagery variant
+specifically (inherited from Google's own base-imagery terms) vs. CC BY 4.0 for the
+IGN-imagery variant. The HF dataset repo itself states CC BY 4.0 overall, but to avoid
+reopening the same NonCommercial-license question already worked through for Bird-Drop,
+**IGN is the recommended subset to actually train on** — unambiguously CC BY 4.0 through
+the whole chain (dataset license + IGN Open License 2.0 base imagery), matching the
+cleanliness of Clean/Dusty/Hotspot's sources. Trade-off: IGN's native resolution is 20cm/pixel
+vs. Google's 10cm/pixel, which may affect detection quality; this can be revisited if IGN
+alone proves insufficient.
+
+IGN shards (11 parquet files: 2 test, 7 train, 2 validation) are being downloaded via a
+resumable retry-hardened script to `E:/Solar AI Training Images/yolo_source/bdappv_hf/ign/`
+as of this writing — not yet complete, not yet inspected for per-row schema (image/mask
+column names, polygon coordinates if included alongside the raster mask).
 
 ## Recommended next steps (not yet performed)
 

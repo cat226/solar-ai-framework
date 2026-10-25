@@ -1,0 +1,7 @@
+{
+  "title": "Solar AI rooftop panel v1",
+  "id": "edithstark/solar-ai-rooftop-panel-v1",
+  "licenses": [{"name": "other"}],
+  "subtitle": "Phase 19 first-party rooftop panel photos, 1-class boxes",
+  "description": "PRIVATE, FIRST-PARTY (owner-captured) rooftop solar photos, 46 images, 1 class (panel), split by physical scene (train/valid/test never share a scene). Labels are annotated_ai_assisted_unverified: MobileSAM proposals corrected by an AI reviewer looking at overlays - NOT human-verified ground truth. All images are from ONE rooftop installation, so the held-out scenes are different spots on the same rooftop, not a different site. Far-field slivers and glare-blurred distant rows are deliberately unlabelled."
+}

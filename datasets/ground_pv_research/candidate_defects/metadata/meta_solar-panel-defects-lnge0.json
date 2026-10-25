@@ -1,0 +1,134 @@
+{
+  "raw": {
+    "workspace": {
+      "name": "solarpanel",
+      "url": "solarpanel-2me5p"
+    },
+    "project": {
+      "id": "solarpanel-2me5p/solar-panel-defects-lnge0",
+      "type": "object-detection",
+      "name": "Solar Panel defects",
+      "created": 1715337517.494,
+      "updated": 1715339070.564,
+      "images": 700,
+      "unannotated": 0,
+      "annotation": "defects",
+      "versions": 0,
+      "public": true,
+      "license": "CC BY 4.0",
+      "splits": {
+        "valid": 136,
+        "test": 67,
+        "export": 0,
+        "train": 497
+      },
+      "colors": {
+        "Electrical_Damage": "#FFABAB",
+        "Physical-Damge": "#808000",
+        "Snow": "#dc143c",
+        "Bird-Drop": "#FE0056",
+        "Electrical-Damge": "#0E7AFE",
+        "Bird drop": "#8622FF",
+        "Clean": "#FF8000",
+        "Physical-damage": "#483d8b",
+        "Dusty": "#00B7EB",
+        "Physical-Damage": "#a0522d",
+        "Bird-drop": "#00FFCE",
+        "Bird Drop": "#C7FC00",
+        "Electrical Damage": "#FFFF00",
+        "Physical Damage": "#0000FF",
+        "Electrical-Damage": "#FF00FF",
+        "Physical_Damage": "#ff4500",
+        "PhysicalDamage": "#8b008b",
+        "Defective": "#00ffff"
+      },
+      "classes": {
+        "Electrical_Damage": 13,
+        "Physical-damage": 22,
+        "Physical-Damage": 223,
+        "Bird Drop": 19,
+        "Electrical-Damage": 26,
+        "Physical_Damage": 135,
+        "PhysicalDamage": 91,
+        "Snow": 248,
+        "Electrical-Damge": 39,
+        "Electrical Damage": 14,
+        "Bird-Drop": 58,
+        "Physical-Damge": 163,
+        "Physical Damage": 34,
+        "Dusty": 252,
+        "Defective": 5,
+        "Bird-drop": 240,
+        "Bird drop": 22,
+        "Clean": 248
+      },
+      "icon": {
+        "original": "https://source.roboflow.com/2T1cJoQVSZpCaCFPET6t/dWw24Xw30zCWw7p2sHyo/original.jpg",
+        "thumb": "https://source.roboflow.com/2T1cJoQVSZpCaCFPET6t/dWw24Xw30zCWw7p2sHyo/thumb.jpg",
+        "annotation": "https://source.roboflow.com/2T1cJoQVSZpCaCFPET6t/dWw24Xw30zCWw7p2sHyo/annotation-defects.png"
+      },
+      "preprocessing": {
+        "auto-orient": true,
+        "resize": {
+          "format": "Stretch to",
+          "width": 640,
+          "height": 640
+        }
+      },
+      "augmentation": {}
+    },
+    "versions": []
+  },
+  "summary": {
+    "label": "S5  solar-panel-defects (2me5p)",
+    "workspace": "solarpanel-2me5p",
+    "project": "solar-panel-defects-lnge0",
+    "http": 200,
+    "name": "Solar Panel defects",
+    "type": "object-detection",
+    "license": "CC BY 4.0",
+    "annotation": "defects",
+    "base_images": 700,
+    "class_instance_counts": {
+      "Electrical_Damage": 13,
+      "Physical-damage": 22,
+      "Physical-Damage": 223,
+      "Bird Drop": 19,
+      "Electrical-Damage": 26,
+      "Physical_Damage": 135,
+      "PhysicalDamage": 91,
+      "Snow": 248,
+      "Electrical-Damge": 39,
+      "Electrical Damage": 14,
+      "Bird-Drop": 58,
+      "Physical-Damge": 163,
+      "Physical Damage": 34,
+      "Dusty": 252,
+      "Defective": 5,
+      "Bird-drop": 240,
+      "Bird drop": 22,
+      "Clean": 248
+    },
+    "project_splits": {
+      "valid": 136,
+      "test": 67,
+      "export": 0,
+      "train": 497
+    },
+    "created": 1715337517.494,
+    "updated": 1715339070.564,
+    "public": true,
+    "n_versions": 0,
+    "latest_version": {
+      "id": null,
+      "name": null,
+      "created": null,
+      "images": null,
+      "splits": null,
+      "preprocessing": null,
+      "augmentation": null,
+      "exports": null
+    },
+    "all_versions": []
+  }
+}

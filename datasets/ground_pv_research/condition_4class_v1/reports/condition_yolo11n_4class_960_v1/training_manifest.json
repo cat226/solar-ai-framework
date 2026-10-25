@@ -1,0 +1,531 @@
+{
+  "experiment_name": "condition_yolo11n_4class_960_v1",
+  "ablation_of": "condition_yolo11n_4class_baseline_v1 (weights/yolo_solar_condition_4class_research_v2.pt) \u2014 RESOLUTION ONLY (imgsz 640->960); epochs/patience/dataset/architecture/augmentation/optimizer unchanged; trained from the same pretrained yolo11n.pt starting point as v2, NOT fine-tuned from v2/v3",
+  "model_role": "EXPERIMENTAL RESEARCH condition detector, ACTIVE 4-CLASS taxonomy (second stage, on panel crops) \u2014 NOT a panel detector, NOT production, NOT validated for field use",
+  "active_taxonomy": {
+    "0": "CLEAN",
+    "1": "DUSTY",
+    "2": "BIRD_DROP",
+    "3": "PHYSICAL_DAMAGE"
+  },
+  "electrical_damage_status": "REMOVED from the active taxonomy entirely \u2014 not present in this dataset, never relabelled",
+  "hotspot_status": "OUT OF SCOPE \u2014 requires thermal/IR data, never inferred from RGB",
+  "dataset_kaggle": "edithstark/solar-ai-ground-condition-4class-research-v1",
+  "dataset_derived_from": "the existing 5-class condition dataset, ELECTRICAL_DAMAGE removed",
+  "provenance_grade": "C",
+  "provenance_tag": "personal-experimental-unverified-provenance",
+  "provenance_warning": "underlying images trace to Kaggle pythonafroz/solar-panel-images (licence Unknown); do NOT redistribute/publish/use commercially/claim verified CC BY",
+  "rare_class_warning": "PHYSICAL_DAMAGE is the rarest active class (314 train+val+test images / 725 instances) \u2014 see per_class[\"test_operating\"][\"PHYSICAL_DAMAGE\"] before trusting aggregate mAP",
+  "base_model": "yolo11n.pt",
+  "pretrained_source": "YOLO11n COCO-pretrained (Ultralytics)",
+  "epochs": 100,
+  "imgsz": 960,
+  "batch": -1,
+  "patience": 20,
+  "optimizer": "auto",
+  "cos_lr": true,
+  "seed": 42,
+  "augmentation": {
+    "hsv_h": 0.015,
+    "hsv_s": 0.4,
+    "hsv_v": 0.4,
+    "degrees": 5.0,
+    "translate": 0.1,
+    "scale": 0.3,
+    "shear": 0.0,
+    "perspective": 0.0,
+    "flipud": 0.0,
+    "fliplr": 0.5,
+    "mosaic": 0.5,
+    "mixup": 0.0,
+    "copy_paste": 0.0
+  },
+  "full_train_args": {
+    "data": "/kaggle/working/ground_condition_4class_data.yaml",
+    "epochs": "100",
+    "imgsz": "960",
+    "patience": "20",
+    "seed": "42",
+    "batch": "-1",
+    "device": "0",
+    "project": "/kaggle/working/research_runs/ground_condition_4class",
+    "name": "condition_yolo11n_4class_960_v1",
+    "exist_ok": "True",
+    "pretrained": "True",
+    "cos_lr": "True",
+    "optimizer": "auto",
+    "verbose": "True",
+    "val": "True",
+    "hsv_h": "0.015",
+    "hsv_s": "0.4",
+    "hsv_v": "0.4",
+    "degrees": "5.0",
+    "translate": "0.1",
+    "scale": "0.3",
+    "shear": "0.0",
+    "perspective": "0.0",
+    "flipud": "0.0",
+    "fliplr": "0.5",
+    "mosaic": "0.5",
+    "mixup": "0.0",
+    "copy_paste": "0.0"
+  },
+  "device": "cuda:0",
+  "env": {
+    "python": "3.12.13",
+    "torch": "2.7.1+cu126",
+    "torchvision": "0.22.1+cu126",
+    "cuda": "12.6",
+    "ultralytics": "8.4.138",
+    "gpu": "Tesla P100-PCIE-16GB",
+    "gpu_capability": "6.0",
+    "gpu_memory_gb": 17.1
+  },
+  "dataset_hashes": {
+    "split_manifest_sha256": "600752137a4cbf8b24f506339b662ea0d0dbb67d1fc897f52fef83d6eb1d893e",
+    "package_dataset_content_sha256": "6637e6361343e7bb17d1703e705bffc0cb733a5428f48ce681fa28bc8826bf92",
+    "package_data_yaml_sha256": "0731819484bb3b07c87a2ced8e79997d380fa5a34a4701fdb3845c8fa03cffe4"
+  },
+  "dataset_stats": {
+    "train": {
+      "images": 1686,
+      "instances": {
+        "DUSTY": 6050,
+        "BIRD_DROP": 5500,
+        "CLEAN": 4209,
+        "PHYSICAL_DAMAGE": 481
+      },
+      "images_with_class": {
+        "BIRD_DROP": 737,
+        "DUSTY": 959,
+        "CLEAN": 639,
+        "PHYSICAL_DAMAGE": 205
+      },
+      "unique_families_per_class": {
+        "BIRD_DROP": 411,
+        "DUSTY": 597,
+        "CLEAN": 349,
+        "PHYSICAL_DAMAGE": 142
+      }
+    },
+    "valid": {
+      "images": 483,
+      "instances": {
+        "CLEAN": 1246,
+        "DUSTY": 1637,
+        "PHYSICAL_DAMAGE": 166,
+        "BIRD_DROP": 1516
+      },
+      "images_with_class": {
+        "CLEAN": 184,
+        "DUSTY": 261,
+        "BIRD_DROP": 194,
+        "PHYSICAL_DAMAGE": 79
+      },
+      "unique_families_per_class": {
+        "BIRD_DROP": 118,
+        "CLEAN": 106,
+        "DUSTY": 163,
+        "PHYSICAL_DAMAGE": 52
+      }
+    },
+    "test": {
+      "images": 242,
+      "instances": {
+        "DUSTY": 863,
+        "BIRD_DROP": 726,
+        "CLEAN": 545,
+        "PHYSICAL_DAMAGE": 78
+      },
+      "images_with_class": {
+        "DUSTY": 144,
+        "CLEAN": 95,
+        "BIRD_DROP": 100,
+        "PHYSICAL_DAMAGE": 30
+      },
+      "unique_families_per_class": {
+        "BIRD_DROP": 56,
+        "CLEAN": 53,
+        "DUSTY": 90,
+        "PHYSICAL_DAMAGE": 18
+      }
+    }
+  },
+  "train_seconds": 6606.944972276688,
+  "best_epoch": 88,
+  "total_epochs": 100,
+  "run_dir": "/kaggle/working/research_runs/ground_condition_4class/condition_yolo11n_4class_960_v1",
+  "threshold_analysis": [
+    {
+      "conf": 0.2,
+      "precision": 0.5673499466595795,
+      "recall": 0.452628468153063,
+      "mAP50": 0.382489263113158,
+      "mAP50_95": 0.21074534083250093,
+      "per_class": {
+        "CLEAN": {
+          "precision": 0.5829675153643546,
+          "recall": 0.5341914722445696
+        },
+        "DUSTY": {
+          "precision": 0.499063670411985,
+          "recall": 0.32559560171044594
+        },
+        "BIRD_DROP": {
+          "precision": 0.4720908230842006,
+          "recall": 0.3302448709463931
+        },
+        "PHYSICAL_DAMAGE": {
+          "precision": 0.7152777777777778,
+          "recall": 0.6204819277108434
+        }
+      }
+    },
+    {
+      "conf": 0.25,
+      "precision": 0.6168752071435646,
+      "recall": 0.4248002956475967,
+      "mAP50": 0.3639145096404748,
+      "mAP50_95": 0.20466421099169638,
+      "per_class": {
+        "CLEAN": {
+          "precision": 0.6298507462686567,
+          "recall": 0.5092518101367659
+        },
+        "DUSTY": {
+          "precision": 0.5494761350407451,
+          "recall": 0.28833231521075137
+        },
+        "BIRD_DROP": {
+          "precision": 0.5230224321133412,
+          "recall": 0.2931833223031105
+        },
+        "PHYSICAL_DAMAGE": {
+          "precision": 0.7651515151515151,
+          "recall": 0.608433734939759
+        }
+      }
+    },
+    {
+      "conf": 0.3,
+      "precision": 0.6501264603681585,
+      "recall": 0.3982029665726442,
+      "mAP50": 0.3493292146410262,
+      "mAP50_95": 0.1985489295971006,
+      "per_class": {
+        "CLEAN": {
+          "precision": 0.6545654565456546,
+          "recall": 0.4786806114239743
+        },
+        "DUSTY": {
+          "precision": 0.5858156028368794,
+          "recall": 0.25229077580940745
+        },
+        "BIRD_DROP": {
+          "precision": 0.5664739884393064,
+          "recall": 0.25943084050297816
+        },
+        "PHYSICAL_DAMAGE": {
+          "precision": 0.7936507936507936,
+          "recall": 0.6024096385542169
+        }
+      }
+    },
+    {
+      "conf": 0.35,
+      "precision": 0.6899748555336113,
+      "recall": 0.3775708111523695,
+      "mAP50": 0.33815342473413784,
+      "mAP50_95": 0.19347788902751012,
+      "per_class": {
+        "CLEAN": {
+          "precision": 0.6866746698679472,
+          "recall": 0.46017699115044247
+        },
+        "DUSTY": {
+          "precision": 0.635,
+          "recall": 0.2327428222357972
+        },
+        "BIRD_DROP": {
+          "precision": 0.6146953405017921,
+          "recall": 0.22700198544010589
+        },
+        "PHYSICAL_DAMAGE": {
+          "precision": 0.8235294117647058,
+          "recall": 0.5903614457831325
+        }
+      }
+    },
+    {
+      "conf": 0.4,
+      "precision": 0.7190475168819537,
+      "recall": 0.35556832385082876,
+      "mAP50": 0.3211871153507163,
+      "mAP50_95": 0.18725402166998592,
+      "per_class": {
+        "CLEAN": {
+          "precision": 0.7176781002638523,
+          "recall": 0.43765084473049076
+        },
+        "DUSTY": {
+          "precision": 0.6606060606060606,
+          "recall": 0.19975565058032987
+        },
+        "BIRD_DROP": {
+          "precision": 0.6544276457883369,
+          "recall": 0.20052945069490405
+        },
+        "PHYSICAL_DAMAGE": {
+          "precision": 0.8434782608695652,
+          "recall": 0.5843373493975904
+        }
+      }
+    },
+    {
+      "conf": 0.45,
+      "precision": 0.7459833024118738,
+      "recall": 0.3352474226696774,
+      "mAP50": 0.3065873934214489,
+      "mAP50_95": 0.18137900635889864,
+      "per_class": {
+        "CLEAN": {
+          "precision": 0.7385714285714285,
+          "recall": 0.415929203539823
+        },
+        "DUSTY": {
+          "precision": 0.7071428571428572,
+          "recall": 0.18142944410507025
+        },
+        "BIRD_DROP": {
+          "precision": 0.6836734693877551,
+          "recall": 0.17736598279285243
+        },
+        "PHYSICAL_DAMAGE": {
+          "precision": 0.8545454545454545,
+          "recall": 0.5662650602409639
+        }
+      }
+    },
+    {
+      "conf": 0.5,
+      "precision": 0.7726174929759171,
+      "recall": 0.3157068809131669,
+      "mAP50": 0.29352998389586804,
+      "mAP50_95": 0.17410922157687256,
+      "per_class": {
+        "CLEAN": {
+          "precision": 0.758998435054773,
+          "recall": 0.3901850362027353
+        },
+        "DUSTY": {
+          "precision": 0.7527777777777778,
+          "recall": 0.16554673182651192
+        },
+        "BIRD_DROP": {
+          "precision": 0.7107692307692308,
+          "recall": 0.1528788881535407
+        },
+        "PHYSICAL_DAMAGE": {
+          "precision": 0.8679245283018868,
+          "recall": 0.5542168674698795
+        }
+      }
+    },
+    {
+      "conf": 0.55,
+      "precision": 0.8066892612069244,
+      "recall": 0.29303228281397015,
+      "mAP50": 0.27582062468933366,
+      "mAP50_95": 0.16626221152550608,
+      "per_class": {
+        "CLEAN": {
+          "precision": 0.7889273356401384,
+          "recall": 0.3668543845534996
+        },
+        "DUSTY": {
+          "precision": 0.7821782178217822,
+          "recall": 0.144777031154551
+        },
+        "BIRD_DROP": {
+          "precision": 0.7576923076923077,
+          "recall": 0.13037723362011913
+        },
+        "PHYSICAL_DAMAGE": {
+          "precision": 0.8979591836734694,
+          "recall": 0.5301204819277109
+        }
+      }
+    },
+    {
+      "conf": 0.6,
+      "precision": 0.8394916177236826,
+      "recall": 0.27077249575548284,
+      "mAP50": 0.257166199272428,
+      "mAP50_95": 0.15618784729997698,
+      "per_class": {
+        "CLEAN": {
+          "precision": 0.8297455968688845,
+          "recall": 0.3411102172164119
+        },
+        "DUSTY": {
+          "precision": 0.8104838709677419,
+          "recall": 0.12278558338423946
+        },
+        "BIRD_DROP": {
+          "precision": 0.7844036697247706,
+          "recall": 0.11317008603573792
+        },
+        "PHYSICAL_DAMAGE": {
+          "precision": 0.9333333333333333,
+          "recall": 0.5060240963855421
+        }
+      }
+    }
+  ],
+  "operating_threshold": 0.2,
+  "val_default_metrics": {
+    "precision": 0.5694975668834399,
+    "recall": 0.4524757497657692,
+    "mAP50": 0.47126443404055357,
+    "mAP50_95": 0.24170190039004522
+  },
+  "val_operating_metrics": {
+    "precision": 0.5673499466595795,
+    "recall": 0.452628468153063,
+    "mAP50": 0.382489263113158,
+    "mAP50_95": 0.21074534083250093
+  },
+  "test_default_metrics": {
+    "precision": 0.5616168637361262,
+    "recall": 0.45156506136893215,
+    "mAP50": 0.4509244578341134,
+    "mAP50_95": 0.21594787501889626
+  },
+  "test_operating_metrics": {
+    "precision": 0.555125621053218,
+    "recall": 0.45445815331188033,
+    "mAP50": 0.36912905983301403,
+    "mAP50_95": 0.18898465896562242
+  },
+  "per_class": {
+    "val_default": {
+      "CLEAN": {
+        "precision": 0.5856681098611148,
+        "recall": 0.5341914722445696,
+        "AP50": 0.5503430143427834,
+        "AP50_95": 0.3328240213817465
+      },
+      "DUSTY": {
+        "precision": 0.502264497965182,
+        "recall": 0.3249847281612706,
+        "AP50": 0.35223339099378836,
+        "AP50_95": 0.15286134921649827
+      },
+      "BIRD_DROP": {
+        "precision": 0.47504606129492777,
+        "recall": 0.3302448709463931,
+        "AP50": 0.3327913317322315,
+        "AP50_95": 0.14056520616669224
+      },
+      "PHYSICAL_DAMAGE": {
+        "precision": 0.7150115984125351,
+        "recall": 0.6204819277108434,
+        "AP50": 0.6496899990934109,
+        "AP50_95": 0.34055702479524375
+      }
+    },
+    "val_operating": {
+      "CLEAN": {
+        "precision": 0.5829675153643546,
+        "recall": 0.5341914722445696,
+        "AP50": 0.45119551239581446,
+        "AP50_95": 0.2915919835034705
+      },
+      "DUSTY": {
+        "precision": 0.499063670411985,
+        "recall": 0.32559560171044594,
+        "AP50": 0.24123903619786724,
+        "AP50_95": 0.11623921689753473
+      },
+      "BIRD_DROP": {
+        "precision": 0.4720908230842006,
+        "recall": 0.3302448709463931,
+        "AP50": 0.2431367586551334,
+        "AP50_95": 0.11359041439208717
+      },
+      "PHYSICAL_DAMAGE": {
+        "precision": 0.7152777777777778,
+        "recall": 0.6204819277108434,
+        "AP50": 0.5943857452038168,
+        "AP50_95": 0.3215597485369113
+      }
+    },
+    "test_default": {
+      "CLEAN": {
+        "precision": 0.5297539614105893,
+        "recall": 0.5514705882352942,
+        "AP50": 0.5190719558731686,
+        "AP50_95": 0.3215297081658041
+      },
+      "DUSTY": {
+        "precision": 0.45755214913885073,
+        "recall": 0.2989571263035921,
+        "AP50": 0.3218581027212318,
+        "AP50_95": 0.12944479384767643
+      },
+      "BIRD_DROP": {
+        "precision": 0.5300146184659148,
+        "recall": 0.3532684283727399,
+        "AP50": 0.35820864783671963,
+        "AP50_95": 0.14461576574518756
+      },
+      "PHYSICAL_DAMAGE": {
+        "precision": 0.7291467259291499,
+        "recall": 0.6025641025641025,
+        "AP50": 0.6045591249053334,
+        "AP50_95": 0.26820123231691684
+      }
+    },
+    "test_operating": {
+      "CLEAN": {
+        "precision": 0.5216637781629117,
+        "recall": 0.5533088235294118,
+        "AP50": 0.44485622762554333,
+        "AP50_95": 0.2917909582984608,
+        "test_images_with_class": 95,
+        "test_instances": 545,
+        "test_unique_families": 53
+      },
+      "DUSTY": {
+        "precision": 0.4451939291736931,
+        "recall": 0.30590961761297797,
+        "AP50": 0.2155732782867349,
+        "AP50_95": 0.09718076901459057,
+        "test_images_with_class": 144,
+        "test_instances": 863,
+        "test_unique_families": 90
+      },
+      "BIRD_DROP": {
+        "precision": 0.5192697768762677,
+        "recall": 0.3560500695410292,
+        "AP50": 0.2633810930164009,
+        "AP50_95": 0.1149536764900713,
+        "test_images_with_class": 100,
+        "test_instances": 726,
+        "test_unique_families": 56
+      },
+      "PHYSICAL_DAMAGE": {
+        "precision": 0.734375,
+        "recall": 0.6025641025641025,
+        "AP50": 0.552705640403377,
+        "AP50_95": 0.25201323205936704,
+        "test_images_with_class": 30,
+        "test_instances": 78,
+        "test_unique_families": 18
+      }
+    }
+  },
+  "checkpoint_sha256": "eca9332a320b41bb695e5f392f532a489ff8e2df7519cf613997ff5241514ace",
+  "last_checkpoint_sha256": "c059911dd9c6a89a54f317e75606604e2533ad91761a63731bf18354a98446be",
+  "not_production_validated": true
+}

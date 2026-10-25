@@ -12,6 +12,25 @@ env
 .streamlit/secrets.toml
 weights
 tests
+# Local development's own SQLite inspection history (services/storage.py's
+# DB_PATH). Never bake this into the image: COPY happens before `USER
+# appuser` in the Dockerfile, so any file here would land root-owned, and
+# when a fresh named volume is first mounted over /app/data Docker's local
+# volume driver copies the image directory's contents (including
+# ownership) into it - silently making history writes fail with
+# "attempt to write a readonly database" in every new deployment on any
+# machine that ever ran the app locally first. Confirmed by direct
+# container testing this session; data/.gitkeep (if present) still ships
+# so the directory itself exists.
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+# Offline dataset/model-preparation tooling and experiment run outputs -
+# never imported by the running application (app.py, models/, services/,
+# utils/, pages/ have no `import training...`) but training/cloud/runs/
+# alone can be 100+ MB of generated checkpoints/plots, needlessly bloating
+# the build context and slowing every build.
+training
 *.patch
 *.log
 .DS_Store

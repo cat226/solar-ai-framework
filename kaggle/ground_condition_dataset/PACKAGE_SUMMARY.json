@@ -1,0 +1,122 @@
+{
+  "staging_dir": "D:\\Documents\\Projects\\solar-ai-framework\\kaggle\\ground_condition_dataset",
+  "kaggle_dataset_id": "edithstark/solar-ai-ground-condition-research-v1",
+  "taxonomy": {
+    "0": "CLEAN",
+    "1": "DUSTY",
+    "2": "BIRD_DROP",
+    "3": "PHYSICAL_DAMAGE",
+    "4": "ELECTRICAL_DAMAGE"
+  },
+  "provenance_grade": "C",
+  "provenance_tag": "personal-experimental-unverified-provenance",
+  "personal_non_commercial_research_only": true,
+  "do_not": [
+    "redistribute",
+    "publish",
+    "use commercially",
+    "claim the underlying images have verified CC BY rights"
+  ],
+  "electrical_damage_semantic_risk": {
+    "flag": "HIGH",
+    "applies_to": "all S1 electrical-damage annotations",
+    "reason": "audit: those boxes visually correspond to cell cracks, not confirmed electrical failure; source class preserved, NOT relabelled",
+    "images": 479,
+    "instances": 1119
+  },
+  "counts": {
+    "train": 1757,
+    "valid": 502,
+    "test": 250
+  },
+  "total_images": 2509,
+  "class_instances_per_split": {
+    "train": {
+      "BIRD_DROP": 5500,
+      "DUSTY": 6050,
+      "CLEAN": 4209,
+      "ELECTRICAL_DAMAGE": 767,
+      "PHYSICAL_DAMAGE": 481
+    },
+    "valid": {
+      "BIRD_DROP": 1516,
+      "CLEAN": 1246,
+      "DUSTY": 1637,
+      "ELECTRICAL_DAMAGE": 208,
+      "PHYSICAL_DAMAGE": 166
+    },
+    "test": {
+      "BIRD_DROP": 726,
+      "DUSTY": 863,
+      "CLEAN": 545,
+      "PHYSICAL_DAMAGE": 78,
+      "ELECTRICAL_DAMAGE": 144
+    }
+  },
+  "class_instances_total": {
+    "BIRD_DROP": 7742,
+    "DUSTY": 8550,
+    "CLEAN": 6000,
+    "ELECTRICAL_DAMAGE": 1119,
+    "PHYSICAL_DAMAGE": 725
+  },
+  "class_image_counts": {
+    "train": {
+      "BIRD_DROP": 737,
+      "DUSTY": 959,
+      "CLEAN": 639,
+      "ELECTRICAL_DAMAGE": 340,
+      "PHYSICAL_DAMAGE": 205
+    },
+    "valid": {
+      "BIRD_DROP": 194,
+      "CLEAN": 184,
+      "DUSTY": 261,
+      "ELECTRICAL_DAMAGE": 95,
+      "PHYSICAL_DAMAGE": 79
+    },
+    "test": {
+      "BIRD_DROP": 100,
+      "DUSTY": 144,
+      "CLEAN": 95,
+      "PHYSICAL_DAMAGE": 30,
+      "ELECTRICAL_DAMAGE": 44
+    },
+    "total": {
+      "BIRD_DROP": 1031,
+      "DUSTY": 1364,
+      "CLEAN": 918,
+      "ELECTRICAL_DAMAGE": 479,
+      "PHYSICAL_DAMAGE": 314
+    }
+  },
+  "unique_family_counts_per_class": {
+    "CLEAN": 508,
+    "DUSTY": 850,
+    "BIRD_DROP": 585,
+    "PHYSICAL_DAMAGE": 212,
+    "ELECTRICAL_DAMAGE": 317
+  },
+  "families_per_split": {
+    "train": 835,
+    "valid": 240,
+    "test": 120
+  },
+  "no_family_crosses_splits": true,
+  "data_yaml_sha256": "5fb557b8dcbd2e4e83b3016080dbbfc6f19923012eefd429e15e4d640c860d8b",
+  "dataset_content_sha256": "dcebb5e7705305176845adc4e215c92c16a3b666a8d04148f3cd0b142dba2a74",
+  "split_manifest_sha256": "9eb47dd2ec418114e74d8f9a233b3e82b72066cb2b5a500c96fa9107388488db",
+  "taxonomy_sha256": "4be303ba82cd12ac097810f75dc758d5c8c89c2ac0a83433e3f05dbe8274623f",
+  "source_condition_manifest_sha256": "dc3774d9e03f02d87e2d1bc78761a1ad1cb80e50c46ce4eadce5ace4fd24411d",
+  "provenance_files_copied": [
+    "SOURCES.json",
+    "condition_build_report.md",
+    "condition_dataset_manifest.json",
+    "condition_overlap_report.md",
+    "condition_split_manifest.csv",
+    "condition_taxonomy.json",
+    "electrical_damage_annotations.csv"
+  ],
+  "source_dir": "D:\\Documents\\Projects\\solar-ai-framework\\datasets\\ground_pv_research\\condition",
+  "quality_gates_all_pass": true
+}

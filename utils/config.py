@@ -10,12 +10,16 @@ Sensitive values (API keys, credentials) must **not** live in YAML.
 Use :func:`get_secret` to read them in priority order:
 
 1. ``st.secrets[key]``  — if running inside Streamlit
-2. ``os.environ[key]``  — from a shell export, ``.env`` file loaded via
-   ``python-dotenv``, or platform secret injection
+2. ``os.environ[key]``  — from a shell export, the project-root ``.env``
+   file (loaded automatically at import via ``python-dotenv`` — see
+   :func:`_load_project_dotenv`), or platform secret injection
 3. *fallback* — optional default value supplied by the caller
 
-If you use a ``.env`` file, ensure ``python-dotenv`` is installed and
-``load_dotenv()`` is called before any imports that need the env var.
+The project-root ``.env`` is loaded once when this module is imported, with
+``override=False`` (a real environment variable always wins) and only when
+``python-dotenv`` is installed and the file exists — so this is a no-op in
+CI, Docker (``.env`` is in ``.dockerignore``), and Streamlit Cloud. The
+``.env`` file itself is git-ignored and must never be committed.
 """
 
 from __future__ import annotations
@@ -33,6 +37,28 @@ import yaml
 # ---------------------------------------------------------------------------
 _PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent
 _SETTINGS_PATH: Path = _PROJECT_ROOT / "configs" / "settings.yaml"
+_DOTENV_PATH: Path = _PROJECT_ROOT / ".env"
+
+
+def _load_project_dotenv(path: Path = _DOTENV_PATH) -> bool:
+    """Load the project-root ``.env`` into ``os.environ`` if possible.
+
+    Returns True iff a ``.env`` file was found and parsed. Never raises:
+    a missing ``python-dotenv`` or a missing file is an expected no-op.
+    ``override=False`` — an already-set environment variable is never
+    clobbered. Secret *values* are never logged here.
+    """
+    try:
+        from dotenv import load_dotenv
+    except ImportError:
+        return False
+    if not path.is_file():
+        return False
+    return bool(load_dotenv(dotenv_path=path, override=False))
+
+
+# Load .env before CFG / any get_secret() call below.
+_DOTENV_LOADED: bool = _load_project_dotenv()
 
 
 def load_config(path: Path = _SETTINGS_PATH) -> dict[str, Any]:

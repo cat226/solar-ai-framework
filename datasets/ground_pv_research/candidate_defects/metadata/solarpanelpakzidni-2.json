@@ -1,0 +1,12 @@
+{
+  "workspace": "ganibs-workspace",
+  "project": "solarpanelpakzidni-2",
+  "http": 404,
+  "error": {
+    "error": {
+      "message": "Unsupported request. `GET /ganibs-workspace/solarpanelpakzidni-2` does not exist or cannot be loaded due to missing permissions.",
+      "type": "GraphMethodException",
+      "hint": "You can see your active workspace by issuing a GET request to `/` with your `api_key`."
+    }
+  }
+}

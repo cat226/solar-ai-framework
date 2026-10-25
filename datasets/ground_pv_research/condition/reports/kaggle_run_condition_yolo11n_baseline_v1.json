@@ -1,0 +1,114 @@
+{
+  "experiment": "condition_yolo11n_baseline_v1",
+  "status": "complete",
+  "model_role": "EXPERIMENTAL RESEARCH condition/defect detector (second stage, runs on panel crops). NOT a panel detector. NOT production. Does not replace weights/yolo_solar.pt or weights/yolo_solar_ground_research_v1.pt.",
+  "kaggle": {
+    "kernel": "edithstark/condition-yolo11n-baseline-v1",
+    "kernel_url": "https://www.kaggle.com/code/edithstark/condition-yolo11n-baseline-v1",
+    "kernel_version": 1,
+    "kernel_id": 133535799,
+    "dataset": "edithstark/solar-ai-ground-condition-research-v1",
+    "dataset_url": "https://www.kaggle.com/datasets/edithstark/solar-ai-ground-condition-research-v1",
+    "dataset_is_private": true,
+    "enable_gpu": true,
+    "enable_internet": true,
+    "account": "edithstark",
+    "launched_at_utc": "2026-09-08T00:00:00Z",
+    "completed_status": "COMPLETE",
+    "gpu_resolved": "Tesla P100-PCIE-16GB (17.1 GB)",
+    "train_seconds": 2917.67,
+    "train_duration_human": "~48.6 min (wall-clock longer due to Kaggle queue/setup)"
+  },
+  "dataset_package": {
+    "source": "datasets/ground_pv_research/condition/ (S1 + S3, 5-class, leakage-safe)",
+    "staging_zip": "solar_ai_ground_condition_v1.zip",
+    "staging_zip_sha256": "49cef902a26886108af62fbd620ebb9b23f5f8977ac78ec00c91ba1cc2a36274",
+    "dataset_content_sha256": "dcebb5e7705305176845adc4e215c92c16a3b666a8d04148f3cd0b142dba2a74",
+    "data_yaml_sha256": "5fb557b8dcbd2e4e83b3016080dbbfc6f19923012eefd429e15e4d640c860d8b",
+    "split_manifest_sha256": "9eb47dd2ec418114e74d8f9a233b3e82b72066cb2b5a500c96fa9107388488db",
+    "taxonomy_sha256": "4be303ba82cd12ac097810f75dc758d5c8c89c2ac0a83433e3f05dbe8274623f",
+    "source_condition_manifest_sha256": "dc3774d9e03f02d87e2d1bc78761a1ad1cb80e50c46ce4eadce5ace4fd24411d",
+    "total_images": 2509,
+    "split_counts": {"train": 1757, "valid": 502, "test": 250},
+    "leakage_families": {"total_over_all_source_images": 1244, "families_with_images_in_dataset": 1195, "train": 835, "valid": 240, "test": 120},
+    "no_family_crosses_splits": true
+  },
+  "provenance": {
+    "grade": "C",
+    "tag": "personal-experimental-unverified-provenance",
+    "underlying_source": "Kaggle pythonafroz/solar-panel-images (licence: Unknown)",
+    "do_not": ["redistribute", "publish", "use commercially", "claim verified CC BY image rights"]
+  },
+  "electrical_damage_semantic_risk": {
+    "flag": "HIGH",
+    "reason": "S1 electrical-damage boxes visually correspond to cell cracks, not confirmed electrical failure; source class preserved, NOT relabelled; a high score is NOT electrical-fault diagnosis",
+    "test_images_with_class": 44,
+    "test_instances": 144,
+    "test_unique_families": 31,
+    "test_metrics": {"precision": 0.8079, "recall": 0.5551, "AP50": 0.5883, "AP50_95": 0.348},
+    "interpretation": "highest precision of any class. This most likely reflects that S1 'electrical-damage' boxes are crisp, well-localised cell-crack features (visually easy) rather than any capacity to diagnose electrical faults. DO NOT read a high score as electrical-fault detection."
+  },
+  "training_config": {
+    "model": "yolo11n.pt (COCO-pretrained, Ultralytics)",
+    "classes": {"0": "CLEAN", "1": "DUSTY", "2": "BIRD_DROP", "3": "PHYSICAL_DAMAGE", "4": "ELECTRICAL_DAMAGE"},
+    "panel_class": "NOT included - this is a second-stage condition model, not a panel detector",
+    "imgsz": 640,
+    "epochs": 100,
+    "patience": 20,
+    "batch": "-1 (auto)",
+    "optimizer": "auto",
+    "cos_lr": true,
+    "pretrained": true,
+    "seed": 42,
+    "device": "cuda:0 (Kaggle GPU)",
+    "augmentation": {
+      "hsv_h": 0.015, "hsv_s": 0.4, "hsv_v": 0.4,
+      "degrees": 5.0, "translate": 0.1, "scale": 0.3,
+      "shear": 0.0, "perspective": 0.0, "flipud": 0.0, "fliplr": 0.5,
+      "mosaic": 0.5, "mixup": 0.0, "copy_paste": 0.0
+    },
+    "pinned_deps": ["torch==2.7.1", "torchvision==0.22.1", "ultralytics==8.4.138", "PyYAML>=6.0.1"]
+  },
+  "clean_semantic_limitation": "CLEAN is trained only where the source carried explicit clean-region annotations. Absence of a defect detection is NOT proof of Clean. No CLEAN boxes were fabricated.",
+  "git_commit_at_launch": "b30c81b9330772d215d418f0ba1efc5351d46b8a",
+  "notes": [
+    "Experimental research artifact only. Does NOT replace weights/yolo_solar.pt (aerial) or weights/yolo_solar_ground_research_v1.pt (ground panel detector).",
+    "No RGB hotspot claim - hotspot requires a separate thermal/IR model.",
+    "Real-world 6-image evaluation is QUALITATIVE ONLY (no ground truth, no accuracy/precision/recall/F1/mAP)."
+  ],
+  "results": {
+    "best_checkpoint_sha256": "b077251a514424481d51b6a57ebcc30f4a607ea7559053cbb3ef7d0de88f9578",
+    "last_checkpoint_sha256": "da0e1b344271c4d00ed1b106ba64f927fb48755e3f95c97c414350604919e927",
+    "promoted_to": "weights/yolo_solar_condition_research_v1.pt (gitignored research artifact)",
+    "best_epoch": 98,
+    "total_epochs": 100,
+    "env": {"python": "3.12.13", "torch": "2.7.1+cu126", "torchvision": "0.22.1+cu126", "cuda": "12.6", "ultralytics": "8.4.138"},
+    "local_reeval_matches_kaggle": true,
+    "local_reeval_env": {"ultralytics": "8.4.118", "torch": "2.13.0+cpu"},
+    "val_held_out": {
+      "images": 502,
+      "overall": {"precision": 0.6237, "recall": 0.4793, "mAP50": 0.5205, "mAP50_95": 0.2792}
+    },
+    "test_held_out": {
+      "images": 250,
+      "overall": {"precision": 0.6230, "recall": 0.4491, "mAP50": 0.4718, "mAP50_95": 0.2540},
+      "per_class": {
+        "CLEAN":             {"precision": 0.5897, "recall": 0.4967, "AP50": 0.5162, "AP50_95": 0.3348, "test_images": 95, "test_instances": 545, "unique_families": 53},
+        "DUSTY":             {"precision": 0.4925, "recall": 0.3476, "AP50": 0.3577, "AP50_95": 0.1627, "test_images": 144, "test_instances": 863, "unique_families": 90},
+        "BIRD_DROP":         {"precision": 0.5654, "recall": 0.3203, "AP50": 0.3740, "AP50_95": 0.1494, "test_images": 100, "test_instances": 726, "unique_families": 56},
+        "PHYSICAL_DAMAGE":   {"precision": 0.6595, "recall": 0.5256, "AP50": 0.5228, "AP50_95": 0.2750, "test_images": 30, "test_instances": 78, "unique_families": 18},
+        "ELECTRICAL_DAMAGE": {"precision": 0.8079, "recall": 0.5551, "AP50": 0.5883, "AP50_95": 0.3480, "test_images": 44, "test_instances": 144, "unique_families": 31, "semantic_risk": "HIGH"}
+      }
+    },
+    "confusion_matrix_finding": "class-vs-class confusion is minimal; the dominant error is missed detections (false negatives -> background): CLEAN 0.50 missed, DUSTY 0.63, BIRD_DROP 0.66, PHYSICAL_DAMAGE 0.45, ELECTRICAL_DAMAGE 0.43. DUSTY/CLEAN also produce the most background false positives.",
+    "overfitting": "none observed - train AND val losses were still decreasing at epoch 100 and val mAP was still rising; the model is UNDERFIT, not overfit. best.pt @ epoch 98.",
+    "learning_real_features": "yes - bird-drop boxes land on actual white droppings (several 0.9-1.0 confidence hits on real splats); CLEAN/DUSTY track panel cleanliness. Caveat: many source images carry stock-photo watermarks (Shutterstock), a possible confound.",
+    "real_world_qualitative": {
+      "images": 6, "panels_detected_stage1": 12, "panels_with_condition_prediction": 8, "panels_with_zero_prediction": 4,
+      "predicted": {"CLEAN": 6, "DUSTY": 2, "BIRD_DROP": 1, "PHYSICAL_DAMAGE": 0, "ELECTRICAL_DAMAGE": 0},
+      "note": "QUALITATIVE ONLY, no ground truth. Predictions are raw model outputs, not facts. Stage-1 ground detector flagged 'cracked' on 2 photos but the condition model predicted no PHYSICAL/ELECTRICAL on those crops."
+    },
+    "model_assessment": "RESEARCH-ONLY",
+    "production": "KEEP SEPARATE"
+  }
+}

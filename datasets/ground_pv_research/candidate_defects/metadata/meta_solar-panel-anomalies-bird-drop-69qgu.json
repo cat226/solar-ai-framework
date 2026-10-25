@@ -1,0 +1,145 @@
+{
+  "raw": {
+    "workspace": {
+      "name": "Mrudula",
+      "url": "mrudula-tqirx"
+    },
+    "project": {
+      "id": "mrudula-tqirx/solar-panel-anomalies-bird-drop-69qgu",
+      "type": "object-detection",
+      "name": "Solar Panel Anomalies Bird Drop ",
+      "created": 1731717836.063,
+      "updated": 1759594138.48,
+      "images": 120,
+      "unannotated": 0,
+      "annotation": "Bird-Drop",
+      "versions": 1,
+      "public": true,
+      "license": "CC BY 4.0",
+      "splits": {
+        "train": 84,
+        "valid": 24,
+        "test": 12
+      },
+      "colors": {
+        "Bird-Drop": "#C7FC00",
+        "Snow": "#8622FF"
+      },
+      "classes": {
+        "Bird-Drop": 170,
+        "Snow": 30
+      },
+      "icon": {
+        "original": "https://source.roboflow.com/nYv0zKXpKdaD1JIsA94SYqHKPAD3/AHEWxxGouvEOQkFmGxuz/original.jpg",
+        "thumb": "https://source.roboflow.com/nYv0zKXpKdaD1JIsA94SYqHKPAD3/AHEWxxGouvEOQkFmGxuz/thumb.jpg",
+        "annotation": "https://source.roboflow.com/nYv0zKXpKdaD1JIsA94SYqHKPAD3/AHEWxxGouvEOQkFmGxuz/annotation-Bird-Drop.png"
+      },
+      "preprocessing": {},
+      "augmentation": {}
+    },
+    "versions": [
+      {
+        "id": "mrudula-tqirx/solar-panel-anomalies-bird-drop-69qgu/1",
+        "name": "2025-10-04 9:38pm",
+        "created": 1759594138.48,
+        "images": 120,
+        "splits": {
+          "valid": 24,
+          "test": 12,
+          "train": 84
+        },
+        "generating": false,
+        "progress": 1,
+        "model": {
+          "id": "solar-panel-anomalies-bird-drop-69qgu/1",
+          "endpoint": "https://serverless.roboflow.com/solar-panel-anomalies-bird-drop-69qgu/1",
+          "start": 1759594324.469,
+          "end": 1759595472.363,
+          "fromScratch": false,
+          "tfjs": true,
+          "oak": true,
+          "map": "33.58",
+          "recall": "31.03",
+          "precision": "56.90"
+        },
+        "preprocessing": {},
+        "augmentation": {},
+        "exports": [
+          "coco",
+          "createml",
+          "yolov11",
+          "yolov5pytorch",
+          "yolov8",
+          "yolov8-obb"
+        ]
+      }
+    ]
+  },
+  "summary": {
+    "label": "S4  solar-panel-anomalies-bird-drop",
+    "workspace": "mrudula-tqirx",
+    "project": "solar-panel-anomalies-bird-drop-69qgu",
+    "http": 200,
+    "name": "Solar Panel Anomalies Bird Drop ",
+    "type": "object-detection",
+    "license": "CC BY 4.0",
+    "annotation": "Bird-Drop",
+    "base_images": 120,
+    "class_instance_counts": {
+      "Bird-Drop": 170,
+      "Snow": 30
+    },
+    "project_splits": {
+      "train": 84,
+      "valid": 24,
+      "test": 12
+    },
+    "created": 1731717836.063,
+    "updated": 1759594138.48,
+    "public": true,
+    "n_versions": 1,
+    "latest_version": {
+      "id": "mrudula-tqirx/solar-panel-anomalies-bird-drop-69qgu/1",
+      "name": "2025-10-04 9:38pm",
+      "created": 1759594138.48,
+      "images": 120,
+      "splits": {
+        "valid": 24,
+        "test": 12,
+        "train": 84
+      },
+      "preprocessing": {},
+      "augmentation": {},
+      "exports": [
+        "coco",
+        "createml",
+        "yolov11",
+        "yolov5pytorch",
+        "yolov8",
+        "yolov8-obb"
+      ]
+    },
+    "all_versions": [
+      {
+        "id": "mrudula-tqirx/solar-panel-anomalies-bird-drop-69qgu/1",
+        "name": "2025-10-04 9:38pm",
+        "images": 120,
+        "splits": {
+          "valid": 24,
+          "test": 12,
+          "train": 84
+        },
+        "created": 1759594138.48,
+        "aug": false,
+        "exports": [
+          "coco",
+          "createml",
+          "yolov11",
+          "yolov5pytorch",
+          "yolov8",
+          "yolov8-obb"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,264 @@
+{
+  "experiment_name": "condition_mobilenetv2_4class_classifier_v1",
+  "phase": "16-B \u2014 panel-crop condition classifier",
+  "model_role": "EXPERIMENTAL RESEARCH condition classifier (second stage, on panel crops) \u2014 NOT a panel detector, NOT production, NOT validated for field use",
+  "architecture": "torchvision MobileNetV2, ImageNet-pretrained, classifier head replaced (num_classes=4)",
+  "classes_index_order": [
+    "BIRD_DROP",
+    "CLEAN",
+    "DUSTY",
+    "PHYSICAL_DAMAGE"
+  ],
+  "baseline_for_comparison": {
+    "checkpoint": "weights/yolo_solar_condition_4class_research_v2.pt",
+    "box_level_test_recall": 0.441,
+    "image_level_agreement": 0.727
+  },
+  "dataset_kaggle": "edithstark/solar-ai-ground-condition-4class-classifier-v1",
+  "dataset_derivation": "dominant_class(): majority by box instance COUNT, ties broken by total box AREA, then alphabetically \u2014 see training/detection/ground_pv/condition_taxonomy.py",
+  "minority_annotation_images_discarded": 910,
+  "provenance_grade": "C",
+  "provenance_tag": "personal-experimental-unverified-provenance",
+  "train_class_counts": {
+    "BIRD_DROP": 509,
+    "CLEAN": 367,
+    "DUSTY": 749,
+    "PHYSICAL_DAMAGE": 61
+  },
+  "class_loss_weights": {
+    "BIRD_DROP": 0.8280943036079407,
+    "CLEAN": 1.1485013961791992,
+    "DUSTY": 0.5627503395080566,
+    "PHYSICAL_DAMAGE": 6.909836292266846
+  },
+  "hyperparameters": {
+    "epochs_requested": 30,
+    "epochs_run": 16,
+    "batch_size": 32,
+    "lr": 0.0005,
+    "optimizer": "AdamW",
+    "patience": 6,
+    "seed": 42,
+    "input_size": 224,
+    "device": "cuda"
+  },
+  "best_epoch": 10,
+  "best_val_accuracy": 0.7701863354037267,
+  "training_seconds": 233.3699848651886,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 1.0679392238387293,
+      "train_acc": 0.5705812574139977,
+      "val_loss": 1.1371274948983952,
+      "val_acc": 0.577639751552795,
+      "seconds": 18.54281210899353
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.7367334126153451,
+      "train_acc": 0.6648873072360617,
+      "val_loss": 0.7348923673294099,
+      "val_acc": 0.7039337474120083,
+      "seconds": 14.347630023956299
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.6081421426889594,
+      "train_acc": 0.7313167259786477,
+      "val_loss": 0.8089089155443954,
+      "val_acc": 0.722567287784679,
+      "seconds": 14.176442623138428
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.5492076666612501,
+      "train_acc": 0.7455516014234875,
+      "val_loss": 0.7603946070246568,
+      "val_acc": 0.7287784679089027,
+      "seconds": 14.270779609680176
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.445777818189397,
+      "train_acc": 0.797153024911032,
+      "val_loss": 0.8406505562503885,
+      "val_acc": 0.7080745341614907,
+      "seconds": 17.302388429641724
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.3986462968736357,
+      "train_acc": 0.8208778173190985,
+      "val_loss": 0.7764015945588579,
+      "val_acc": 0.7515527950310559,
+      "seconds": 13.562022924423218
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.37062807411202897,
+      "train_acc": 0.833926453143535,
+      "val_loss": 0.8705944017455074,
+      "val_acc": 0.7163561076604554,
+      "seconds": 13.536503553390503
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.5014124840038385,
+      "train_acc": 0.7983392645314353,
+      "val_loss": 0.8677800977699012,
+      "val_acc": 0.7287784679089027,
+      "seconds": 13.944876909255981
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.42662123273417335,
+      "train_acc": 0.8297746144721234,
+      "val_loss": 0.7829195512747913,
+      "val_acc": 0.7246376811594203,
+      "seconds": 13.759374141693115
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.27504339573787767,
+      "train_acc": 0.8712930011862396,
+      "val_loss": 0.7875815995238089,
+      "val_acc": 0.7701863354037267,
+      "seconds": 13.87368369102478
+    },
+    {
+      "epoch": 11,
+      "train_loss": 0.24420581770395752,
+      "train_acc": 0.9015421115065243,
+      "val_loss": 0.9843476045699346,
+      "val_acc": 0.7246376811594203,
+      "seconds": 13.50183916091919
+    },
+    {
+      "epoch": 12,
+      "train_loss": 0.23355785088253475,
+      "train_acc": 0.902135231316726,
+      "val_loss": 0.8964882610099656,
+      "val_acc": 0.7349896480331263,
+      "seconds": 13.671238422393799
+    },
+    {
+      "epoch": 13,
+      "train_loss": 0.1990934149897961,
+      "train_acc": 0.9098457888493475,
+      "val_loss": 0.8910614559908955,
+      "val_acc": 0.7453416149068323,
+      "seconds": 14.45527458190918
+    },
+    {
+      "epoch": 14,
+      "train_loss": 0.16889278882338907,
+      "train_acc": 0.9288256227758007,
+      "val_loss": 0.989165497887841,
+      "val_acc": 0.7101449275362319,
+      "seconds": 14.66904354095459
+    },
+    {
+      "epoch": 15,
+      "train_loss": 0.2160227875162274,
+      "train_acc": 0.9104389086595492,
+      "val_loss": 0.9146223755738472,
+      "val_acc": 0.7370600414078675,
+      "seconds": 14.89747929573059
+    },
+    {
+      "epoch": 16,
+      "train_loss": 0.20100641112734838,
+      "train_acc": 0.9134045077105575,
+      "val_loss": 1.0108918783333978,
+      "val_acc": 0.7329192546583851,
+      "seconds": 14.569445610046387
+    }
+  ],
+  "test_set": {
+    "n_images": 242,
+    "overall_accuracy": 0.7520661157024794,
+    "overall_loss": 0.7662197302195651,
+    "confusion_matrix": [
+      [
+        48,
+        6,
+        14,
+        3
+      ],
+      [
+        5,
+        42,
+        7,
+        1
+      ],
+      [
+        12,
+        7,
+        85,
+        3
+      ],
+      [
+        1,
+        1,
+        0,
+        7
+      ]
+    ],
+    "confusion_matrix_class_order": [
+      "BIRD_DROP",
+      "CLEAN",
+      "DUSTY",
+      "PHYSICAL_DAMAGE"
+    ],
+    "per_class": {
+      "BIRD_DROP": {
+        "n_test_images": 71,
+        "tp": 48,
+        "fp": 18,
+        "fn": 23,
+        "precision": 0.7272727272727273,
+        "recall": 0.676056338028169,
+        "f1": 0.7007299270072992
+      },
+      "CLEAN": {
+        "n_test_images": 55,
+        "tp": 42,
+        "fp": 14,
+        "fn": 13,
+        "precision": 0.75,
+        "recall": 0.7636363636363637,
+        "f1": 0.7567567567567568
+      },
+      "DUSTY": {
+        "n_test_images": 107,
+        "tp": 85,
+        "fp": 21,
+        "fn": 22,
+        "precision": 0.8018867924528302,
+        "recall": 0.794392523364486,
+        "f1": 0.7981220657276995
+      },
+      "PHYSICAL_DAMAGE": {
+        "n_test_images": 9,
+        "tp": 7,
+        "fp": 7,
+        "fn": 2,
+        "precision": 0.5,
+        "recall": 0.7777777777777778,
+        "f1": 0.6086956521739131
+      }
+    }
+  },
+  "checkpoint_sha256": "1614b0a6a9072b64db4c883c158cfb2e0868a7255af2f89fc45c6979ca413a01",
+  "environment": {
+    "python": "3.12.13",
+    "torch": "2.7.1+cu126",
+    "torchvision": "0.22.1+cu126",
+    "cuda": "12.6",
+    "gpu": "Tesla P100-PCIE-16GB",
+    "gpu_capability": "6.0",
+    "gpu_memory_gb": 17.1
+  },
+  "not_production_validated": true
+}

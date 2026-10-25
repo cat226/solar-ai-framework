@@ -1,0 +1,28 @@
+{
+  "classes_index_order": [
+    "CLEAN",
+    "DUSTY",
+    "BIRD_DROP",
+    "PHYSICAL_DAMAGE"
+  ],
+  "architecture": "torchvision convnext_tiny, classifier[2]=Linear(768,4), ImageNet-1k pretrained",
+  "preprocessing": "Resize((288,288)) whole frame, ImageNet mean/std; eval = mean of image and horizontal flip",
+  "epochs": 12,
+  "batch": 32,
+  "lr": 0.0001,
+  "optimizer": "AdamW wd=0.05 + OneCycle",
+  "loss": "CE, sqrt-inverse-frequency weights, label_smoothing=0.1",
+  "amp": "fp16 autocast",
+  "seed": 42,
+  "n_train": 2618,
+  "env": {
+    "python": "3.13.15",
+    "torch": "2.7.1+cu126",
+    "torchvision": "0.22.1+cu126",
+    "cuda": "12.6",
+    "gpu": "Tesla T4"
+  },
+  "final_train_minutes": 4.91,
+  "checkpoint_sha256": "bd9ba44d113aee6f602b5d2303796307fed418ec788f9b7ae23c430aef4ab907",
+  "status": "RESEARCH ONLY - web photos, never validated on the target rooftop camera"
+}

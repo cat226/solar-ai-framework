@@ -1,0 +1,336 @@
+{
+  "samples_dir": "D:\\Documents\\Projects\\solar-ai-framework\\datasets\\ground_pv_research\\phase12_audit\\samples",
+  "existing_dir": "D:\\Documents\\Projects\\solar-ai-framework\\datasets\\ground_pv_research\\yolo",
+  "candidates": {
+    "kaggle_fxmikf_621": {
+      "domain": {
+        "images": 621,
+        "distinct_dimensions": 229,
+        "top_dimensions": [
+          [
+            [
+              480,
+              480
+            ],
+            294
+          ],
+          [
+            [
+              500,
+              375
+            ],
+            14
+          ],
+          [
+            [
+              259,
+              194
+            ],
+            9
+          ],
+          [
+            [
+              275,
+              183
+            ],
+            9
+          ],
+          [
+            [
+              300,
+              168
+            ],
+            7
+          ]
+        ],
+        "aspect": {
+          "landscape": 277,
+          "square": 333,
+          "portrait": 11
+        },
+        "polygon_label_images": 0,
+        "annotation_style": "bounding-box",
+        "aspect_ratio_range": [
+          0.469,
+          3.555
+        ],
+        "panel_boxes": 1099,
+        "boxes_per_image": {
+          "mean": 1.77,
+          "median": 1,
+          "max": 17,
+          "images_with_zero": 7
+        },
+        "box_area_fraction": {
+          "median": 0.1821,
+          "gt_0_25": 437,
+          "gt_0_5": 155,
+          "n": 1099
+        },
+        "boundary_touching_boxes": 438,
+        "boundary_touching_pct": 39.9
+      },
+      "images_fingerprinted": 621,
+      "corrupt": 0,
+      "internal_redundancy_fraction": 0.0032,
+      "independent_scene_proxy": 619,
+      "overlap_vs_existing": {
+        "exact": 0,
+        "shared_basename": 0,
+        "perceptual_near_dup": 0,
+        "any_signal": 0,
+        "fraction": 0.0
+      }
+    },
+    "panel-detection-nfzzu_v1": {
+      "domain": {
+        "images": 160,
+        "distinct_dimensions": 1,
+        "top_dimensions": [
+          [
+            [
+              640,
+              640
+            ],
+            160
+          ]
+        ],
+        "aspect": {
+          "square": 160
+        },
+        "polygon_label_images": 0,
+        "annotation_style": "bounding-box",
+        "aspect_ratio_range": [
+          1.0,
+          1.0
+        ],
+        "panel_boxes": 67,
+        "boxes_per_image": {
+          "mean": 0.42,
+          "median": 0.0,
+          "max": 6,
+          "images_with_zero": 114
+        },
+        "box_area_fraction": {
+          "median": 0.0367,
+          "gt_0_25": 0,
+          "gt_0_5": 0,
+          "n": 67
+        },
+        "boundary_touching_boxes": 5,
+        "boundary_touching_pct": 7.5
+      },
+      "images_fingerprinted": 160,
+      "corrupt": 0,
+      "internal_redundancy_fraction": 0.0062,
+      "independent_scene_proxy": 159,
+      "overlap_vs_existing": {
+        "exact": 0,
+        "shared_basename": 0,
+        "perceptual_near_dup": 0,
+        "any_signal": 0,
+        "fraction": 0.0
+      }
+    },
+    "panel-solar-yolo_v3": {
+      "domain": {
+        "images": 102,
+        "distinct_dimensions": 1,
+        "top_dimensions": [
+          [
+            [
+              640,
+              640
+            ],
+            102
+          ]
+        ],
+        "aspect": {
+          "square": 102
+        },
+        "polygon_label_images": 1,
+        "annotation_style": "bounding-box",
+        "aspect_ratio_range": [
+          1.0,
+          1.0
+        ],
+        "panel_boxes": 1571,
+        "boxes_per_image": {
+          "mean": 15.4,
+          "median": 15.5,
+          "max": 33,
+          "images_with_zero": 1
+        },
+        "box_area_fraction": {
+          "median": 0.0236,
+          "gt_0_25": 0,
+          "gt_0_5": 0,
+          "n": 1571
+        },
+        "boundary_touching_boxes": 205,
+        "boundary_touching_pct": 13.0
+      },
+      "images_fingerprinted": 102,
+      "corrupt": 0,
+      "internal_redundancy_fraction": 0.0,
+      "independent_scene_proxy": 102,
+      "overlap_vs_existing": {
+        "exact": 0,
+        "shared_basename": 0,
+        "perceptual_near_dup": 0,
+        "any_signal": 0,
+        "fraction": 0.0
+      }
+    },
+    "solar-panel-zitzr_v1": {
+      "domain": {
+        "images": 471,
+        "distinct_dimensions": 1,
+        "top_dimensions": [
+          [
+            [
+              640,
+              512
+            ],
+            471
+          ]
+        ],
+        "aspect": {
+          "landscape": 471
+        },
+        "polygon_label_images": 0,
+        "annotation_style": "bounding-box",
+        "aspect_ratio_range": [
+          1.25,
+          1.25
+        ],
+        "panel_boxes": 4469,
+        "boxes_per_image": {
+          "mean": 9.49,
+          "median": 10,
+          "max": 15,
+          "images_with_zero": 0
+        },
+        "box_area_fraction": {
+          "median": 0.0725,
+          "gt_0_25": 0,
+          "gt_0_5": 0,
+          "n": 4469
+        },
+        "boundary_touching_boxes": 4051,
+        "boundary_touching_pct": 90.6
+      },
+      "images_fingerprinted": 471,
+      "corrupt": 0,
+      "internal_redundancy_fraction": 0.0,
+      "independent_scene_proxy": 471,
+      "overlap_vs_existing": {
+        "exact": 0,
+        "shared_basename": 0,
+        "perceptual_near_dup": 0,
+        "any_signal": 0,
+        "fraction": 0.0
+      }
+    },
+    "solar-panels-r4trk_v2": {
+      "domain": {
+        "images": 402,
+        "distinct_dimensions": 1,
+        "top_dimensions": [
+          [
+            [
+              416,
+              416
+            ],
+            402
+          ]
+        ],
+        "aspect": {
+          "square": 402
+        },
+        "polygon_label_images": 402,
+        "annotation_style": "segmentation-polygon (convertible to bbox)",
+        "aspect_ratio_range": [
+          1.0,
+          1.0
+        ],
+        "panel_boxes": 810,
+        "boxes_per_image": {
+          "mean": 2.01,
+          "median": 1.0,
+          "max": 11,
+          "images_with_zero": 0
+        },
+        "box_area_fraction": {
+          "median": 0.0222,
+          "gt_0_25": 1,
+          "gt_0_5": 0,
+          "n": 810
+        },
+        "boundary_touching_boxes": 372,
+        "boundary_touching_pct": 45.9
+      },
+      "images_fingerprinted": 402,
+      "corrupt": 0,
+      "internal_redundancy_fraction": 0.1169,
+      "independent_scene_proxy": 355,
+      "overlap_vs_existing": {
+        "exact": 0,
+        "shared_basename": 0,
+        "perceptual_near_dup": 0,
+        "any_signal": 0,
+        "fraction": 0.0
+      }
+    },
+    "spd-ubwtz_v13": {
+      "domain": {
+        "images": 563,
+        "distinct_dimensions": 1,
+        "top_dimensions": [
+          [
+            [
+              640,
+              640
+            ],
+            563
+          ]
+        ],
+        "aspect": {
+          "square": 563
+        },
+        "polygon_label_images": 505,
+        "annotation_style": "segmentation-polygon (convertible to bbox)",
+        "aspect_ratio_range": [
+          1.0,
+          1.0
+        ],
+        "panel_boxes": 1688,
+        "boxes_per_image": {
+          "mean": 3.0,
+          "median": 3,
+          "max": 8,
+          "images_with_zero": 58
+        },
+        "box_area_fraction": {
+          "median": 0.0644,
+          "gt_0_25": 133,
+          "gt_0_5": 13,
+          "n": 1688
+        },
+        "boundary_touching_boxes": 425,
+        "boundary_touching_pct": 25.2
+      },
+      "images_fingerprinted": 563,
+      "corrupt": 0,
+      "internal_redundancy_fraction": 0.0,
+      "independent_scene_proxy": 563,
+      "overlap_vs_existing": {
+        "exact": 0,
+        "shared_basename": 0,
+        "perceptual_near_dup": 0,
+        "any_signal": 0,
+        "fraction": 0.0
+      }
+    }
+  }
+}

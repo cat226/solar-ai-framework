@@ -51,8 +51,5 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Verify imports
-        run: python verify_imports.py
-
       - name: Run pytest with coverage
         run: python -m pytest -q

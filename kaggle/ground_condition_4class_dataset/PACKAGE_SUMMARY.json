@@ -1,0 +1,65 @@
+{
+  "staging_dir": "D:\\Documents\\Projects\\solar-ai-framework\\kaggle\\ground_condition_4class_dataset",
+  "kaggle_dataset_id": "edithstark/solar-ai-ground-condition-4class-research-v1",
+  "taxonomy": {
+    "0": "CLEAN",
+    "1": "DUSTY",
+    "2": "BIRD_DROP",
+    "3": "PHYSICAL_DAMAGE"
+  },
+  "provenance_grade": "C",
+  "provenance_tag": "personal-experimental-unverified-provenance",
+  "personal_non_commercial_research_only": true,
+  "do_not": [
+    "redistribute",
+    "publish",
+    "use commercially",
+    "claim the underlying images have verified CC BY rights"
+  ],
+  "electrical_damage_removed": true,
+  "counts": {
+    "train": 1686,
+    "valid": 483,
+    "test": 242
+  },
+  "total_images": 2411,
+  "class_instances_per_split": {
+    "train": {
+      "BIRD_DROP": 5500,
+      "DUSTY": 6050,
+      "CLEAN": 4209,
+      "PHYSICAL_DAMAGE": 481
+    },
+    "valid": {
+      "BIRD_DROP": 1516,
+      "CLEAN": 1246,
+      "DUSTY": 1637,
+      "PHYSICAL_DAMAGE": 166
+    },
+    "test": {
+      "BIRD_DROP": 726,
+      "DUSTY": 863,
+      "CLEAN": 545,
+      "PHYSICAL_DAMAGE": 78
+    }
+  },
+  "class_instances_total": {
+    "BIRD_DROP": 7742,
+    "DUSTY": 8550,
+    "CLEAN": 6000,
+    "PHYSICAL_DAMAGE": 725
+  },
+  "no_family_crosses_splits": true,
+  "no_exact_duplicate_crosses_splits": true,
+  "data_yaml_sha256": "0731819484bb3b07c87a2ced8e79997d380fa5a34a4701fdb3845c8fa03cffe4",
+  "dataset_content_sha256": "6637e6361343e7bb17d1703e705bffc0cb733a5428f48ce681fa28bc8826bf92",
+  "split_manifest_sha256": "600752137a4cbf8b24f506339b662ea0d0dbb67d1fc897f52fef83d6eb1d893e",
+  "provenance_files_copied": [
+    "condition_4class_build_report.md",
+    "condition_4class_manifest.json",
+    "dropped_images.csv",
+    "splits_4class_manifest.csv"
+  ],
+  "source_dir": "D:\\Documents\\Projects\\solar-ai-framework\\datasets\\ground_pv_research\\condition_4class_v1",
+  "derived_from": "datasets/ground_pv_research/condition (5-class, unmodified) \u2014 ELECTRICAL_DAMAGE removed, never relabelled"
+}

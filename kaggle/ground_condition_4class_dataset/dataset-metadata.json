@@ -1,0 +1,11 @@
+{
+  "title": "Solar AI ground PV condition 4-class research v1",
+  "id": "edithstark/solar-ai-ground-condition-4class-research-v1",
+  "licenses": [
+    {
+      "name": "other"
+    }
+  ],
+  "subtitle": "Active 4-class PV condition set - unverified provenance (grade C)",
+  "description": "Solar AI ground-level PV CONDITION research dataset \u2014 ACTIVE 4-CLASS taxonomy (experimental).\n\nPERSONAL, NON-COMMERCIAL RESEARCH ONLY. Provenance grade C, tagged `personal-experimental-unverified-provenance`. Derived from the project's existing 5-class condition dataset by REMOVING every ELECTRICAL_DAMAGE annotation (never relabelled as PHYSICAL_DAMAGE or any other class) \u2014 the source audit found those boxes visually correspond to cell cracks, not confirmed electrical failure. The underlying photographs ultimately trace to Kaggle `pythonafroz/solar-panel-images`, whose Kaggle licence is UNKNOWN. Do NOT redistribute, publish, use commercially, or claim verified CC BY image rights for the underlying images.\n\nClasses (contiguous, ACTIVE taxonomy): 0=CLEAN 1=DUSTY 2=BIRD_DROP 3=PHYSICAL_DAMAGE. ELECTRICAL_DAMAGE, SNOW, and the ambiguous 'Defective' are excluded. PANEL is not a class here \u2014 this feeds a SECOND-STAGE condition model that runs on panel crops from the separate ground panel detector.\n\nPHYSICAL_DAMAGE is the rarest active class (314 images / 725 instances vs. DUSTY's 1,364 images / 8,550 instances) \u2014 a known class-imbalance limitation.\n\n2411 images: train 1686 / valid 483 / test 242. Leakage-safe split preserved EXACTLY from the 5-class dataset's own leakage-clean family-grouped split (a class-filtered subset of a leakage-clean split stays leakage-clean by construction). Detection format, bounding boxes preserved verbatim for the surviving classes (no fabricated boxes). provenance/ carries the full build report and per-image manifest.\n\nNot a validated engineering or safety diagnosis."
+}

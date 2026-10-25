@@ -1,0 +1,109 @@
+{
+  "artifact": "Solar AI ground-level PV defect research dataset - raw acquisition",
+  "acquired_by": "scripts/download_ground_pv_dataset.py (Roboflow Python package)",
+  "acquired_at_utc": "2026-09-07T17:13:54.987060+00:00",
+  "git_commit_at_acquisition": "5a8794238c53fac1cfc74cd8fd132ca73cde1592",
+  "source": {
+    "name": "panel solar",
+    "owner": "Susan",
+    "platform": "Roboflow Universe",
+    "url": "https://universe.roboflow.com/susan-ifblr/panel-solar-bw945",
+    "workspace": "susan-ifblr",
+    "project": "panel-solar-bw945",
+    "version": 1,
+    "export_format": "yolov8",
+    "roboflow_export_note": "exported via roboflow.com on 2024-09-10; version snapshot '2024-09-04 6:46pm'",
+    "preprocessing_applied_by_source": [
+      "auto-orient (EXIF stripped)",
+      "resize 640x640 stretch"
+    ],
+    "source_augmentation": "none"
+  },
+  "license": {
+    "as_displayed_by_source": "CC BY 4.0",
+    "declared_in": [
+      "data.yaml (roboflow.license)",
+      "README.dataset.txt",
+      "README.roboflow.txt"
+    ],
+    "attribution_required": true,
+    "image_level_provenance_verified": false,
+    "citation": "Susan. \"panel solar Dataset.\" Roboflow Universe. https://universe.roboflow.com/susan-ifblr/panel-solar-bw945"
+  },
+  "raw_location": {
+    "path": "datasets/ground_pv_research/raw/panel_solar_bw945_v1",
+    "drive": "D: (temporary - project storage policy prefers E:; E: drive was unstable at acquisition time)",
+    "immutable": true,
+    "committed_to_git": false,
+    "gitignored_by": "datasets/ground_pv_research/raw/",
+    "total_bytes": 389015640,
+    "total_files": 12990,
+    "image_count": 6493,
+    "label_count": 6493,
+    "image_format": "JPEG 640x640 RGB"
+  },
+  "key_file_sha256": {
+    "data.yaml": "0ffaa95b5c04f8d7e02174dbec9149b7ce2c1f74a8ef5631dd4fefadfd82b88b",
+    "README.roboflow.txt": "a245e31e44cdcd8eaf7be594f28904f1ab19d04248b93f56d67baa575f667e29",
+    "README.dataset.txt": "4db518a3396d541f2b1b1246f7e181d605b9fa275d7221e794a72d48f359ab39"
+  },
+  "source_class_names_in_order": [
+    "bird_drop",
+    "cracked",
+    "dusty",
+    "panel"
+  ],
+  "research_class_id_remap_source_to_research": {
+    "0": 1,
+    "1": 2,
+    "2": 3,
+    "3": 0
+  },
+  "split_counts": {
+    "train": {
+      "images": 4546,
+      "labels": 4546
+    },
+    "valid": {
+      "images": 1299,
+      "labels": 1299
+    },
+    "test": {
+      "images": 648,
+      "labels": 648
+    }
+  },
+  "published_vs_actual_class_counts": {
+    "published_by_roboflow": {
+      "cracked": 6233,
+      "panel": 4477,
+      "dusty": 235,
+      "bird_drop": 60
+    },
+    "actual_instances_bbox_plus_polygon": {
+      "panel": 6319,
+      "bird_drop": 81,
+      "cracked": 9040,
+      "dusty": 351
+    },
+    "actual_images_containing_class": {
+      "panel": 5227,
+      "bird_drop": 9,
+      "cracked": 3694,
+      "dusty": 156
+    }
+  },
+  "audit_report": {
+    "md": "datasets/ground_pv_research/reports/dataset_audit.md",
+    "json": "datasets/ground_pv_research/reports/dataset_audit.json",
+    "result": "FAILED CLOSED",
+    "fail_closed_reasons": [
+      "1 exact-duplicate image(s) span multiple splits (train/val/test leakage) - a leakage-clean split is required before training",
+      "614 YOLO-segmentation polygon line(s) across 410 file(s) (166 mixed with boxes, 244 polygon-only) - the dataset mixes YOLO-seg and YOLO-detect formats; the normalized copy must convert polygons to bounding boxes before detection training"
+    ]
+  },
+  "notes": [
+    "Raw download is immutable; see raw/panel_solar_bw945_v1/download_manifest.json for the downloader's own record.",
+    "Not mixed with the production aerial dataset. Not used for training. No pseudo-labels created."
+  ]
+}

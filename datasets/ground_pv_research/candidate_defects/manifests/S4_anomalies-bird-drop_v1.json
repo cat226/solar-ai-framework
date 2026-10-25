@@ -1,0 +1,25 @@
+{
+  "key": "S4_anomalies-bird-drop_v1",
+  "workspace": "mrudula-tqirx",
+  "project": "solar-panel-anomalies-bird-drop-69qgu",
+  "version": 1,
+  "export_format": "yolov8",
+  "license_shown_on_roboflow": "CC BY 4.0",
+  "downloaded_at_utc": "2026-09-08T06:08:49.815666+00:00",
+  "roboflow_url": "https://universe.roboflow.com/mrudula-tqirx/solar-panel-anomalies-bird-drop-69qgu/dataset/1",
+  "image_count": 120,
+  "label_txt_count": 122,
+  "top_level_files": [
+    "README.dataset.txt",
+    "README.roboflow.txt",
+    "data.yaml"
+  ],
+  "top_level_dirs": [
+    "test",
+    "train",
+    "valid"
+  ],
+  "notes": [
+    "Raw immutable Roboflow export. Do not edit in place."
+  ]
+}

@@ -1,0 +1,929 @@
+[
+  {
+    "label": "C1  SOLAR PANEL DEFECT",
+    "workspace": "solar-panel-defects-ax0gw",
+    "project": "solar-panel-defect-w1dfi",
+    "http": 200,
+    "name": "SOLAR PANEL DEFECT",
+    "type": "object-detection",
+    "license": "CC BY 4.0",
+    "annotation": "Defective-and-Non-Defective",
+    "base_images": 570,
+    "class_instance_counts": {
+      "Dusty": 577,
+      "Snow": 346,
+      "Non-Defective": 1294,
+      "Defective": 440,
+      "Physical-Damage": 622,
+      "Bird-drop": 1091,
+      "Electrical-Damage": 123
+    },
+    "project_splits": {
+      "valid": 114,
+      "test": 57,
+      "export": 0,
+      "train": 399
+    },
+    "created": 1716048063.74,
+    "updated": 1716798986.303,
+    "public": true,
+    "n_versions": 6,
+    "latest_version": {
+      "id": "solar-panel-defects-ax0gw/solar-panel-defect-w1dfi/8",
+      "name": "2024-05-27 2:06pm",
+      "created": 1716798986.244,
+      "images": 1368,
+      "splits": {
+        "valid": 114,
+        "test": 57,
+        "train": 1197
+      },
+      "preprocessing": {
+        "auto-orient": true,
+        "resize": {
+          "width": 640,
+          "format": "Stretch to",
+          "height": 640
+        }
+      },
+      "augmentation": {
+        "rotate": {
+          "degrees": 15
+        },
+        "image": {
+          "versions": 3
+        },
+        "brightness": {
+          "brighten": true,
+          "percent": 15,
+          "darken": true
+        },
+        "bbexposure": {
+          "percent": 10
+        },
+        "noise": {
+          "percent": 0.1
+        },
+        "bbblur": {
+          "pixels": 2.5
+        },
+        "flip": {
+          "horizontal": true,
+          "vertical": true
+        }
+      },
+      "exports": [
+        "coco",
+        "multiclass",
+        "openai",
+        "paligemma",
+        "tensorflow",
+        "voc",
+        "yolo26",
+        "yolov11",
+        "yolov12",
+        "yolov7pytorch",
+        "yolov8",
+        "yolov8-obb",
+        "yolov9"
+      ]
+    },
+    "all_versions": [
+      {
+        "id": "solar-panel-defects-ax0gw/solar-panel-defect-w1dfi/8",
+        "name": "2024-05-27 2:06pm",
+        "images": 1368,
+        "splits": {
+          "valid": 114,
+          "test": 57,
+          "train": 1197
+        },
+        "created": 1716798986.244,
+        "aug": true,
+        "exports": [
+          "coco",
+          "multiclass",
+          "openai",
+          "paligemma",
+          "tensorflow",
+          "voc",
+          "yolo26",
+          "yolov11",
+          "yolov12",
+          "yolov7pytorch",
+          "yolov8",
+          "yolov8-obb",
+          "yolov9"
+        ]
+      },
+      {
+        "id": "solar-panel-defects-ax0gw/solar-panel-defect-w1dfi/7",
+        "name": "2024-05-23 1:48pm",
+        "images": 1368,
+        "splits": {
+          "valid": 87,
+          "test": 51,
+          "train": 915
+        },
+        "created": 1716452338.934,
+        "aug": true,
+        "exports": [
+          "coco",
+          "yolov5pytorch",
+          "yolov8"
+        ]
+      },
+      {
+        "id": "solar-panel-defects-ax0gw/solar-panel-defect-w1dfi/6",
+        "name": "2024-05-23 1:48pm",
+        "images": 1368,
+        "splits": {
+          "valid": 87,
+          "test": 51,
+          "train": 915
+        },
+        "created": 1716452329.675,
+        "aug": true,
+        "exports": [
+          "coco",
+          "yolov8"
+        ]
+      },
+      {
+        "id": "solar-panel-defects-ax0gw/solar-panel-defect-w1dfi/5",
+        "name": "2024-05-23 12:53pm",
+        "images": 1368,
+        "splits": {
+          "valid": 87,
+          "test": 51,
+          "train": 915
+        },
+        "created": 1716449019.568,
+        "aug": true,
+        "exports": [
+          "coco",
+          "yolov5pytorch",
+          "yolov8"
+        ]
+      },
+      {
+        "id": "solar-panel-defects-ax0gw/solar-panel-defect-w1dfi/4",
+        "name": "2024-05-21 8:14pm",
+        "images": 1368,
+        "splits": {
+          "valid": 114,
+          "test": 57,
+          "train": 1197
+        },
+        "created": 1716302663.602,
+        "aug": true,
+        "exports": [
+          "coco",
+          "yolov8"
+        ]
+      },
+      {
+        "id": "solar-panel-defects-ax0gw/solar-panel-defect-w1dfi/3",
+        "name": "2024-05-20 6:49pm",
+        "images": 1368,
+        "splits": {
+          "valid": 114,
+          "test": 57,
+          "train": 1197
+        },
+        "created": 1716211262.699,
+        "aug": true,
+        "exports": [
+          "coco",
+          "darknet",
+          "tensorflow",
+          "voc",
+          "yolo26",
+          "yolokeras",
+          "yolov11",
+          "yolov4pytorch",
+          "yolov5pytorch",
+          "yolov8"
+        ]
+      }
+    ]
+  },
+  {
+    "label": "C2  SolarPanelPakZidni 2",
+    "workspace": "ganibs-workspace",
+    "project": "solarpanelpakzidni-2",
+    "http": 404,
+    "error": "{'error': {'message': 'Unsupported request. `GET /ganibs-workspace/solarpanelpakzidni-2` does not exist or cannot be loaded due to missing permissions.', 'type': 'GraphMethodException', 'hint': 'You c"
+  },
+  {
+    "label": "C3  solar panel4",
+    "workspace": "solar-panel-4isfg",
+    "project": "solar-panel4",
+    "http": 200,
+    "name": "solar panel4",
+    "type": "classification",
+    "license": "CC BY 4.0",
+    "annotation": "fault",
+    "base_images": 724,
+    "class_instance_counts": {
+      "Dusty": 194,
+      "Physical-Damage": 45,
+      "Bird-drop": 141,
+      "Clean": 177,
+      "Electrical-damage": 73,
+      "Snow-Covered": 94
+    },
+    "project_splits": {
+      "train": 507,
+      "valid": 141,
+      "test": 76,
+      "export": 0
+    },
+    "created": 1747933824.653,
+    "updated": 1749439258.83,
+    "public": true,
+    "n_versions": 2,
+    "latest_version": {
+      "id": "solar-panel-4isfg/solar-panel4/2",
+      "name": "2025-06-09 11:20am",
+      "created": 1749439258.83,
+      "images": 1738,
+      "splits": {
+        "valid": 141,
+        "test": 76,
+        "train": 1521
+      },
+      "preprocessing": {
+        "auto-orient": true,
+        "resize": {
+          "format": "Stretch to",
+          "height": 640,
+          "width": 640
+        }
+      },
+      "augmentation": {
+        "image": {
+          "versions": 3
+        },
+        "rotate": {
+          "degrees": 15
+        },
+        "flip": {
+          "horizontal": true,
+          "vertical": true
+        },
+        "shear": {
+          "horizontal": 15,
+          "vertical": 15
+        },
+        "blur": {
+          "pixels": 1.1
+        }
+      },
+      "exports": [
+        "folder",
+        "openai"
+      ]
+    },
+    "all_versions": [
+      {
+        "id": "solar-panel-4isfg/solar-panel4/2",
+        "name": "2025-06-09 11:20am",
+        "images": 1738,
+        "splits": {
+          "valid": 141,
+          "test": 76,
+          "train": 1521
+        },
+        "created": 1749439258.83,
+        "aug": true,
+        "exports": [
+          "folder",
+          "openai"
+        ]
+      },
+      {
+        "id": "solar-panel-4isfg/solar-panel4/1",
+        "name": "2025-05-23 1:17am",
+        "images": 1738,
+        "splits": {
+          "valid": 141,
+          "test": 76,
+          "train": 1521
+        },
+        "created": 1747934268.067,
+        "aug": true,
+        "exports": [
+          "folder"
+        ]
+      }
+    ]
+  },
+  {
+    "label": "S1  detection-for-defects-in-solar-panels",
+    "workspace": "defects-kgig6",
+    "project": "detection-for-defects-in-solar-panels",
+    "http": 200,
+    "name": "Detection for defects in solar panels ",
+    "type": "object-detection",
+    "license": "CC BY 4.0",
+    "annotation": "defects",
+    "base_images": 821,
+    "class_instance_counts": {
+      "bird-drop": 1518,
+      "electrical-damage": 207,
+      "snow-covered": 1299,
+      "clean": 1107,
+      "physical-damage": 169,
+      "dusty": 1460
+    },
+    "project_splits": {
+      "valid": 120,
+      "test": 101,
+      "train": 600
+    },
+    "created": 1686387852.315,
+    "updated": 1691163487.474,
+    "public": true,
+    "n_versions": 7,
+    "latest_version": {
+      "id": "defects-kgig6/detection-for-defects-in-solar-panels/10",
+      "name": "2023-06-16 4:51pm",
+      "created": 1686919925.926,
+      "images": 14478,
+      "splits": {
+        "valid": 761,
+        "test": 640,
+        "train": 13077
+      },
+      "preprocessing": {
+        "isolate": true,
+        "auto-orient": true,
+        "contrast": {
+          "type": "Contrast Stretching"
+        },
+        "resize": {
+          "format": "Stretch to",
+          "width": 640,
+          "height": 640
+        }
+      },
+      "augmentation": {
+        "image": {
+          "versions": 3
+        },
+        "rotate": {
+          "degrees": 15
+        },
+        "ninety": {
+          "clockwise": true,
+          "counter-clockwise": true,
+          "upside-down": false
+        },
+        "mosaic": true,
+        "flip": {
+          "horizontal": true,
+          "vertical": true
+        }
+      },
+      "exports": [
+        "clip",
+        "coco",
+        "coco-mmdetection",
+        "createml",
+        "darknet",
+        "florence2-od",
+        "multiclass",
+        "tensorflow",
+        "yolov11",
+        "yolov12",
+        "yolov5-obb",
+        "yolov5pytorch",
+        "yolov7pytorch",
+        "yolov8",
+        "yolov8-obb",
+        "yolov9"
+      ]
+    },
+    "all_versions": [
+      {
+        "id": "defects-kgig6/detection-for-defects-in-solar-panels/10",
+        "name": "2023-06-16 4:51pm",
+        "images": 14478,
+        "splits": {
+          "valid": 761,
+          "test": 640,
+          "train": 13077
+        },
+        "created": 1686919925.926,
+        "aug": true,
+        "exports": [
+          "clip",
+          "coco",
+          "coco-mmdetection",
+          "createml",
+          "darknet",
+          "florence2-od",
+          "multiclass",
+          "tensorflow",
+          "yolov11",
+          "yolov12",
+          "yolov5-obb",
+          "yolov5pytorch",
+          "yolov7pytorch",
+          "yolov8",
+          "yolov8-obb",
+          "yolov9"
+        ]
+      },
+      {
+        "id": "defects-kgig6/detection-for-defects-in-solar-panels/9",
+        "name": "2023-06-16 4:20pm",
+        "images": 14478,
+        "splits": {
+          "valid": 761,
+          "test": 640,
+          "train": 13077
+        },
+        "created": 1686918081.117,
+        "aug": true,
+        "exports": [
+          "coco",
+          "yolov8"
+        ]
+      },
+      {
+        "id": "defects-kgig6/detection-for-defects-in-solar-panels/8",
+        "name": "2023-06-16 3:01pm",
+        "images": 14478,
+        "splits": {
+          "valid": 761,
+          "test": 640,
+          "train": 13077
+        },
+        "created": 1686913313.359,
+        "aug": true,
+        "exports": [
+          "darknet",
+          "yolov8",
+          "yolov8-obb"
+        ]
+      },
+      {
+        "id": "defects-kgig6/detection-for-defects-in-solar-panels/7",
+        "name": "2023-06-16 9:03am",
+        "images": 14478,
+        "splits": {
+          "valid": 761,
+          "test": 640,
+          "train": 13077
+        },
+        "created": 1686891858.325,
+        "aug": true,
+        "exports": [
+          "yolov8"
+        ]
+      },
+      {
+        "id": "defects-kgig6/detection-for-defects-in-solar-panels/6",
+        "name": "2023-06-16 9:03am",
+        "images": 14478,
+        "splits": {
+          "valid": 761,
+          "test": 640,
+          "train": 13077
+        },
+        "created": 1686891858.236,
+        "aug": true,
+        "exports": [
+          "voc",
+          "yolov8"
+        ]
+      },
+      {
+        "id": "defects-kgig6/detection-for-defects-in-solar-panels/3",
+        "name": "2023-06-14 1:43pm",
+        "images": 2061,
+        "splits": {
+          "valid": 100,
+          "test": 101,
+          "train": 1860
+        },
+        "created": 1686735818.654,
+        "aug": true,
+        "exports": [
+          "coco",
+          "voc",
+          "yolo26",
+          "yolov11",
+          "yolov5pytorch",
+          "yolov7pytorch",
+          "yolov8"
+        ]
+      },
+      {
+        "id": "defects-kgig6/detection-for-defects-in-solar-panels/2",
+        "name": "2023-06-14 1:57am",
+        "images": 1963,
+        "splits": {
+          "valid": 162,
+          "test": 88,
+          "train": 1713
+        },
+        "created": 1686693487.408,
+        "aug": true,
+        "exports": [
+          "coco",
+          "coco-mmdetection",
+          "darknet",
+          "voc",
+          "yolo26",
+          "yolov11",
+          "yolov5pytorch",
+          "yolov7pytorch",
+          "yolov8"
+        ]
+      }
+    ]
+  },
+  {
+    "label": "S2  Solar Panel Damage Detection",
+    "workspace": "solar-panel-defects-ax0gw",
+    "project": "solar-panel-damage-detection-vfg96",
+    "http": 200,
+    "name": "Solar Panel Damage Detection",
+    "type": "object-detection",
+    "license": "Public Domain",
+    "annotation": "Solar-Panels",
+    "base_images": 797,
+    "class_instance_counts": {
+      "Snow": 459,
+      "Physical Damage": 935,
+      "Electrical Damage": 210,
+      "Dusty": 739,
+      "Non Defective": 1841,
+      "Defective": 880,
+      "Bird Drop": 1123
+    },
+    "project_splits": {
+      "export": 0,
+      "valid": 157,
+      "test": 78,
+      "train": 562
+    },
+    "created": 1715937455.303,
+    "updated": 1715951652.332,
+    "public": true,
+    "n_versions": 0,
+    "latest_version": {
+      "id": null,
+      "name": null,
+      "created": null,
+      "images": null,
+      "splits": null,
+      "preprocessing": null,
+      "augmentation": null,
+      "exports": null
+    },
+    "all_versions": []
+  },
+  {
+    "label": "S3  dusty-and-bird-droppings",
+    "workspace": "solar-panel-a5cyn",
+    "project": "dusty-and-bird-droppings",
+    "http": 200,
+    "name": "dusty and bird-droppings",
+    "type": "object-detection",
+    "license": "CC BY 4.0",
+    "annotation": "dusdusty-bird-droppings",
+    "base_images": 710,
+    "class_instance_counts": {
+      "bird-droppings": 916,
+      "dusdusty": 2914
+    },
+    "project_splits": {
+      "valid": 60,
+      "test": 50,
+      "train": 600
+    },
+    "created": 1675222329.724,
+    "updated": 1675311068.651,
+    "public": true,
+    "n_versions": 1,
+    "latest_version": {
+      "id": "solar-panel-a5cyn/dusty-and-bird-droppings/1",
+      "name": "2023-02-02 12:11pm",
+      "created": 1675311068.698,
+      "images": 710,
+      "splits": {
+        "valid": 60,
+        "test": 50,
+        "train": 600
+      },
+      "preprocessing": {
+        "auto-orient": true,
+        "resize": {
+          "format": "Stretch to",
+          "width": 640,
+          "height": 640
+        }
+      },
+      "augmentation": {},
+      "exports": [
+        "clip",
+        "coco",
+        "darknet",
+        "multiclass",
+        "tensorflow",
+        "voc",
+        "yolo26",
+        "yolov11",
+        "yolov5pytorch",
+        "yolov7pytorch",
+        "yolov8",
+        "yolov8-obb",
+        "yolov9"
+      ]
+    },
+    "all_versions": [
+      {
+        "id": "solar-panel-a5cyn/dusty-and-bird-droppings/1",
+        "name": "2023-02-02 12:11pm",
+        "images": 710,
+        "splits": {
+          "valid": 60,
+          "test": 50,
+          "train": 600
+        },
+        "created": 1675311068.698,
+        "aug": false,
+        "exports": [
+          "clip",
+          "coco",
+          "darknet",
+          "multiclass",
+          "tensorflow",
+          "voc",
+          "yolo26",
+          "yolov11",
+          "yolov5pytorch",
+          "yolov7pytorch",
+          "yolov8",
+          "yolov8-obb",
+          "yolov9"
+        ]
+      }
+    ]
+  },
+  {
+    "label": "S4  solar-panel-anomalies-bird-drop",
+    "workspace": "mrudula-tqirx",
+    "project": "solar-panel-anomalies-bird-drop-69qgu",
+    "http": 200,
+    "name": "Solar Panel Anomalies Bird Drop ",
+    "type": "object-detection",
+    "license": "CC BY 4.0",
+    "annotation": "Bird-Drop",
+    "base_images": 120,
+    "class_instance_counts": {
+      "Bird-Drop": 170,
+      "Snow": 30
+    },
+    "project_splits": {
+      "train": 84,
+      "valid": 24,
+      "test": 12
+    },
+    "created": 1731717836.063,
+    "updated": 1759594138.48,
+    "public": true,
+    "n_versions": 1,
+    "latest_version": {
+      "id": "mrudula-tqirx/solar-panel-anomalies-bird-drop-69qgu/1",
+      "name": "2025-10-04 9:38pm",
+      "created": 1759594138.48,
+      "images": 120,
+      "splits": {
+        "valid": 24,
+        "test": 12,
+        "train": 84
+      },
+      "preprocessing": {},
+      "augmentation": {},
+      "exports": [
+        "coco",
+        "createml",
+        "yolov11",
+        "yolov5pytorch",
+        "yolov8",
+        "yolov8-obb"
+      ]
+    },
+    "all_versions": [
+      {
+        "id": "mrudula-tqirx/solar-panel-anomalies-bird-drop-69qgu/1",
+        "name": "2025-10-04 9:38pm",
+        "images": 120,
+        "splits": {
+          "valid": 24,
+          "test": 12,
+          "train": 84
+        },
+        "created": 1759594138.48,
+        "aug": false,
+        "exports": [
+          "coco",
+          "createml",
+          "yolov11",
+          "yolov5pytorch",
+          "yolov8",
+          "yolov8-obb"
+        ]
+      }
+    ]
+  },
+  {
+    "label": "S5  solar-panel-defects (2me5p)",
+    "workspace": "solarpanel-2me5p",
+    "project": "solar-panel-defects-lnge0",
+    "http": 200,
+    "name": "Solar Panel defects",
+    "type": "object-detection",
+    "license": "CC BY 4.0",
+    "annotation": "defects",
+    "base_images": 700,
+    "class_instance_counts": {
+      "Electrical_Damage": 13,
+      "Physical-damage": 22,
+      "Physical-Damage": 223,
+      "Bird Drop": 19,
+      "Electrical-Damage": 26,
+      "Physical_Damage": 135,
+      "PhysicalDamage": 91,
+      "Snow": 248,
+      "Electrical-Damge": 39,
+      "Electrical Damage": 14,
+      "Bird-Drop": 58,
+      "Physical-Damge": 163,
+      "Physical Damage": 34,
+      "Dusty": 252,
+      "Defective": 5,
+      "Bird-drop": 240,
+      "Bird drop": 22,
+      "Clean": 248
+    },
+    "project_splits": {
+      "valid": 136,
+      "test": 67,
+      "export": 0,
+      "train": 497
+    },
+    "created": 1715337517.494,
+    "updated": 1715339070.564,
+    "public": true,
+    "n_versions": 0,
+    "latest_version": {
+      "id": null,
+      "name": null,
+      "created": null,
+      "images": null,
+      "splits": null,
+      "preprocessing": null,
+      "augmentation": null,
+      "exports": null
+    },
+    "all_versions": []
+  },
+  {
+    "label": "S6  solar-panel-defects (b17u9)",
+    "workspace": "solarpanel2",
+    "project": "solar-panel-defects-b17u9",
+    "http": 200,
+    "name": "Solar Panel defects",
+    "type": "object-detection",
+    "license": "CC BY 4.0",
+    "annotation": "Solar-Panel",
+    "base_images": 780,
+    "class_instance_counts": {
+      "Dusty": 729,
+      "Snow": 507,
+      "Electrical Damage ": 208,
+      "Defective": 859,
+      "Bird Drop": 903,
+      "Physical Damage": 913,
+      "Non Defective ": 1565
+    },
+    "project_splits": {
+      "valid": 174,
+      "test": 107,
+      "export": 0,
+      "train": 499
+    },
+    "created": 1715590263.784,
+    "updated": 1715838352.82,
+    "public": true,
+    "n_versions": 4,
+    "latest_version": {
+      "id": "solarpanel2/solar-panel-defects-b17u9/4",
+      "name": "2024-05-14 9:00am",
+      "created": 1715657411.805,
+      "images": 780,
+      "splits": {
+        "valid": 174,
+        "test": 107,
+        "train": 499
+      },
+      "preprocessing": {
+        "auto-orient": true,
+        "resize": {
+          "format": "Stretch to",
+          "width": 640,
+          "height": 640
+        }
+      },
+      "augmentation": {},
+      "exports": [
+        "coco",
+        "tensorflow",
+        "voc",
+        "yolo26",
+        "yolov11",
+        "yolov5pytorch",
+        "yolov8"
+      ]
+    },
+    "all_versions": [
+      {
+        "id": "solarpanel2/solar-panel-defects-b17u9/4",
+        "name": "2024-05-14 9:00am",
+        "images": 780,
+        "splits": {
+          "valid": 174,
+          "test": 107,
+          "train": 499
+        },
+        "created": 1715657411.805,
+        "aug": false,
+        "exports": [
+          "coco",
+          "tensorflow",
+          "voc",
+          "yolo26",
+          "yolov11",
+          "yolov5pytorch",
+          "yolov8"
+        ]
+      },
+      {
+        "id": "solarpanel2/solar-panel-defects-b17u9/3",
+        "name": "2024-05-14 6:23am",
+        "images": 780,
+        "splits": {
+          "valid": 174,
+          "test": 107,
+          "train": 499
+        },
+        "created": 1715648035.663,
+        "aug": false,
+        "exports": [
+          "yolo26",
+          "yolov8"
+        ]
+      },
+      {
+        "id": "solarpanel2/solar-panel-defects-b17u9/2",
+        "name": "2024-05-13 5:04pm",
+        "images": 780,
+        "splits": {
+          "valid": 174,
+          "test": 107,
+          "train": 499
+        },
+        "created": 1715600054.735,
+        "aug": false,
+        "exports": [
+          "coco",
+          "voc",
+          "yolov5pytorch"
+        ]
+      },
+      {
+        "id": "solarpanel2/solar-panel-defects-b17u9/1",
+        "name": "2024-05-13 4:59pm",
+        "images": 742,
+        "splits": {
+          "valid": 164,
+          "test": 102,
+          "train": 476
+        },
+        "created": 1715599760.69,
+        "aug": false,
+        "exports": [
+          "coco",
+          "darknet",
+          "yolov11"
+        ]
+      }
+    ]
+  }
+]

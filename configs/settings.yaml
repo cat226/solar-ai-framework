@@ -29,10 +29,42 @@ weather:
 models:
   yolo:
     weights: "weights/yolo_solar.pt"
+    # Recalibrated 2026-09-05 (Phase 6C domain-remediation audit) from
+    # 0.30 back to 0.45, after fixing a confirmed RGB/BGR channel-order bug
+    # in models/detector.py (see docs/ML_DOMAIN_REMEDIATION.md). The prior
+    # 0.30 value (Phase 6B) was itself selected by a threshold sweep that,
+    # unknown at the time, fed the model color-inverted images - so it was
+    # optimized against a corrupted precision/recall curve. Re-running the
+    # SAME sweep methodology (val split only, never test - see
+    # training/evaluation/yolo_threshold_sweep.py) on the FIXED pipeline
+    # gives: conf=0.30 -> P=0.5513/R=0.8344/F1=0.6639; conf=0.45 (best-F1
+    # on this corrected curve) -> P=0.6658/R=0.7536/F1=0.7070. This is a
+    # real, evidence-backed recalibration of the existing artifact, not a
+    # new model and not a change to the frozen v1.0.0 tag. It does NOT
+    # change the artifact hash, and it does NOT change the pipeline's
+    # separately-confirmed 0/16 detection rate on genuine close-up
+    # real-world photos (see docs/ML_DOMAIN_REMEDIATION.md) - that failure
+    # is domain shift, not this bug, and this threshold change cannot fix it.
     confidence_threshold: 0.45
     iou_threshold: 0.50
     image_size: 640
   mobilenet:
+    # v1 (frozen, current) classifier: the real, actively-loaded artifact for
+    # this release, covering the three classes with genuinely licensed data.
+    # This is not a placeholder or a fallback - it IS the v1 production
+    # classifier. See training/classification/DATASET_SOURCES.md for why
+    # Bird-Drop/Electrical-Damage/Physical-Damage remain a documented future
+    # expansion rather than part of this release.
+    v1_weights: "weights/mobilenet_solar_v1.pth"
+    v1_labels:
+      - "Clean"
+      - "Dusty"
+      - "Hotspot"
+    # Future six-class artifact: not yet trained (no artifact exists at this
+    # path). ModelManager prefers this automatically the moment it exists -
+    # see models/model_manager.py's mobilenet_status property - so acquiring
+    # the three missing classes' data and training this later requires no
+    # application code changes.
     weights: "weights/mobilenet_solar.pth"
     num_classes: 6
     input_size: 224

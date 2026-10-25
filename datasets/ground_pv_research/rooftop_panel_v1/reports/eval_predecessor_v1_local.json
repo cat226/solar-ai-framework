@@ -1,0 +1,73 @@
+{
+ "weights": "weights\\yolo_solar_ground_research_v1.pt",
+ "split": "test",
+ "images": 10,
+ "labelled_panels": 48,
+ "mAP50": 0.27438584393544185,
+ "mAP50_95": 0.13127380533599384,
+ "deployment_conf": 0.25,
+ "precision@conf": 0.6,
+ "recall@conf": 0.125,
+ "per_image": [
+  {
+   "image": "rooftop_rooftop_0018.jpg",
+   "labelled": 6,
+   "detected@conf": 0,
+   "matched@0.5": 0
+  },
+  {
+   "image": "rooftop_rooftop_0019.jpg",
+   "labelled": 6,
+   "detected@conf": 0,
+   "matched@0.5": 0
+  },
+  {
+   "image": "rooftop_rooftop_0020.jpg",
+   "labelled": 6,
+   "detected@conf": 0,
+   "matched@0.5": 0
+  },
+  {
+   "image": "rooftop_rooftop_0021.jpg",
+   "labelled": 6,
+   "detected@conf": 0,
+   "matched@0.5": 0
+  },
+  {
+   "image": "rooftop_rooftop_0035.jpg",
+   "labelled": 4,
+   "detected@conf": 1,
+   "matched@0.5": 0
+  },
+  {
+   "image": "rooftop_rooftop_0036.jpg",
+   "labelled": 1,
+   "detected@conf": 0,
+   "matched@0.5": 0
+  },
+  {
+   "image": "rooftop_rooftop_0037.jpg",
+   "labelled": 4,
+   "detected@conf": 3,
+   "matched@0.5": 2
+  },
+  {
+   "image": "rooftop_rooftop_0038.jpg",
+   "labelled": 5,
+   "detected@conf": 4,
+   "matched@0.5": 3
+  },
+  {
+   "image": "rooftop_rooftop_0039.jpg",
+   "labelled": 5,
+   "detected@conf": 2,
+   "matched@0.5": 1
+  },
+  {
+   "image": "rooftop_rooftop_0040.jpg",
+   "labelled": 5,
+   "detected@conf": 0,
+   "matched@0.5": 0
+  }
+ ]
+}

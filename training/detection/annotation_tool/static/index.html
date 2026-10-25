@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Solar AI — Panel Annotation Tool</title>
+<link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div id="topbar">
+    <div id="progress">Loading…</div>
+    <div id="controls">
+      <button id="prevBtn" title="Previous image (←)">◀ Prev</button>
+      <button id="nextBtn" title="Next image (→)">Next ▶</button>
+      <button id="deleteBtn" title="Delete selected box (Delete)">Delete box</button>
+      <button id="zeroBtn" title="Confirm this image has zero visible panels">Zero panels</button>
+      <button id="saveBtn" title="Save (S)">Save</button>
+      <span id="dirtyFlag"></span>
+    </div>
+  </div>
+  <div id="main">
+    <div id="sidebar"></div>
+    <div id="canvasWrap">
+      <div id="filename"></div>
+      <canvas id="canvas"></canvas>
+      <div id="hint">
+        Drag on empty space to draw a box around one panel · click a box to select it · Delete to remove ·
+        class is always <code>solar_panel</code> (id 0) · Save before leaving an image
+      </div>
+    </div>
+  </div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

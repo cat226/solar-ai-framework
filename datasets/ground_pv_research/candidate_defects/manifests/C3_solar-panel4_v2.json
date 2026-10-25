@@ -1,0 +1,24 @@
+{
+  "key": "C3_solar-panel4_v2",
+  "workspace": "solar-panel-4isfg",
+  "project": "solar-panel4",
+  "version": 2,
+  "export_format": "folder",
+  "license_shown_on_roboflow": "CC BY 4.0",
+  "downloaded_at_utc": "2026-09-08T06:05:07.840457+00:00",
+  "roboflow_url": "https://universe.roboflow.com/solar-panel-4isfg/solar-panel4/dataset/2",
+  "image_count": 1738,
+  "label_txt_count": 2,
+  "top_level_files": [
+    "README.dataset.txt",
+    "README.roboflow.txt"
+  ],
+  "top_level_dirs": [
+    "test",
+    "train",
+    "valid"
+  ],
+  "notes": [
+    "Raw immutable Roboflow export. Do not edit in place."
+  ]
+}

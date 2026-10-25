@@ -1,0 +1,104 @@
+{
+  "experiment": "ground_yolo11n_v2",
+  "status": "complete",
+  "model_role": "RESEARCH ground PANEL detector v2 (failure-targeted). NOT production. NOT a condition/defect model. Does not replace weights/yolo_solar.pt or weights/yolo_solar_ground_research_v1.pt.",
+  "predecessor": {
+    "name": "ground_yolo11n_baseline_v1",
+    "checkpoint": "weights/yolo_solar_ground_research_v1.pt",
+    "sha256": "2b26334dc4023ba4c89a80e2350ddc9012358a48cdef713aee86c8e79a1bbb50"
+  },
+  "kaggle": {
+    "kernel": "edithstark/ground-yolo11n-v2",
+    "kernel_url": "https://www.kaggle.com/code/edithstark/ground-yolo11n-v2",
+    "kernel_version": 1,
+    "kernel_id": 133556625,
+    "dataset": "edithstark/solar-ai-ground-pv-research-v1",
+    "dataset_reused_from_v1": true,
+    "dataset_content_sha256": "178e75ff7bf296ed3badf90b8e221f8b93adfaa52f22769636e5530c5ae3b918",
+    "data_yaml_sha256": "31100f51ac218d9b37a49af6602a043108e165916ea37235999ba1080d52d21a",
+    "enable_gpu": true,
+    "enable_internet": true,
+    "account": "edithstark"
+  },
+  "dataset": {
+    "local": "datasets/ground_pv_research/yolo/ (leakage-clean, 3-class, EXACT v1 dataset + split)",
+    "classes": {"0": "panel", "1": "cracked", "2": "dusty"},
+    "split_counts": {"train": 4546, "valid": 1297, "test": 649},
+    "bird_drop": "EXCLUDED (data availability)",
+    "identical_to_v1": "same images, same leakage-isolated family split, same test set"
+  },
+  "intervention": "scale / domain-robustness augmentation ONLY - a single coherent intervention family targeting the Phase 10 failures (image 4: frame-filling panel missed; image 6: wide array not separated)",
+  "v1_to_v2_delta": {
+    "scale":        {"v1": 0.3,  "v2": 0.9,  "why": "RandomResize object-scale jitter [0.7,1.3] -> [0.1,1.9]: expose panels from tiny to frame-filling"},
+    "mosaic":       {"v1": 0.5,  "v2": 1.0,  "why": "always 4-image mosaic -> shrinks objects + synthesises multi-panel scenes"},
+    "close_mosaic": {"v1": "default", "v2": 10, "why": "disable mosaic for the last 10 epochs -> clean real-scale convergence"},
+    "multi_scale":  {"v1": false, "v2": true, "why": "per-batch imgsz jitter +/-50%"}
+  },
+  "unchanged_from_v1": [
+    "architecture = YOLO11n", "COCO pretrained init", "optimizer = auto", "cos_lr = true",
+    "epochs = 100", "patience = 20", "seed = 42", "imgsz = 640", "batch = -1", "device = cuda:0",
+    "dataset + leakage-clean split + test set",
+    "hsv_h/s/v = 0.015/0.4/0.4", "degrees = 5.0", "translate = 0.1", "fliplr = 0.5",
+    "no mixup / copy_paste / perspective / flipud / shear",
+    "pinned torch==2.7.1 / torchvision==0.22.1 / ultralytics==8.4.138"
+  ],
+  "v1_test_metrics_for_comparison": {
+    "overall": {"precision": 0.8756, "recall": 0.8014, "mAP50": 0.8647, "mAP50_95": 0.6775},
+    "per_class": {
+      "panel":   {"precision": 0.9465, "recall": 0.9250, "AP50": 0.9628, "AP50_95": 0.8427},
+      "cracked": {"precision": 0.8090, "recall": 0.6531, "AP50": 0.7495, "AP50_95": 0.5296},
+      "dusty":   {"precision": 0.8712, "recall": 0.8261, "AP50": 0.8819, "AP50_95": 0.6601}
+    }
+  },
+  "training_data_failure_analysis": "datasets/ground_pv_research/reports/ground_dataset_scale_analysis.json + ground_detector_v2_report.md §3",
+  "git_commit_at_launch": "2a252f68b0d7e016090be14536ccc2992658a373",
+  "notes": [
+    "Research artifact only. No merge / push / deploy. No production change.",
+    "Six owner photos are NOT training data and were NOT pseudo-labelled.",
+    "No external images added."
+  ],
+  "results": {
+    "kernel_status": "COMPLETE",
+    "gpu": "Tesla P100-PCIE-16GB (17.1 GB)",
+    "env": {"python": "3.12.13", "torch": "2.7.1+cu126", "torchvision": "0.22.1+cu126", "cuda": "12.6", "ultralytics": "8.4.138"},
+    "train_seconds": 16660.96,
+    "train_duration_human": "~4h37m pure training (~5.8x v1's ~48min - multi_scale=True caused per-batch cuDNN re-benchmarking on P100; DO NOT use multi_scale here)",
+    "best_epoch": 86,
+    "total_epochs": 100,
+    "overfitting": "none - train and val losses still decreasing at ep100 (underfit, like v1)",
+    "checkpoint_sha256": "26e4d603de0718b9b20c6bf5c9761ef1b114b6954f280925ea6c08e469357aa3",
+    "last_checkpoint_sha256": "2d9bc0cf2d5e5a786a3d9a0701afc358394272802fd88efc8d7a3fec49d9275c",
+    "promoted_to": "weights/yolo_solar_ground_research_v2.pt (gitignored; v1 NOT overwritten)",
+    "local_reeval_matches_kaggle": true,
+    "test_held_out": {
+      "images": 649,
+      "overall": {"precision": 0.8179, "recall": 0.8274, "mAP50": 0.8764, "mAP50_95": 0.6489},
+      "per_class": {
+        "panel":   {"precision": 0.9004, "recall": 0.9446, "AP50": 0.9785, "AP50_95": 0.8240},
+        "cracked": {"precision": 0.7695, "recall": 0.6969, "AP50": 0.7457, "AP50_95": 0.5253},
+        "dusty":   {"precision": 0.7838, "recall": 0.8406, "AP50": 0.9049, "AP50_95": 0.5975}
+      },
+      "vs_v1": {
+        "overall_delta": {"precision": -0.058, "recall": 0.026, "mAP50": 0.012, "mAP50_95": -0.028},
+        "reading": "v2 trades precision for recall; marginal mAP50 gain, mAP50-95 loss (looser boxes). Within noise on the in-distribution 640x640 test set."
+      }
+    },
+    "real_world_six_photos_qualitative": {
+      "protocol": "full-frame, conf 0.45, iou 0.50, imgsz 640 - QUALITATIVE ONLY, no ground truth, no accuracy/precision/recall/F1/mAP",
+      "v1_panels_per_image": [1, 2, 2, 1, 2, 2],
+      "v2_panels_per_image": [0, 0, 0, 0, 0, 0],
+      "v2_max_panel_confidence_at_conf_0.05": 0.16,
+      "verdict": "SEVERE REAL-WORLD REGRESSION - v2 detects 0 panels on all 6 owner photos (v1: usable signal on 5/6). Two-stage pipeline non-functional with v2.",
+      "image4_recovered": false,
+      "image4_note": "v1: 1 box (wrong strip); v2: 0. Regressed.",
+      "image6_separated": false,
+      "image6_note": "v1: 2 group boxes; v2: 0 full-frame, 1 via opt-in tiled fallback. Regressed.",
+      "crack_fp_fixed": false,
+      "crack_fp_note": "in-distribution v2 INCREASED cracked-on-background FPs (confusion matrix bg->cracked 0.56 vs v1 ~0.28)",
+      "condition_chain": {"v1_crops": 10, "v1_crops_with_prediction": 8, "v2_crops": 0, "v2_crops_with_prediction": 0}
+    },
+    "root_cause": "training data is 100% square 640x640 (Roboflow stretch-resized); owner photos are ~1:2.2 portrait / 2.2:1 landscape. Aggressive scale/mosaic/multi_scale augmentation fit the augmented in-distribution manifold but generalised WORSE to the real OOD photos.",
+    "recommendation": "C - improves some in-distribution test metrics but introduces regressions; do NOT adopt v2, keep v1. Real fix is representative training DATA, not augmentation.",
+    "production_disposition": "KEEP SEPARATE - v1 remains the ground panel detector"
+  }
+}

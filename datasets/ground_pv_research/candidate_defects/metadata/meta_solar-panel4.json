@@ -1,0 +1,275 @@
+{
+  "raw": {
+    "workspace": {
+      "name": "solar panel",
+      "url": "solar-panel-4isfg"
+    },
+    "project": {
+      "id": "solar-panel-4isfg/solar-panel4",
+      "type": "classification",
+      "name": "solar panel4",
+      "created": 1747933824.653,
+      "updated": 1749439258.83,
+      "images": 724,
+      "unannotated": 724,
+      "annotation": "fault",
+      "versions": 2,
+      "public": true,
+      "license": "CC BY 4.0",
+      "splits": {
+        "train": 507,
+        "valid": 141,
+        "test": 76,
+        "export": 0
+      },
+      "colors": {
+        "Dusty": "#FE0056",
+        "Physical-Damage": "#00B7EB",
+        "Bird-drop": "#00FFCE",
+        "Clean": "#FF8000",
+        "Electrical-damage": "#8622FF",
+        "Snow-Covered": "#C7FC00"
+      },
+      "classes": {
+        "Dusty": 194,
+        "Physical-Damage": 45,
+        "Bird-drop": 141,
+        "Clean": 177,
+        "Electrical-damage": 73,
+        "Snow-Covered": 94
+      },
+      "icon": {
+        "original": "https://source.roboflow.com/HqVMpeJTCNOar9ZpEcW6okydS5g2/yn3PVhjTp2tPJvconiFv/original.jpg",
+        "thumb": "https://source.roboflow.com/HqVMpeJTCNOar9ZpEcW6okydS5g2/yn3PVhjTp2tPJvconiFv/thumb.jpg",
+        "annotation": null
+      },
+      "preprocessing": {
+        "auto-orient": true,
+        "resize": {
+          "format": "Stretch to",
+          "height": 640,
+          "width": 640
+        }
+      },
+      "augmentation": {
+        "image": {
+          "versions": 3
+        },
+        "rotate": {
+          "degrees": 15
+        },
+        "flip": {
+          "horizontal": true,
+          "vertical": true
+        },
+        "shear": {
+          "horizontal": 15,
+          "vertical": 15
+        },
+        "blur": {
+          "pixels": 1.1
+        }
+      }
+    },
+    "versions": [
+      {
+        "id": "solar-panel-4isfg/solar-panel4/2",
+        "name": "2025-06-09 11:20am",
+        "created": 1749439258.83,
+        "images": 1738,
+        "splits": {
+          "valid": 141,
+          "test": 76,
+          "train": 1521
+        },
+        "generating": false,
+        "progress": 1,
+        "preprocessing": {
+          "auto-orient": true,
+          "resize": {
+            "format": "Stretch to",
+            "height": 640,
+            "width": 640
+          }
+        },
+        "augmentation": {
+          "image": {
+            "versions": 3
+          },
+          "rotate": {
+            "degrees": 15
+          },
+          "flip": {
+            "horizontal": true,
+            "vertical": true
+          },
+          "shear": {
+            "horizontal": 15,
+            "vertical": 15
+          },
+          "blur": {
+            "pixels": 1.1
+          }
+        },
+        "exports": [
+          "folder",
+          "openai"
+        ]
+      },
+      {
+        "id": "solar-panel-4isfg/solar-panel4/1",
+        "name": "2025-05-23 1:17am",
+        "created": 1747934268.067,
+        "images": 1738,
+        "splits": {
+          "valid": 141,
+          "test": 76,
+          "train": 1521
+        },
+        "generating": false,
+        "progress": 1,
+        "model": {
+          "id": "solar-panel4/1",
+          "endpoint": "https://serverless.roboflow.com/solar-panel4/1",
+          "start": 1747934443.275,
+          "end": 1747935670.051,
+          "fromScratch": true,
+          "tfjs": false,
+          "oak": false,
+          "accuracy": "NaN"
+        },
+        "preprocessing": {
+          "auto-orient": true,
+          "resize": {
+            "format": "Stretch to",
+            "height": 640,
+            "width": 640
+          }
+        },
+        "augmentation": {
+          "image": {
+            "versions": 3
+          },
+          "shear": {
+            "horizontal": 9,
+            "vertical": 15
+          },
+          "rotate": {
+            "degrees": 15
+          },
+          "flip": {
+            "horizontal": true,
+            "vertical": true
+          }
+        },
+        "exports": [
+          "folder"
+        ]
+      }
+    ]
+  },
+  "summary": {
+    "label": "C3  solar panel4",
+    "workspace": "solar-panel-4isfg",
+    "project": "solar-panel4",
+    "http": 200,
+    "name": "solar panel4",
+    "type": "classification",
+    "license": "CC BY 4.0",
+    "annotation": "fault",
+    "base_images": 724,
+    "class_instance_counts": {
+      "Dusty": 194,
+      "Physical-Damage": 45,
+      "Bird-drop": 141,
+      "Clean": 177,
+      "Electrical-damage": 73,
+      "Snow-Covered": 94
+    },
+    "project_splits": {
+      "train": 507,
+      "valid": 141,
+      "test": 76,
+      "export": 0
+    },
+    "created": 1747933824.653,
+    "updated": 1749439258.83,
+    "public": true,
+    "n_versions": 2,
+    "latest_version": {
+      "id": "solar-panel-4isfg/solar-panel4/2",
+      "name": "2025-06-09 11:20am",
+      "created": 1749439258.83,
+      "images": 1738,
+      "splits": {
+        "valid": 141,
+        "test": 76,
+        "train": 1521
+      },
+      "preprocessing": {
+        "auto-orient": true,
+        "resize": {
+          "format": "Stretch to",
+          "height": 640,
+          "width": 640
+        }
+      },
+      "augmentation": {
+        "image": {
+          "versions": 3
+        },
+        "rotate": {
+          "degrees": 15
+        },
+        "flip": {
+          "horizontal": true,
+          "vertical": true
+        },
+        "shear": {
+          "horizontal": 15,
+          "vertical": 15
+        },
+        "blur": {
+          "pixels": 1.1
+        }
+      },
+      "exports": [
+        "folder",
+        "openai"
+      ]
+    },
+    "all_versions": [
+      {
+        "id": "solar-panel-4isfg/solar-panel4/2",
+        "name": "2025-06-09 11:20am",
+        "images": 1738,
+        "splits": {
+          "valid": 141,
+          "test": 76,
+          "train": 1521
+        },
+        "created": 1749439258.83,
+        "aug": true,
+        "exports": [
+          "folder",
+          "openai"
+        ]
+      },
+      {
+        "id": "solar-panel-4isfg/solar-panel4/1",
+        "name": "2025-05-23 1:17am",
+        "images": 1738,
+        "splits": {
+          "valid": 141,
+          "test": 76,
+          "train": 1521
+        },
+        "created": 1747934268.067,
+        "aug": true,
+        "exports": [
+          "folder"
+        ]
+      }
+    ]
+  }
+}

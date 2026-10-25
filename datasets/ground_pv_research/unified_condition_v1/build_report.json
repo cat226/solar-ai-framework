@@ -1,0 +1,106 @@
+{
+  "schema_version": "1.0",
+  "seed": 42,
+  "max_hamming_bits": 4,
+  "min_side_px": 128,
+  "excluded_lineages": [
+    "phone2021_macro"
+  ],
+  "scanned_by_source": {
+    "faulty": 885,
+    "github_raw": 1212,
+    "github_split": 1767,
+    "roboflow_eval": 959,
+    "roboflow_train": 6499
+  },
+  "github_skipped_non_original": {
+    "github_augmented": 6086,
+    "github_discarded": 786,
+    "github_temporary": 1151,
+    "github_with_labels": 28
+  },
+  "decodable_images": 11322,
+  "families_total": 3457,
+  "families_kept": 2618,
+  "coarse_to_fine_overrides": {
+    "BIRD_DROP": 56,
+    "PHYSICAL_DAMAGE": 3
+  },
+  "families_dropped": {
+    "conflict_with_excluded_class": 6,
+    "label_conflict": 31,
+    "excluded_class": 172,
+    "excluded_lineage:phone2021_macro": 630
+  },
+  "images_in_dropped_families": {
+    "conflict_with_excluded_class": 432,
+    "label_conflict": 206,
+    "excluded_class": 215,
+    "excluded_lineage:phone2021_macro": 1586
+  },
+  "kept_by_class": {
+    "BIRD_DROP": 128,
+    "CLEAN": 1559,
+    "DUSTY": 883,
+    "PHYSICAL_DAMAGE": 48
+  },
+  "kept_by_split": {
+    "valid": 392,
+    "train": 1834,
+    "test": 392
+  },
+  "kept_per_split_class": {
+    "train": {
+      "CLEAN": 1091,
+      "DUSTY": 619,
+      "BIRD_DROP": 90,
+      "PHYSICAL_DAMAGE": 34
+    },
+    "valid": {
+      "CLEAN": 234,
+      "DUSTY": 132,
+      "BIRD_DROP": 19,
+      "PHYSICAL_DAMAGE": 7
+    },
+    "test": {
+      "CLEAN": 234,
+      "DUSTY": 132,
+      "BIRD_DROP": 19,
+      "PHYSICAL_DAMAGE": 7
+    }
+  },
+  "kept_by_lineage": {
+    "faulty_solar_panel": 516,
+    "imgclean_imgdirty_web": 2045,
+    "other": 57
+  },
+  "lineage_by_class": {
+    "CLEAN": {
+      "faulty_solar_panel": 172,
+      "imgclean_imgdirty_web": 1339,
+      "other": 48
+    },
+    "DUSTY": {
+      "faulty_solar_panel": 168,
+      "imgclean_imgdirty_web": 706,
+      "other": 9
+    },
+    "BIRD_DROP": {
+      "faulty_solar_panel": 128
+    },
+    "PHYSICAL_DAMAGE": {
+      "faulty_solar_panel": 48
+    }
+  },
+  "families_by_contributing_sources": {
+    "faulty": 201,
+    "faulty+roboflow": 62,
+    "faulty+github+roboflow": 251,
+    "faulty+github": 2,
+    "github+roboflow": 1296,
+    "github": 12,
+    "roboflow": 794
+  },
+  "licence_status": "UNRESOLVED for all three sources (Kaggle pythonafroz 'Unknown'; Roboflow CC BY 4.0 is a re-declaration; GitHub repo has no licence) - research only, do not redistribute",
+  "out_dir": "F:\\Solar AI Datasets\\condition_unified_v1"
+}
