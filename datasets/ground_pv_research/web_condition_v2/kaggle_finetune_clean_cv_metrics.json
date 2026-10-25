@@ -1,0 +1,119 @@
+{
+  "finetuned": {
+    "accuracy": 0.886,
+    "balanced_accuracy": 0.854,
+    "macro_f1": 0.855,
+    "per_class": {
+      "CLEAN": {
+        "n": 1555,
+        "recall": 0.922,
+        "recall_wilson95": [
+          0.907,
+          0.934
+        ],
+        "precision": 0.922,
+        "f1": 0.922
+      },
+      "DUSTY": {
+        "n": 877,
+        "recall": 0.84,
+        "recall_wilson95": [
+          0.815,
+          0.863
+        ],
+        "precision": 0.834,
+        "f1": 0.837
+      },
+      "BIRD_DROP": {
+        "n": 132,
+        "recall": 0.78,
+        "recall_wilson95": [
+          0.702,
+          0.842
+        ],
+        "precision": 0.844,
+        "f1": 0.811
+      },
+      "PHYSICAL_DAMAGE": {
+        "n": 48,
+        "recall": 0.875,
+        "recall_wilson95": [
+          0.753,
+          0.941
+        ],
+        "precision": 0.824,
+        "f1": 0.848
+      }
+    },
+    "confusion_matrix": [
+      [
+        1433,
+        117,
+        2,
+        3
+      ],
+      [
+        120,
+        737,
+        16,
+        4
+      ],
+      [
+        0,
+        27,
+        103,
+        2
+      ],
+      [
+        2,
+        3,
+        1,
+        42
+      ]
+    ],
+    "by_lineage": {
+      "faulty_solar_panel": {
+        "n": 516,
+        "accuracy": 0.89
+      },
+      "imgclean_imgdirty_web": {
+        "n": 2039,
+        "accuracy": 0.882
+      },
+      "other": {
+        "n": 57,
+        "accuracy": 1.0
+      }
+    }
+  },
+  "frozen_lr_reference": {
+    "accuracy": 0.83,
+    "balanced_accuracy": 0.792,
+    "macro_f1": 0.79,
+    "recall": {
+      "CLEAN": 0.876,
+      "DUSTY": 0.763,
+      "BIRD_DROP": 0.758,
+      "PHYSICAL_DAMAGE": 0.771
+    }
+  },
+  "env": {
+    "python": "3.13.15",
+    "torch": "2.7.1+cu126",
+    "torchvision": "0.22.1+cu126",
+    "cuda": "12.6",
+    "gpu": "Tesla T4"
+  },
+  "epochs": 12,
+  "size": 288,
+  "lr": 0.0001,
+  "batch": 32,
+  "seed": 42,
+  "fold_minutes": {
+    "0": 3.66,
+    "1": 3.84,
+    "2": 3.83,
+    "3": 3.84,
+    "4": 3.84
+  }
+}

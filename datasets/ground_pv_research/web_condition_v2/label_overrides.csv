@@ -1,0 +1,12 @@
+image_id,action,original_label,new_label,reason,reviewer
+roboflow_fba8a56d2f71,drop,CLEAN,,"water-droplet macro, not a condition","AI visual review (Claude), unverified by owner"
+github_8a8c34aeb038,drop,CLEAN,,Before/After collage,"AI visual review (Claude), unverified by owner"
+roboflow_6382ea40aefb,drop,CLEAN,,aerial roof overview,"AI visual review (Claude), unverified by owner"
+roboflow_00c7dbda79e0,drop,DUSTY,,hand holding spray bottle,"AI visual review (Claude), unverified by owner"
+github_9fd863fc72c6,drop,DUSTY,,"heliostat mirror array, not a PV panel photo","AI visual review (Claude), unverified by owner"
+roboflow_8bf9dbb0c790,drop,DUSTY,,"sky/tree reflection, panel not assessable","AI visual review (Claude), unverified by owner"
+github_f23c5da4b632,relabel,DUSTY,BIRD_DROP,clear bird droppings,"AI visual review (Claude), unverified by owner"
+roboflow_6b0a5ff39711,relabel,DUSTY,BIRD_DROP,clear bird droppings,"AI visual review (Claude), unverified by owner"
+roboflow_42ef60b1db4d,relabel,DUSTY,BIRD_DROP,bird dropping streak,"AI visual review (Claude), unverified by owner"
+roboflow_ea3075b0a215,relabel,DUSTY,BIRD_DROP,white splatter droppings,"AI visual review (Claude), unverified by owner"
+roboflow_b9564bd27492,relabel,CLEAN,DUSTY,handwriting drawn in dust,"AI visual review (Claude), unverified by owner"

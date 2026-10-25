@@ -68,6 +68,23 @@ These are my visual judgements of one contact sheet, not a verified relabel. Not
 Suggested follow-up: drop non-informative images, then review the DUSTY->BIRD_DROP candidates (conf >= 0.8, 12 images)
 and relabel only those that clearly show droppings, then re-run the Kaggle CV on the cleaned pool.
 
+## Cleaned pool re-run (2026-10-25)
+`label_overrides.csv` (reversible; original labels kept; AI visual review of the 49 confident errors, NOT owner-verified):
+6 non-informative images dropped, 4 DUSTY->BIRD_DROP and 1 CLEAN->DUSTY relabelled. Same folds. Kaggle dataset
+`edithstark/solar-ai-web-condition-v2-clean`, kernel `edithstark/web-condition-convnext-v2-clean`
+(`scripts/build_web_condition_clean_package.py`, tests in `tests/test_web_condition_overrides.py`).
+
+| run | n | accuracy | balanced acc | macro-F1 | BIRD_DROP recall / precision |
+|---|---|---|---|---|---|
+| v2 fine-tune, original labels | 2,618 | 0.885 | 0.839 | 0.842 | 0.742 / 0.760 |
+| same v2 predictions scored on corrected labels (control) | 2,612 | 0.889 | 0.844 | 0.848 | 0.750 / - |
+| **clean-pool fine-tune (retrained)** | 2,612 | **0.886** | **0.854** | **0.855** | 0.780 [0.702, 0.842] / 0.844 |
+
+Most of the +0.013 is the label correction itself (+0.006 from rescoring alone); the retrain adds ~+0.007, which is
+within run-to-run noise (single seed). Real gain is mostly BIRD_DROP precision (0.76 -> 0.84). CLEAN<->DUSTY (237
+images) remains the dominant error. Checkpoint: `weights/convnext_tiny_condition_web_v2_clean.pth` (gitignored).
+Still a web-photo estimate, not rooftop accuracy.
+
 ## What this number is and is not
 * It is a **web-photo, same-distribution, family-disjoint** estimate. It is NOT a rooftop-camera accuracy:
   in v1 a web-trained MobileNet got 0/7 exact on the owner's marked rooftop defects while scoring 79% on web test.
