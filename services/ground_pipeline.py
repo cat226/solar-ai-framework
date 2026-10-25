@@ -21,6 +21,7 @@ for the full evidence trail this pipeline's design decisions are based on.
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any
 
@@ -51,6 +52,28 @@ CLASSIFIER_WEIGHTS = Path("weights/mobilenet_condition_4class_rooftop_mix_oversa
 CLASSIFIER_CLASSES = ["BIRD_DROP", "CLEAN", "DUSTY", "PHYSICAL_DAMAGE"]
 CLASSIFIER_INPUT_SIZE = 224
 CLASSIFIER_PREDICTED_THRESHOLD = 0.45  # same "trustworthy" convention used elsewhere in this project
+
+# Condition-classifier backends. "rooftop_mix" (default) is the MobileNetV2 above. "web_ensemble" is the final
+# web-only 5-backbone ensemble (training/detection/ground_pv/web_ensemble.py): out-of-fold macro-F1 0.878 on WEB
+# photos, never validated on the target rooftop camera. It is opt-in and is never selected silently.
+CLASSIFIER_BACKENDS = ("rooftop_mix", "web_ensemble")
+CLASSIFIER_BACKEND_ENV = "SOLAR_AI_CLASSIFIER"
+ENSEMBLE_MANIFEST = Path("weights/web_condition_ensemble_v1/ensemble.json")
+
+
+def active_classifier_backend(backend: str | None = None) -> str:
+    """Resolve the classifier backend: explicit arg, else $SOLAR_AI_CLASSIFIER, else "rooftop_mix".
+    An unknown value fails closed instead of falling back to a different model."""
+    chosen = (backend or os.environ.get(CLASSIFIER_BACKEND_ENV) or "rooftop_mix").strip().lower()
+    if chosen not in CLASSIFIER_BACKENDS:
+        raise ModelLoadError("condition classifier",
+                             f"unknown classifier backend {chosen!r}; expected one of {CLASSIFIER_BACKENDS}")
+    return chosen
+
+
+def ensemble_available() -> bool:
+    return ENSEMBLE_MANIFEST.is_file()
+
 
 # Soft cap on captures per run/ingestion batch — shared by app.py (Streamlit
 # upload) and api/main.py (Pi ingestion) so neither can be tricked into an
@@ -95,7 +118,7 @@ def load_ground_models() -> tuple[Any, Any]:
     return panel_model, condition_model
 
 
-def load_condition_classifier() -> tuple[Any, Any]:
+def load_condition_classifier(backend: str | None = None) -> tuple[Any, Any]:
     """Load the panel-crop condition CLASSIFIER (MobileNetV2, Phase 16-B) —
     a SEPARATE research checkpoint from the box-detector condition model
     above, evaluated on the same held-out test set at the image level:
@@ -103,6 +126,21 @@ def load_condition_classifier() -> tuple[Any, Any]:
     modest win overall), and specifically 0.794 vs. 0.359 recall on DUSTY —
     see docs/CONDITION_MODEL_4CLASS_CLASSIFIER_V1.md. Fails closed like
     every other model loader in this project."""
+    if active_classifier_backend(backend) == "web_ensemble":
+        if not ensemble_available():
+            raise ModelLoadError(
+                "condition classifier",
+                f"web ensemble manifest not found at {ENSEMBLE_MANIFEST}. Fetch the Kaggle outputs "
+                "(see datasets/ground_pv_research/web_condition_v2/README.md) or use the default backend.",
+            )
+        from training.detection.ground_pv.web_ensemble import WebEnsemble  # noqa: PLC0415
+
+        try:
+            return WebEnsemble(ENSEMBLE_MANIFEST), None
+        except Exception as exc:  # noqa: BLE001 — surfaced as a typed, actionable error
+            raise ModelLoadError("condition classifier",
+                                 f"web ensemble failed to load: {type(exc).__name__}: {exc}") from exc
+
     import torch
     from torchvision import models
 
@@ -137,6 +175,16 @@ def classify_crop(classifier_model: Any, device: Any, crop_image: Image.Image) -
     low-confidence top class still gets marked "uncertain", never silently
     treated as a confident read. Preprocessing (resize 224 + center-crop +
     ImageNet normalize) matches training exactly."""
+    if hasattr(classifier_model, "predict_proba"):  # web ensemble: own preprocessing + own (canonical) class order
+        probs = classifier_model.predict_proba(crop_image)
+        classes = classifier_model.classes
+        class_id = max(range(len(probs)), key=lambda i: probs[i])
+        confidence = probs[class_id]
+        return {
+            "status": "predicted" if confidence >= CLASSIFIER_PREDICTED_THRESHOLD else "uncertain",
+            "label": classes[class_id], "confidence": confidence, "probabilities": dict(zip(classes, probs)),
+        }
+
     import torch
     import torch.nn.functional as F
     from torchvision import transforms

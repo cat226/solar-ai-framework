@@ -121,9 +121,9 @@ def _load_ground_models():
     return ground_pipeline.load_ground_models()
 
 
-@st.cache_resource(show_spinner="Loading condition classifier (Phase 16-B)…")
-def _load_condition_classifier():
-    return ground_pipeline.load_condition_classifier()
+@st.cache_resource(show_spinner="Loading condition classifier…")
+def _load_condition_classifier(backend: str):
+    return ground_pipeline.load_condition_classifier(backend)
 
 
 _run_capture = ground_pipeline.run_capture
@@ -137,17 +137,28 @@ _summarize_panels = ground_pipeline.summarize_panels
 
 st.title("🔬 Ground Inspection")
 st.warning(
-    "**Research prototype, not production-validated.** Separate model stack from the "
-    "**Aerial Inspect** page (production aerial-imagery pipeline — sidebar). The condition "
-    "classifier (primary) is a Phase 19-B domain-adapted retrain: **0.938 (45/48)** accuracy "
-    "measured on this rooftop's own held-out photos (the original Phase 16-B checkpoint "
-    "scored only 0.271 there — a real domain-shift failure, now fixed), at a disclosed cost "
-    "of 0.731 vs. 0.752 on the original Susan-derived benchmark. The box-detector "
-    "(secondary) reaches 0.727 on that same Susan-derived set — real, measured, neither "
-    "perfect — and the panel detector can still miss a panel or merge adjacent panels into "
-    "one box on real photos. No accuracy is claimed for any NEW image run through this "
-    "page — only the models' own already-measured test performance is cited. See "
-    "`docs/PHASE_16_ARCHITECTURE_REVIEW.md`, `docs/ROOFTOP_CONDITION_MIX_PHASE19B.md`."
+    "**Research prototype, not validated on this rooftop.** Separate model stack from the "
+    "**Aerial Inspect** page (production aerial-imagery pipeline — sidebar). Neither condition "
+    "classifier has been verified on the target camera. The default (rooftop-adapted MobileNetV2) "
+    "was tuned on AI-labelled photos that the owner's own defect marks later contradicted; in a "
+    "direct check it called all 5 owner-marked bird-drop panels CLEAN with high confidence, so a "
+    "CLEAN result here does **not** mean the panel is clean. The optional web-trained ensemble "
+    "measured macro-F1 0.878 only on public web photos (out-of-fold, same sources), not on a "
+    "rooftop. The panel detector can also miss or merge panels. **Do not use these outputs for "
+    "alerts or maintenance decisions** until fixed-camera photos have been used to measure accuracy. "
+    "See `docs/ROOFTOP_CONDITION_MIX_PHASE19B.md` and "
+    "`datasets/ground_pv_research/web_condition_v2/README.md`."
+)
+
+_CLASSIFIER_LABELS = {
+    "rooftop_mix": "MobileNetV2, rooftop-adapted (default)",
+    "web_ensemble": "Web-trained 5-model ensemble (research, ~5x slower)",
+}
+_backend_options = ["rooftop_mix"] + (["web_ensemble"] if ground_pipeline.ensemble_available() else [])
+_CLASSIFIER_BACKEND = st.selectbox(
+    "Condition classifier (primary)", _backend_options, format_func=_CLASSIFIER_LABELS.get,
+    help="The web ensemble loads only if weights/web_condition_ensemble_v1/ is present. Neither option is "
+         "validated on the target rooftop camera.",
 )
 
 with st.expander("Two condition engines, how they differ from Aerial Inspect, and how array coverage works"):
@@ -294,7 +305,7 @@ run_clicked = st.button("🔍 Run Ground Inspection", type="primary", disabled=n
 if run_clicked and captures_in:
     try:
         panel_model, condition_model = _load_ground_models()
-        classifier_model, classifier_device = _load_condition_classifier()
+        classifier_model, classifier_device = _load_condition_classifier(_CLASSIFIER_BACKEND)
     except (ModelLoadError, ValueError, ImportError) as exc:
         st.error(f"Could not load the ground-domain research models: {exc}")
         st.stop()
@@ -548,7 +559,8 @@ for idx, cap in enumerate(captures, start=1):
 st.divider()
 st.caption(
     f"Pipeline: full image → dynamic ground panel detector (`{_PANEL_WEIGHTS.name}`) → "
-    f"per-panel crop → PRIMARY condition classifier (`{_CLASSIFIER_WEIGHTS.name}`) + "
+    f"per-panel crop → PRIMARY condition classifier (`{_CLASSIFIER_LABELS[_CLASSIFIER_BACKEND]}`"
+    f"{'' if _CLASSIFIER_BACKEND == 'web_ensemble' else ' · `' + _CLASSIFIER_WEIGHTS.name + '`'}) + "
     f"SECONDARY condition box-detector (`{_CONDITION_WEIGHTS.name}`), run independently "
     "per capture and combined above. All three are frozen research checkpoints, not "
     "production artifacts. No accuracy/precision/recall/mAP is computed or claimed for "
