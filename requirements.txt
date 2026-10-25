@@ -2,7 +2,10 @@
 # Install with: pip install -r requirements.txt
 
 # Streamlit UI
-streamlit>=1.35.0
+# Upper bound: streamlit 1.66.x breaks AppTest-driven page tests (the test harness crashes in
+# streamlit/testing, KeyError on an internal session-state key). 1.61 (dev machine) and 1.63 (main's last green
+# CI) work. Raise the cap only after re-running tests/test_pages_*.py against the new version.
+streamlit>=1.35.0,<1.66
 
 # Computer Vision — YOLO
 ultralytics>=8.2.0
