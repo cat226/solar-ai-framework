@@ -53,6 +53,21 @@ Final all-data checkpoint: `weights/convnext_tiny_condition_web_v2.pth` (gitigno
 Raw outputs: `kaggle_finetune_cv_metrics.json`, `kaggle_finetune_training_manifest.json`.
 This supersedes the frozen-embedding joblib as the better research model.
 
+## Error analysis of the fine-tuned model (2026-10-25, visual review of the 48 most confident out-of-fold errors)
+301 of 2,618 images are wrong out-of-fold; 239 of them at confidence >= 0.5, only 8 at >= 0.9. Of the errors at
+confidence >= 0.8 (49): CLEAN->DUSTY 23, DUSTY->BIRD_DROP 12, BIRD_DROP->DUSTY 7, DUSTY->CLEAN 7; 37 come from the
+Imgclean/Imgdirty lineage, 12 from Faulty. Looking at them:
+* **DUSTY->BIRD_DROP is mostly the model being right.** The binary Clean/Dusty sources can only say "dirty", so panels
+  with visible droppings, debris or lichen are labelled DUSTY. The coarse-to-fine rule only fixes this when the same
+  photo also appears in Faulty. The reported BIRD_DROP recall (0.742) therefore understates the model, and BIRD_DROP
+  precision is hurt by correct predictions on DUSTY-labelled images.
+* **Non-informative images are in the pool:** a Before/After collage labelled CLEAN, a hand holding a spray bottle, a
+  heliostat/tracker mirror array, an aerial roof overview, handwriting scrawled in dust. They should be dropped.
+* **CLEAN<->DUSTY is genuinely ambiguous** (dark panels, glare, mild haze); no label fix is obvious there.
+These are my visual judgements of one contact sheet, not a verified relabel. Nothing in the dataset was changed.
+Suggested follow-up: drop non-informative images, then review the DUSTY->BIRD_DROP candidates (conf >= 0.8, 12 images)
+and relabel only those that clearly show droppings, then re-run the Kaggle CV on the cleaned pool.
+
 ## What this number is and is not
 * It is a **web-photo, same-distribution, family-disjoint** estimate. It is NOT a rooftop-camera accuracy:
   in v1 a web-trained MobileNet got 0/7 exact on the owner's marked rooftop defects while scoring 79% on web test.
